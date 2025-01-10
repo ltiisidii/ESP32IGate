@@ -11,7 +11,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define VERSION "1.3"
+#define VERSION "1.4"
 #define VERSION_BUILD 'a'
 
 #define WX

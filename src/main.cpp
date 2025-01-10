@@ -633,11 +633,11 @@ void defaultConfig()
     config.tx_timeslot = 2000; // ms
 
     config.wifi_mode = WIFI_AP_STA_FIX;
-    config.wifi_power = 44; // WIFI_POWER_11dBm
+    config.wifi_power = 78; // WIFI_POWER_11dBm
     config.wifi_ap_ch = 6;
     config.wifi_sta[0].enable = true;
-    sprintf(config.wifi_sta[0].wifi_ssid, "APRSTH");
-    sprintf(config.wifi_sta[0].wifi_pass, "aprsthnetwork");
+    sprintf(config.wifi_sta[0].wifi_ssid, "IGATE");
+    sprintf(config.wifi_sta[0].wifi_pass, "aprsesp32");
     for (int i = 1; i < 5; i++)
     {
         config.wifi_sta[i].enable = false;
@@ -645,7 +645,7 @@ void defaultConfig()
         config.wifi_sta[i].wifi_pass[0] = 0;
     }
     sprintf(config.wifi_ap_ssid, "ESP32IGate");
-    sprintf(config.wifi_ap_pass, "aprsthnetwork");
+    sprintf(config.wifi_ap_pass, "aprsesp32");
 
     //--RF Module
     config.rf_en = true;
@@ -676,7 +676,7 @@ void defaultConfig()
     config.aprs_ssid = 1;
     config.aprs_port = 14580;
     sprintf(config.aprs_mycall, "NOCALL");
-    sprintf(config.aprs_host, "aprs.dprns.com");
+    sprintf(config.aprs_host, "rotate.aprs2.net");
     memset(config.aprs_passcode, 0, sizeof(config.aprs_passcode));
     sprintf(config.aprs_moniCall, "%s-%d", config.aprs_mycall, config.aprs_ssid);
     sprintf(config.aprs_filter, "m/10");
@@ -1958,6 +1958,13 @@ void setup()
 #else
     Serial.begin(9600); // monitor
 #endif
+
+    // Inicializar SPIFFS
+    if (!SPIFFS.begin(true)) {
+        Serial.println("Failed to initialize SPIFF");
+        return;
+    }
+    Serial.println("SPIFFS initialized successfully");   
 
     Serial.println();
     Serial.println("Start ESP32IGate V" + String(VERSION));

@@ -184,3 +184,9 @@ https://www.espressif.com/en/support/download/other-tools
 
 ## HITH
 This project implement by APRS text (TNC2 Raw) only,It not support null string(0x00) in the package.
+
+## Version 1.4
+- Change SSID name and SSID Password
+- Compress with gzip style.css ( )
+- Use Cache-Control in css for better performance (max-age=86400 // 1 day)
+- Change aprs.dprns.com to rotate.aprs2.net
