@@ -1,0 +1,56 @@
+name: Build and Release with PlatformIO
+
+on:
+  push:
+    tags:
+      - 'v*' # Will trigger only when a tag starting with "v" is pushed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Repository setup
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # PlatformIO setup
+    - name: Install PlatformIO
+      run: |
+        python3 -m pip install --upgrade platformio
+
+    # Project build
+    - name: Build with PlatformIO
+      run: |
+        pio run
+
+    # Upload generated artifacts (binaries, etc.)
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: firmware
+        path: |
+          .pio/build/*/*.bin
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    # Download generated artifacts
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: firmware
+
+    # Create a GitHub Release
+    - name: Create GitHub Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: firmware
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: |
+          Release created automatically.
+
