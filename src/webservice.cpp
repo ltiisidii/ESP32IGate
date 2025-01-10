@@ -63,7 +63,7 @@ void setMainPage(AsyncWebServerRequest *request)
 	webString += "<meta name=\"KeyWords\" content=\"ESP32IGATE,APRS\" />\n";
 	webString += "<meta http-equiv=\"Cache-Control\" content=\"no-cache, no-store, must-revalidate\" />\n";
 	webString += "<meta http-equiv=\"pragma\" content=\"no-cache\" />\n";
-	webString += "<link rel=\"shortcut icon\" href=\"http://aprs.dprns.com/favicon.ico\" type=\"image/x-icon\" />\n";
+	webString += "<link rel=\"shortcut icon\" href=\"http://www.p00lack.cc/favicon.ico\" type=\"image/x-icon\" />\n";
 	webString += "<meta http-equiv=\"Expires\" content=\"0\" />\n";
 	webString += "<title>ESP32IGATE</title>\n";
 	webString += "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n";
@@ -184,7 +184,8 @@ void setMainPage(AsyncWebServerRequest *request)
 
 void handle_css(AsyncWebServerRequest *request) {
     AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/style.css.gz", "text/css");
-    response->addHeader("Cache-Control", "max-age=86400"); // 1 día
+    response->addHeader("Cache-Control", "max-age=604800"); // 1 semana de caché
+    response->addHeader("Content-Encoding", "gzip"); // Especifica que está comprimido
     request->send(response);
 }
 
