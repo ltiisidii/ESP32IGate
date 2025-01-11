@@ -6,6 +6,24 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <title>ESP32IGATE</title>
+    <style>
+        .status-enabled {
+            background-color: #28a745; /* Bootstrap Success */
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .status-disabled {
+            background-color: #6c757d; /* Bootstrap Secondary */
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            padding: 5px;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body class="bg-dark text-light">
 
@@ -43,7 +61,7 @@
 
     <!-- Main Content -->
     <div class="container mt-4">
-        <!-- System Info Table (100% Width with 5 Columns, each 20%) -->
+        <!-- System Info Table -->
         <table class="table table-striped table-dark table-100">
             <thead>
                 <tr>
@@ -67,7 +85,7 @@
 
         <!-- Split Layout -->
         <div class="row">
-            <!-- Left Column (20%) -->
+            <!-- Left Column -->
             <div class="col-md-3">
                 <!-- Modes Enabled -->
                 <table class="table table-striped table-dark mb-3">
@@ -75,8 +93,14 @@
                         <tr><th colspan="2">Modes Enabled</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>IGATE</td><td>DIGI</td></tr>
-                        <tr><td>WX</td><td>TRACKER</td></tr>
+                        <tr>
+                            <td><div class="status-disabled">IGATE</div></td>
+                            <td><div class="status-enabled">DIGI</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="status-disabled">WX</div></td>
+                            <td><div class="status-disabled">TRACKER</div></td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -86,8 +110,14 @@
                         <tr><th colspan="2">Network Status</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>APRS-IS</td><td>VPN</td></tr>
-                        <tr><td>4G LTE</td><td>MQTT</td></tr>
+                        <tr>
+                            <td><div class="status-disabled">APRS-IS</div></td>
+                            <td><div class="status-disabled">VPN</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="status-disabled">4G LTE</div></td>
+                            <td><div class="status-disabled">MQTT</div></td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -98,16 +128,51 @@
                     </thead>
                     <tbody>
                         <tr><td>PACKET RX:</td><td>0</td></tr>
-                        <tr><td>PACKET TX:</td><td>9</td></tr>
+                        <tr><td>PACKET TX:</td><td>1</td></tr>
                         <tr><td>RF2INET:</td><td>0</td></tr>
                         <tr><td>INET2RF:</td><td>0</td></tr>
                         <tr><td>DIGI:</td><td>0</td></tr>
                         <tr><td>DROP/ERR:</td><td>0/0</td></tr>
                     </tbody>
                 </table>
+
+                <!-- Radio Info -->
+                <table class="table table-striped table-dark mb-3">
+                    <thead>
+                        <tr><th colspan="2">Radio Info</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Freq TX:</td><td>144.3900 MHz</td></tr>
+                        <tr><td>Freq RX:</td><td>144.3900 MHz</td></tr>
+                        <tr><td>H/L:</td><td>LOW</td></tr>
+                    </tbody>
+                </table>
+
+                <!-- APRS Server -->
+                <table class="table table-striped table-dark mb-3">
+                    <thead>
+                        <tr><th colspan="2">APRS SERVER</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>HOST:</td><td>rotate.aprs2.net</td></tr>
+                        <tr><td>PORT:</td><td>14580</td></tr>
+                    </tbody>
+                </table>
+
+                <!-- WiFi -->
+                <table class="table table-striped table-dark">
+                    <thead>
+                        <tr><th colspan="2">WiFi</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>MODE:</td><td>AP+STA</td></tr>
+                        <tr><td>SSID:</td><td>IGATE</td></tr>
+                        <tr><td>RSSI:</td><td>-53 dBm</td></tr>
+                    </tbody>
+                </table>
             </div>
 
-            <!-- Right Column (80%) -->
+            <!-- Right Column -->
             <div class="col-md-9">
                 <!-- Centered Last Heard Title -->
                 <div class="bg-primary text-light text-center p-2 mb-2">
@@ -147,6 +212,5 @@
     <footer class="bg-primary text-center text-light py-3 mt-4">
         ESP32IGate Web Configuration - &copy; 2025
     </footer>
-
 </body>
 </html>
