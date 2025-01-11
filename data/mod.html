@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <title>ESP32IGATE - Modifications</title>
+</head>
+<body class="bg-dark text-light">
+
+    <!-- Header -->
+    <div class="container py-3">
+        <h1 class="text-center">
+            <a href="/" class="text-decoration-none text-light">ESP32IGate Project [Modifications]</a>
+        </h1>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/igate">IGATE</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/digi">Digi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tracker">Tracker</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/wx">WX</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tlm">TLM</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/mod">Mod</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4 mb-5" id="contentmain">
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+
+
+        <!-- UART0 Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>UART0 (USB) Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="uart0Enable">
+                <label class="form-check-label" for="uart0Enable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="uart0Rx" class="form-label">RX GPIO:</label>
+                <input type="text" class="form-control" id="uart0Rx">
+            </div>
+            <div class="mb-3">
+                <label for="uart0Tx" class="form-label">TX GPIO:</label>
+                <input type="text" class="form-control" id="uart0Tx">
+            </div>
+            <div class="mb-3">
+                <label for="uart0Rts" class="form-label">RTS/DE GPIO:</label>
+                <input type="text" class="form-control" id="uart0Rts">
+            </div>
+            <div class="mb-3">
+                <label for="uart0Baudrate" class="form-label">Baudrate:</label>
+                <input type="number" class="form-control" id="uart0Baudrate">
+                <small class="small text-light">bps</small>
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- UART1 Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>UART1 (USB) Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="uart1Enable">
+                <label class="form-check-label" for="uart1Enable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="uart1Rx" class="form-label">RX GPIO:</label>
+                <input type="text" class="form-control" id="uart1Rx">
+            </div>
+            <div class="mb-3">
+                <label for="uart1Tx" class="form-label">TX GPIO:</label>
+                <input type="text" class="form-control" id="uart1Tx">
+            </div>
+            <div class="mb-3">
+                <label for="uart1Rts" class="form-label">RTS/DE GPIO:</label>
+                <input type="text" class="form-control" id="uart1Rts">
+            </div>
+            <div class="mb-3">
+                <label for="uart1Baudrate" class="form-label">Baudrate:</label>
+                <input type="number" class="form-control" id="uart1Baudrate">
+                <small class="small text-light">bps</small>
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- UART2 Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>UART2 (USB) Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="uart2Enable">
+                <label class="form-check-label" for="uart2Enable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="uart2Rx" class="form-label">RX GPIO:</label>
+                <input type="text" class="form-control" id="uart2Rx">
+            </div>
+            <div class="mb-3">
+                <label for="uart2Tx" class="form-label">TX GPIO:</label>
+                <input type="text" class="form-control" id="uart2Tx">
+            </div>
+            <div class="mb-3">
+                <label for="uart2Rts" class="form-label">RTS/DE GPIO:</label>
+                <input type="text" class="form-control" id="uart2Rts">
+            </div>
+            <div class="mb-3">
+                <label for="uart2Baudrate" class="form-label">Baudrate:</label>
+                <input type="number" class="form-control" id="uart2Baudrate">
+                <small class="small text-light">bps</small>
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- RF GPIO Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>RF GPIO Modify</h5>
+            <div class="mb-3">
+                <label for="rfBaudrate" class="form-label">Baudrate:</label>
+                <input type="number" class="form-control" id="rfBaudrate">
+                <small class="small text-light">bps</small>
+            </div>
+            <div class="mb-3">
+                <label for="adcAttenuation" class="form-label">ADC Attenuation:</label>
+                <input type="text" class="form-control" id="adcAttenuation">
+            </div>
+            <div class="mb-3">
+                <label for="adcOffset" class="form-label">ADC DC OFFSET:</label>
+                <input type="text" class="form-control" id="adcOffset">
+                <small class="small text-light">(Current: 625 mV)</small>
+            </div>
+            <div class="mb-3">
+                <label for="rxGpio" class="form-label">RX GPIO:</label>
+                <input type="text" class="form-control" id="rxGpio">
+            </div>
+            <div class="mb-3">
+                <label for="txGpio" class="form-label">TX GPIO:</label>
+                <input type="text" class="form-control" id="txGpio">
+            </div>
+            <div class="mb-3">
+                <label for="pdGpio" class="form-label">PD GPIO:</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="pdActive" id="pdLow" value="LOW">
+                    <label class="form-check-label text-light" for="pdLow">LOW</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="pdActive" id="pdHigh" value="HIGH">
+                    <label class="form-check-label text-light" for="pdHigh">HIGH</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="hlGpio" class="form-label">H/L GPIO:</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="hlActive" id="hlLow" value="LOW">
+                    <label class="form-check-label text-light" for="hlLow">LOW</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="hlActive" id="hlHigh" value="HIGH">
+                    <label class="form-check-label text-light" for="hlHigh">HIGH</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="sqlGpio" class="form-label">SQL GPIO:</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sqlActive" id="sqlLow" value="LOW">
+                    <label class="form-check-label text-light" for="sqlLow">LOW</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sqlActive" id="sqlHigh" value="HIGH">
+                    <label class="form-check-label text-light" for="sqlHigh">HIGH</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="pttGpio" class="form-label">PTT GPIO:</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="pttActive" id="pttLow" value="LOW">
+                    <label class="form-check-label text-light" for="pttLow">LOW</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="pttActive" id="pttHigh" value="HIGH">
+                    <label class="form-check-label text-light" for="pttHigh">HIGH</label>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- I2C_0 (OLED) Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>I2C_0 (OLED) Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="i2c0Enable">
+                <label class="form-check-label" for="i2c0Enable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="i2c0Sda" class="form-label">SDA GPIO:</label>
+                <input type="text" class="form-control" id="i2c0Sda">
+            </div>
+            <div class="mb-3">
+                <label for="i2c0Scl" class="form-label">SCK GPIO:</label>
+                <input type="text" class="form-control" id="i2c0Scl">
+            </div>
+            <div class="mb-3">
+                <label for="i2c0Freq" class="form-label">Frequency:</label>
+                <input type="number" class="form-control" id="i2c0Freq">
+                <small class="small text-light">Hz</small>
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- I2C_1 Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>I2C_1 Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="i2c1Enable">
+                <label class="form-check-label" for="i2c1Enable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="i2c1Sda" class="form-label">SDA GPIO:</label>
+                <input type="text" class="form-control" id="i2c1Sda">
+            </div>
+            <div class="mb-3">
+                <label for="i2c1Scl" class="form-label">SCK GPIO:</label>
+                <input type="text" class="form-control" id="i2c1Scl">
+            </div>
+            <div class="mb-3">
+                <label for="i2c1Freq" class="form-label">Frequency:</label>
+                <input type="number" class="form-control" id="i2c1Freq">
+                <small class="small text-light">Hz</small>
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- Counter_0 Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>Counter_0 Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="counter0Enable">
+                <label class="form-check-label" for="counter0Enable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="counter0Input" class="form-label">INPUT GPIO:</label>
+                <input type="text" class="form-control" id="counter0Input">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Active:</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="counter0Active" id="counter0Low" value="LOW">
+                    <label class="form-check-label" for="counter0Low">LOW</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="counter0Active" id="counter0High" value="HIGH">
+                    <label class="form-check-label" for="counter0High">HIGH</label>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- Counter_1 Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>Counter_1 Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="counter1Enable">
+                <label class="form-check-label" for="counter1Enable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="counter1Input" class="form-label">INPUT GPIO:</label>
+                <input type="text" class="form-control" id="counter1Input">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Active:</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="counter1Active" id="counter1Low" value="LOW">
+                    <label class="form-check-label" for="counter1Low">LOW</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="counter1Active" id="counter1High" value="HIGH">
+                    <label class="form-check-label" for="counter1High">HIGH</label>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- GNSS Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>GNSS Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="gnssEnable">
+                <label class="form-check-label" for="gnssEnable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="gnssPort" class="form-label">PORT:</label>
+                <input type="text" class="form-control" id="gnssPort">
+            </div>
+            <div class="mb-3">
+                <label for="gnssAtCommand" class="form-label">AT Command:</label>
+                <input type="text" class="form-control" id="gnssAtCommand">
+            </div>
+            <div class="mb-3">
+                <label for="gnssTcpHost" class="form-label">TCP Host:</label>
+                <input type="text" class="form-control" id="gnssTcpHost">
+            </div>
+            <div class="mb-3">
+                <label for="gnssTcpPort" class="form-label">TCP Port:</label>
+                <input type="number" class="form-control" id="gnssTcpPort">
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- MODBUS Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>MODBUS Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="modbusEnable">
+                <label class="form-check-label" for="modbusEnable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="modbusPort" class="form-label">PORT:</label>
+                <input type="text" class="form-control" id="modbusPort">
+            </div>
+            <div class="mb-3">
+                <label for="modbusAddress" class="form-label">Address:</label>
+                <input type="text" class="form-control" id="modbusAddress">
+            </div>
+            <div class="mb-3">
+                <label for="modbusDe" class="form-label">DE:</label>
+                <input type="text" class="form-control" id="modbusDe">
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+
+        <!-- External TNC Modify -->
+        <div class="mb-4 border border-primary rounded p-3">
+            <h5>External TNC Modify</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="tncEnable">
+                <label class="form-check-label" for="tncEnable">Enable</label>
+            </div>
+            <div class="mb-3">
+                <label for="tncPort" class="form-label">PORT:</label>
+                <input type="text" class="form-control" id="tncPort">
+            </div>
+            <div class="mb-3">
+                <label for="tncMode" class="form-label">MODE:</label>
+                <input type="text" class="form-control" id="tncMode">
+            </div>
+            <button type="button" class="btn btn-primary">Apply</button>
+        </div>
+    </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-center text-light py-3">
+        ESP32IGate Modifications - &copy; 2025
+    </footer>
+
+</body>
+</html>
