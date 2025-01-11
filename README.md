@@ -93,34 +93,33 @@ The Schematic PDF is [here](doc/ESP32DR_Simple_Schematic.pdf)
 
 ### BOM list  
 
-|Reference|Value|Description|
+| Reference | Value | Description |
 |---|:---:|---|
-|U1|ESP32 DEVKIT|DOIT ESP32 DEVKIT (โมดูล ESP32)|
-|RP2|1K|VR 3362W (R ปรับค่าเสียงออก)|
-|RP1|10K|VR 3362W (R ปรับค่าเสียงเข้า)|
-|RJ11|RJ11-6P6C|แจ๊คโมดูล RJ11 แบบ 6ขา|
-|R13,R12,R11,R5,R3,R9|1K|R 1K 1/4W (ค่าสี: น้ำตาล ดำ แดง)|
-|R7,R18,R19|100R|R 100R  1/4W (ค่าสี: น้ำตาล ดำ ดำ)|
-|R6,R2,R1|10K|R 10k  1/4W  (ค่าสี: น้ำตาล ดำ ส้ม)|
-|R4|3K|R 3k 1/4W (ค่าสี: ส้ม ดำ แดง)|
-|R10|33K|R 33K 1/4W (ค่าสี: ส้ม ส้ม ส้ม)|
-|Q1|2N3904|ทรานซิสเตอร์ NPN (TO-92)|
-|LED3|LED 3.5mm|สีเหลือง แสดงส่งสัญญาณ TX|
-|LED2|LED 3.5mm|สีเขียว แสดงรับสัญญาณ RX|
-|LED1|LED 3.5mm|สีแดง แสดงไฟเข้าทำงาน|
-|L1|L or JMP|L Isolate or Jumper|
-|C11|100uF/6.3V|ตัวเก็บประจุแบบอิเล็กโทรไลติก|
-|C4,C5|100nF|ตัวเก็บประจุแบบเซรามิกมัลติเลเยอร์|
-|C6|470uF/10V|ตัวเก็บประจุแบบอิเล็กโทรไลติก|
-|C1,C3,C10|100nF หรือ 0.1uF|ตัวเก็บประจุแบบโพลีโพรไพลีน|
-|C2|10nF หรือ 0.01uF|ตัวเก็บประจุแบบโพลีโพรไพลีน|
-|D2,D1|1N4148|ไดโอด หรือใช้ C 0.01uF แทนได้|
+| U1 | ESP32 DEVKIT | DOIT ESP32 DEVKIT (ESP32 module) |
+| RP2 | 1K | VR 3362W (Potentiometer for output audio adjustment) |
+| RP1 | 10K | VR 3362W (Potentiometer for input audio adjustment) |
+| RJ11 | RJ11-6P6C | RJ11 module jack with 6 pins |
+| R13, R12, R11, R5, R3, R9 | 1K | R 1K 1/4W (Color code: Brown, Black, Red) |
+| R7, R18, R19 | 100R | R 100R 1/4W (Color code: Brown, Black, Black) |
+| R6, R2, R1 | 10K | R 10K 1/4W (Color code: Brown, Black, Orange) |
+| R4 | 3K | R 3K 1/4W (Color code: Orange, Black, Red) |
+| R10 | 33K | R 33K 1/4W (Color code: Orange, Orange, Orange) |
+| Q1 | 2N3904 | NPN transistor (TO-92) |
+| LED3 | LED 3.5mm | Yellow LED, indicates TX signal transmission |
+| LED2 | LED 3.5mm | Green LED, indicates RX signal reception |
+| LED1 | LED 3.5mm | Red LED, indicates power is on |
+| L1 | L or JMP | L Isolate or Jumper |
+| C11 | 100uF/6.3V | Electrolytic capacitor |
+| C4, C5 | 100nF | Multilayer ceramic capacitor |
+| C6 | 470uF/10V | Electrolytic capacitor |
+| C1, C3, C10 | 100nF or 0.1uF | Polypropylene capacitor |
+| C2 | 10nF or 0.01uF | Polypropylene capacitor |
+| D2, D1 | 1N4148 | Diode or replace with 0.01uF capacitor |
 
-*R18 and R19 ไม่ใส่ก็ได้.  
-*D2,D1 เปลี่ยนเป็นตัวเก็บประจุแบบเซรามิกมัลติเลเยอร์ค่า 10nF แทนได้ 
-*หากใช้ต่อกับวิทยุรับส่งเข้าขาไมค์นอก ให้เปลี่ยน R4 เป็น 100K
-
-จัดซื้อชุดคิทผ่าน Shopee ได้ที่ [คลิ๊ก](https://shopee.co.th/product/45191268/13373396785)
+**Notes:**  
+- *R18 and R19 are optional.*  
+- *D2 and D1 can be replaced with 10nF multilayer ceramic capacitors.*  
+- *If connecting to a transceiver via an external mic pin, replace R4 with 100K.*
 
 The Howto DIY is [here](doc/ESP32DR_DIY-Thai.pdf)
 
@@ -159,6 +158,7 @@ for Handheld
 
 ![HT-RX](image/ESP32DR_RxOnly.png)
 
+---
 
 ## ESP32IGate firmware installation (do it first time, next time via the web browser)
 - 1.Connect the USB cable to the ESP32 Module.
@@ -167,15 +167,6 @@ for Handheld
 - 4.Push **BOOT** button long >100ms to TX Position and >10Sec to Factory Default
 
 ![ESP32Tool](image/ESP32Tool.png)
-
-## Firmware Installation
-
-1. Connect the USB cable to the ESP32 module.  
-2. Use the ESP32 Download Tool to upload firmware.  
-3. Set firmware configurations as described and connect GPIO0 to GND if required.  
-4. After upload, connect to the AP SSID: `ESP32IGate` and open a browser at [http://192.168.4.1](http://192.168.4.1), password: `aprsthnetwork`.  
-
-![ESP32 Tool](image/ESP32Tool.png)
 
 ---
 
