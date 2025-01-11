@@ -690,7 +690,7 @@ void defaultConfig()
     memset(config.igate_object, 0, sizeof(config.igate_object));
     memset(config.igate_phg, 0, sizeof(config.igate_phg));
     config.igate_path = 8;
-    sprintf(config.igate_comment, "IGate MODE");
+    sprintf(config.igate_comment, "ESP32 IGate MODE");
 
     // DIGI REPEATER
     config.digi_en = false;
@@ -848,7 +848,7 @@ void defaultConfig()
     config.audio_hpf = false;
     config.audio_bpf = false;
     config.preamble = 3;
-    sprintf(config.ntp_host, "ntp.dprns.com");
+    sprintf(config.ntp_host, "pool.ntp.org");
 
     sprintf(config.path[0], "WIDE1-1");
     sprintf(config.path[1], "WIDE1-1,WIDE2-1");
@@ -858,7 +858,7 @@ void defaultConfig()
     // VPN Wireguard
     config.vpn = false;
     config.wg_port = 51820;
-    sprintf(config.wg_peer_address, "vpn.dprns.com");
+    sprintf(config.wg_peer_address, "192.168.1.2");
     sprintf(config.wg_local_address, "192.168.1.2");
     sprintf(config.wg_netmask_address, "255.255.255.0");
     sprintf(config.wg_gw_address, "192.168.1.1");

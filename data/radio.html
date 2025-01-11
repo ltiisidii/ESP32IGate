@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <title>ESP32IGATE - Radio</title>
+</head>
+<body class="bg-dark text-light">
+
+    <!-- Header -->
+    <div class="container py-3">
+        <h1 class="text-center">
+            <a href="/" class="text-decoration-none text-light">ESP32IGate Project</a>
+        </h1>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/radio">Radio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/igate">IGATE</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/digi">Digi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tracker">Tracker</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/wx">WX</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tlm">TLM</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/vpn">VPN</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/mod">Mod</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4" id="contentmain">
+        <!-- RF Analog Module -->
+        <h2 class="text-center mb-4">RF Analog Module</h2>
+        <table class="table table-dark table-striped">
+            <tbody>
+                <tr>
+                    <th>Enable</th>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Module Type</th>
+                    <td>
+                        <select class="form-select" id="moduleType">
+                            <option>NONE</option>
+                            <option>SA868_VHF</option>
+                            <option>SA868_UHF</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>TX Frequency</th>
+                    <td>
+                        <input type="text" class="form-control" id="txFrequency" value="144.3900"> MHz
+                    </td>
+                </tr>
+                <tr>
+                    <th>RX Frequency</th>
+                    <td>
+                        <input type="text" class="form-control" id="rxFrequency" value="144.3900"> MHz
+                    </td>
+                </tr>
+                <tr>
+                    <th>TX CTCSS</th>
+                    <td>
+                        <select class="form-select" id="txCtcss">
+                            <option>0.0</option>
+                            <option>67.0</option>
+                            <option>71.9</option>
+                        </select> Hz
+                    </td>
+                </tr>
+                <tr>
+                    <th>RX CTCSS</th>
+                    <td>
+                        <select class="form-select" id="rxCtcss">
+                            <option>0.0</option>
+                            <option>67.0</option>
+                            <option>71.9</option>
+                        </select> Hz
+                    </td>
+                </tr>
+                <tr>
+                    <th>Narrow/Wide</th>
+                    <td>
+                        <select class="form-select" id="narrowWide">
+                            <option>12.5KHz</option>
+                            <option>25.5KHz</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>TX Power</th>
+                    <td>
+                        <select class="form-select" id="txPower">
+                            <option>LOW</option>
+                            <option>HIGH</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>VOLUME</th>
+                    <td>
+                        <input type="range" class="form-range" id="volume" min="1" max="8" value="6">
+                    </td>
+                </tr>
+                <tr>
+                    <th>SQL Level</th>
+                    <td>
+                        <input type="range" class="form-range" id="sqlLevel" min="1" max="8" value="1">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="text-center">
+            <button class="btn btn-primary">Apply Changes</button>
+        </div>
+
+        <hr class="my-5">
+
+        <!-- AFSK/TNC Configuration -->
+        <h2 class="text-center mb-4">AFSK/TNC Configuration</h2>
+        <table class="table table-dark table-striped">
+            <tbody>
+                <tr>
+                    <th>Modem Type</th>
+                    <td>
+                        <select class="form-select" id="modemType">
+                            <option>AFSK_300</option>
+                            <option>AFSK_1200</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Audio HPF</th>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="audioHpf">
+                        </div>
+                        <span>*Audio high pass filter >1KHz cutoff 10Khz</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Audio BPF</th>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="audioBpf">
+                        </div>
+                        <span>*Audio band pass filter 1Khz-2.5KHz</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>TX Time Slot</th>
+                    <td>
+                        <input type="text" class="form-control" id="txTimeSlot" value="2000"> mSec.
+                    </td>
+                </tr>
+                <tr>
+                    <th>Preamble</th>
+                    <td>
+                        <input type="text" class="form-control" id="preamble" value="300"> mSec.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="text-center">
+            <button class="btn btn-primary">Apply Changes</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-center text-light py-3 mt-5">
+        ESP32IGate Web Configuration - &copy; 2025
+    </footer>
+</body>
+</html>
