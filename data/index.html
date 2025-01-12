@@ -154,9 +154,9 @@
                             <tr><th colspan="2">Radio Info</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td>Freq TX:</td><td id="freq-tx" >N/A</td></tr>
-                            <tr><td>Freq RX:</td><td id="freq-rx" >N/A</td></tr>
-                            <tr><td>H/L:</td><td id="power-level" >N/A</td></tr>
+                            <tr><th>Freq TX</th><td id="freq-tx">-</td></tr>
+                            <tr><th>Freq RX</th><td id="freq-rx">-</td></tr>
+                            <tr><th>Power</th><td id="power">-</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -323,6 +323,26 @@
             // Actualizar información cada 5 segundos
             setInterval(loadStatistics, 5000);
             loadStatistics(); // Cargar inicialmente
+        </script>
+        <!-- JavaScript to Fetch APRS Server Info -->
+        <script>
+            async function updateRadioInfo() {
+                try {
+                    const response = await fetch('/radio-info');
+                    if (response.ok) {
+                        const data = await response.json();
+                        document.getElementById('freq-tx').textContent = data.freq_tx;
+                        document.getElementById('freq-rx').textContent = data.freq_rx;
+                        document.getElementById('power').textContent = data.power;
+                    } else {
+                        console.error("Error fetching radio info: ", response.status);
+                    }
+                } catch (error) {
+                    console.error("Error fetching radio info: ", error);
+                }
+            }
+
+            setInterval(updateRadioInfo, 5000); // Actualizar cada 5 segundos
         </script>
         <!-- JavaScript to Fetch APRS Server Info -->
         <script>
