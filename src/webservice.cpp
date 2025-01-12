@@ -6578,96 +6578,14 @@ void handle_ws_gnss(char *nmea, size_t size)
 	ws_gnss.textAll(jsonMsg, strlen(jsonMsg));
 }
 
-void handle_test(AsyncWebServerRequest *request)
-{
-	// if (request->hasArg("sendBeacon"))
-	// {
-	// 	String tnc2Raw = send_fix_location();
-	// 	if (config.rf_en)
-	// 		pkgTxPush(tnc2Raw.c_str(), tnc2Raw.length(), 0);
-	// 	// APRS_sendTNC2Pkt(tnc2Raw); // Send packet to RF
-	// }
-	// else if (request->hasArg("sendRaw"))
-	// {
-	// 	for (uint8_t i = 0; i < request->args(); i++)
-	// 	{
-	// 		if (request->argName(i) == "raw")
-	// 		{
-	// 			if (request->arg(i) != "")
-	// 			{
-	// 				String tnc2Raw = request->arg(i);
-	// 				if (config.rf_en)
-	// 				{
-	// 					pkgTxPush(tnc2Raw.c_str(), tnc2Raw.length(), 0);
-	// 					// APRS_sendTNC2Pkt(request->arg(i)); // Send packet to RF
-	// 					// Serial.println("Send RAW: " + tnc2Raw);
-	// 				}
-	// 			}
-	// 			break;
-	// 		}
-	// 	}
-	// }
-	// setHTML(6);
+void handle_tnc2(AsyncWebServerRequest *request) {
+    // Autenticación si es necesaria
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
 
-	webString = "<html>\n<head>\n";
-	webString += "<script src=\"https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js\"></script>\n";
-	webString += "<script src=\"https://code.highcharts.com/highcharts.js\"></script>\n";
-	webString += "<script src=\"https://code.highcharts.com/highcharts-more.js\"></script>\n";
-	webString += "<script language=\"JavaScript\">";
-	webString += "$(document).ready(function() {\nvar chart = {\ntype: 'gauge',plotBorderWidth: 1,plotBackgroundColor: {linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },stops: [[0, '#FFFFC6'],[0.3, '#FFFFFF'],[1, '#FFF4C6']]},plotBackgroundImage: null,height: 200};\n";
-	webString += "var credits = {enabled: false};\n";
-	webString += "var title = {text: 'RX VU Meter'};\n";
-	webString += "var pane = [{startAngle: -45,endAngle: 45,background: null,center: ['50%', '145%'],size: 300}];\n";
-	webString += "var yAxis = [{min: -40,max: 1,minorTickPosition: 'outside',tickPosition: 'outside',labels: {rotation: 'auto',distance: 20},\n";
-	webString += "plotBands: [{from: -10,to: 1,color: '#C02316',innerRadius: '100%',outerRadius: '105%'},{from: -20,to: -10,color: '#00C000',innerRadius: '100%',outerRadius: '105%'},{from: -30,to: -20,color: '#AFFF0F',innerRadius: '100%',outerRadius: '105%'},{from: -40,to: -30,color: '#C0A316',innerRadius: '100%',outerRadius: '105%'}],\n";
-	webString += "pane: 0,title: {text: '<span style=\"font-size:12px\">dBV</span>',y: -40}}];\n";
-	webString += "var plotOptions = {gauge: {dataLabels: {enabled: false},dial: {radius: '100%'}}};\n";
-	webString += "var series= [{data: [-40],yAxis: 0}];\n";
-	webString += "var json = {};\n json.chart = chart;\n json.credits = credits;\n json.title = title;\n json.pane = pane;\n json.yAxis = yAxis;\n json.plotOptions = plotOptions;\n json.series = series;\n";
-	// Add some life
-	webString += "var chartFunction = function (chart) { \n"; // the chart may be destroyed
-	webString += "var Vrms=0;\nvar dBV=-40;\nvar active=0;var raw=\"\";var timeStamp;\n";
-	webString += "if (chart.series) {\n";
-	webString += "var left = chart.series[0].points[0];\n";
-	webString += "var host='ws://'+location.hostname+':81/ws'\n";
-	webString += "const ws = new WebSocket(host);\n";
-	webString += "ws.onopen = function() { console.log('Connection opened');};\n ws.onclose = function() { console.log('Connection closed');};\n";
-	webString += "ws.onmessage = function(event) {\n  console.log(event.data);\n";
-	webString += "const jsonR=JSON.parse(event.data);\n";
-	webString += "active=parseInt(jsonR.Active);\n";
-	webString += "Vrms=parseFloat(jsonR.mVrms)/1000;\n";
-	webString += "dBV=20.0*Math.log10(Vrms);\n";
-	webString += "if(dBV<-40) dBV=-40;\n";
-	webString += "raw=jsonR.RAW;\n";
-	webString += "timeStamp=Number(jsonR.timeStamp);\n";
-	webString += "if(active==1){\nleft.update(dBV,false);\nchart.redraw();\n";
-	webString += "var date=new Date(timeStamp * 1000);\n";
-	webString += "var head=date+\"[\"+Vrms.toFixed(3)+\"Vrms,\"+dBV.toFixed(1)+\"dBV]\\n\";\n";
-	// webString += "document.getElementById(\"raw_txt\").value+=head+atob(raw)+\"\\n\";\n";
-	webString += "var textArea=document.getElementById(\"raw_txt\");\n";
-	webString += "textArea.value+=head+atob(raw)+\"\\n\";\n";
-	webString += "textArea.scrollTop = textArea.scrollHeight;\n";
-	webString += "}\n";
-	webString += "}\n";
-	webString += "}};\n";
-	webString += "$('#vumeter').highcharts(json, chartFunction);\n";
-	webString += "});\n</script>\n";
-	webString += "</head><body>\n<table>\n";
-	// webString += "<tr><td><form accept-charset=\"UTF-8\" action=\"/test\" class=\"form-horizontal\" id=\"test_form\" method=\"post\">\n";
-	// webString += "<div style=\"margin-left: 20px;\"><input type='submit' class=\"btn btn-danger\" name=\"sendBeacon\" value='SEND BEACON'></div><br />\n";
-	// webString += "<div style=\"margin-left: 20px;\">TNC2 RAW: <input id=\"raw\" name=\"raw\" type=\"text\" size=\"60\" value=\"" + String(config.aprs_mycall) + ">APE32I,WIDE1-1:>Test Status\"/></div>\n";
-	// webString += "<div style=\"margin-left: 20px;\"><input type='submit' class=\"btn btn-primary\" name=\"sendRaw\" value='SEND RAW'></div> <br />\n";
-	// webString += "</form></td></tr>\n";
-	// webString += "<tr><td><hr width=\"80%\" /></td></tr>\n";
-	webString += "<tr><td><div id=\"vumeter\" style=\"width: 300px; height: 200px; margin: 10px;\"></div></td>\n";
-	webString += "<tr><td><div style=\"margin: 15px;\">Terminal<br /><textarea id=\"raw_txt\" name=\"raw_txt\" rows=\"50\" cols=\"80\" /></textarea></div></td></tr>\n";
-	webString += "</table>\n";
-
-	webString += "</body></html>\n";
-	request->send(200, "text/html", webString); // send to someones browser when asked
-
-	delay(100);
-	webString.clear();
+    // Servir el archivo estático desde SPIFFS
+    request->send(SPIFFS, "/tnc2.html", "text/html");
 }
 
 void handle_about(AsyncWebServerRequest *request)
@@ -6992,7 +6910,7 @@ void webService()
 	async_server.on("/wireless", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_wireless(request); });
 	async_server.on("/tnc2", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_test(request); });
+					{ handle_tnc2(request); });
 	async_server.on("/gnss", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_gnss(request); });
 	async_server.on("/realtime", HTTP_GET, [](AsyncWebServerRequest *request)
