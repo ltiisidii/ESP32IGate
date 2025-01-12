@@ -45,7 +45,7 @@ void handle_logout(AsyncWebServerRequest *request)
 	request->send(200, "text/html", webString);
 }
 
-void setMainPage(AsyncWebServerRequest *request)
+/* void setMainPage(AsyncWebServerRequest *request)
 {
 	if (!request->authenticate(config.http_username, config.http_password))
 	{
@@ -176,6 +176,15 @@ void setMainPage(AsyncWebServerRequest *request)
 	webString += "</html>";
 	request->send(200, "text/html", webString); // send to someones browser when asked
 	event_lastHeard();
+} */
+
+void setMainPage(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    // Servir index.html desde SPIFFS
+    request->send(SPIFFS, "/index.html", "text/html");
 }
 
 ////////////////////////////////////////////////////////////
@@ -197,7 +206,7 @@ void handle_jquery(AsyncWebServerRequest *request)
 	request->send(response);
 }
 
-void handle_dashboard(AsyncWebServerRequest *request)
+/* void handle_dashboard(AsyncWebServerRequest *request)
 {
 	if (!request->authenticate(config.http_username, config.http_password))
 	{
@@ -345,6 +354,15 @@ void handle_dashboard(AsyncWebServerRequest *request)
 	delay(100);
 	webString.clear();
 	event_lastHeard();
+} */
+
+void handle_dashboard(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    // Servir dashboard.html desde SPIFFS
+    request->send(SPIFFS, "/dashboard.html", "text/html");
 }
 
 void handle_sidebar(AsyncWebServerRequest *request)
@@ -525,7 +543,7 @@ void handle_symbol(AsyncWebServerRequest *request)
 	}
 }
 
-void handle_sysinfo(AsyncWebServerRequest *request)
+/* void handle_sysinfo(AsyncWebServerRequest *request)
 {
 	String html = "<table style=\"table-layout: fixed;border-collapse: unset;border-radius: 10px;border-color: #ee800a;border-style: ridge;border-spacing: 1px;border-width: 4px;background: #ee800a;\">\n";
 	html += "<tr>\n";
@@ -552,6 +570,64 @@ void handle_sysinfo(AsyncWebServerRequest *request)
 	html += "</table>\n";
 	request->send(200, "text/html", html); // send to someones browser when asked
 	html.clear();
+} */
+
+void handle_sysinfo(AsyncWebServerRequest *request)
+{
+	// Calcula el tiempo de actividad
+	time_t tn = now() - systemUptime;
+
+	// Calcula días, horas y minutos
+	int days = day(tn) - 1;  // Resta 1 porque 'day()' empieza en 1
+	int hours = hour(tn);
+	int minutes = minute(tn);
+
+	// Formatea el uptime como "XD HH:MM"
+	String uptime = String(days, DEC) + "D " +
+					(hours < 10 ? "0" : "") + String(hours, DEC) + ":" +
+					(minutes < 10 ? "0" : "") + String(minutes, DEC);
+
+    // Calcula memoria RAM y PSRAM disponibles y totales
+    float freeHeap = (float)ESP.getFreeHeap() / 1024; // en KB
+    float totalHeap = (float)ESP.getHeapSize() / 1024; // en KB
+    float freePsram = (float)ESP.getFreePsram() / 1024; // en KB
+    float totalPsram = (float)ESP.getPsramSize() / 1024; // en KB
+
+    // Calcula espacio en tarjeta SD
+    uint32_t cardTotal = SD.totalBytes() / (1024 * 1024); // en MB
+    uint32_t cardUsed = SD.usedBytes() / (1024 * 1024); // en MB
+
+    // Calcula la temperatura de la CPU
+    float cpuTemp = (float)(temprature_sens_read() - 32) / 1.8F; // Convertir a Celsius
+
+    // Crea el JSON
+    String json = "{";
+    json += "\"uptime\":\"" + uptime + "\",";
+    json += "\"free_ram_kb\":" + String(freeHeap, 1) + ",";
+    json += "\"total_ram_kb\":" + String(totalHeap, 1) + ",";
+    json += "\"free_psram_kb\":" + String(freePsram, 1) + ",";
+    json += "\"total_psram_kb\":" + String(totalPsram, 1) + ",";
+    json += "\"sd_card_used_mb\":" + String(cardUsed) + ",";
+    json += "\"sd_card_total_mb\":" + String(cardTotal) + ",";
+    json += "\"cpu_temp_c\":" + String(cpuTemp, 1);
+    json += "}";
+
+    // Envía el JSON como respuesta
+    request->send(200, "application/json", json);
+}
+
+void handleModesEnabled(AsyncWebServerRequest *request) 
+{
+    // Crear JSON manualmente
+    String json = "{";
+    json += "\"igate\":" + String(config.igate_en ? "true" : "false") + ",";
+    json += "\"digi\":" + String(config.digi_en ? "true" : "false") + ",";
+    json += "\"wx\":" + String(config.wx_en ? "true" : "false") + ",";
+    json += "\"tracker\":" + String(config.trk_en ? "true" : "false");
+    json += "}";
+
+    // Enviar respuesta como JSON
+    request->send(200, "application/json", json);
 }
 
 void handle_lastHeard(AsyncWebServerRequest *request)
@@ -6878,6 +6954,8 @@ void webService()
 					{ handle_css(request); });
 	async_server.on("/jquery-3.7.1.js", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_jquery(request); });
+	async_server.on("/modes-enabled", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handleModesEnabled(request); });				
 	async_server.on(
 		"/update", HTTP_POST, [](AsyncWebServerRequest *request)
 		{

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <title>ESP32IGATE - Default</title>
+</head>
+<body class="bg-dark text-light">
+
+    <!-- Header -->
+    <div class="container py-3">
+        <h1 class="text-center">
+            <a href="/" class="text-decoration-none text-light">ESP32IGate Project [APRS ALL IN ONE]</a>
+        </h1>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/igate">IGATE</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/digi">Digi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tracker">Tracker</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/wx">WX</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tlm">TLM</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/vpn">VPN</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/mod">Mod</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <h2 class="text-center">Welcome to ESP32IGate Default Page</h2>
+        <p class="text-center">This is a placeholder for the default route. Please select an option from the navigation bar to proceed.</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-secondary text-light mb-3">
+                    <div class="card-header">System Info</div>
+                    <div class="card-body">
+                        <p>Uptime: <span id="uptime">-</span></p>
+                        <p>Free RAM: <span id="freeram">-</span></p>
+                        <p>CPU Temperature: <span id="cputemp">-</span> °C</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-secondary text-light mb-3">
+                    <div class="card-header">Quick Links</div>
+                    <div class="card-body">
+                        <ul>
+                            <li><a href="/dashboard" class="text-light">Dashboard</a></li>
+                            <li><a href="/radio" class="text-light">Radio Settings</a></li>
+                            <li><a href="/system" class="text-light">System Configuration</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-center text-light py-3">
+        ESP32IGate Web Configuration - &copy; 2025
+    </footer>
+
+    <!-- Script to fetch data -->
+    <script>
+        // Placeholder script to fetch system info
+        document.getElementById('uptime').textContent = '1 day, 2 hours';
+        document.getElementById('freeram').textContent = '120 KB';
+        document.getElementById('cputemp').textContent = '45.3';
+    </script>
+</body>
+</html>
