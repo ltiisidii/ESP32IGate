@@ -630,6 +630,63 @@ void handleModesEnabled(AsyncWebServerRequest *request)
     request->send(200, "application/json", json);
 }
 
+void handleNetworkStatus(AsyncWebServerRequest *request) {
+    String json = "{";
+    json += "\"aprs_is\":" + String(aprsClient.connected() ? "true" : "false") + ",";
+    json += "\"vpn\":" + String(wireguard_active() ? "true" : "false") + ",";
+    json += "\"lte_4g\":false,"; // Usa valores booleanos directamente
+    json += "\"mqtt\":false";    // Usa valores booleanos directamente
+    json += "}";
+
+    request->send(200, "application/json", json);
+}
+
+void handleStatistics(AsyncWebServerRequest *request) {
+    String json = "{";
+    json += "\"packet_rx\":" + String(status.rxCount) + ",";
+    json += "\"packet_tx\":" + String(status.txCount) + ",";
+    json += "\"rf2inet\":" + String(status.rf2inet) + ",";
+    json += "\"inet2rf\":" + String(status.inet2rf) + ",";
+    json += "\"digi\":" + String(status.digiCount) + ",";
+    json += "\"drop\":" + String(status.dropCount) + ",";
+    json += "\"error\":" + String(status.errorCount);
+    json += "}";
+
+    request->send(200, "application/json", json);
+}
+
+void handleRadioInfo(AsyncWebServerRequest *request) {
+    String json = "{";
+    json += "\"freq_tx\":\"" + String(config.freq_tx, 4) + " MHz\",";
+    json += "\"freq_rx\":\"" + String(config.freq_rx, 4) + " MHz\",";
+    json += "\"power\":\"" + String(config.rf_power == 0 ? "LOW" : "HIGH") + "\"";
+    json += "}";
+
+    request->send(200, "application/json", json);
+}
+
+void handleAPRSServer(AsyncWebServerRequest *request) {
+    String json = "{";
+    json += "\"host\":\"" + String(config.aprs_host) + "\",";
+    json += "\"port\":" + String(config.aprs_port);
+    json += "}";
+
+    request->send(200, "application/json", json);
+}
+
+void handleWiFiInfo(AsyncWebServerRequest *request) {
+    String json = "{";
+    json += "\"mode\":\"" + String(WiFi.getMode() == WIFI_MODE_APSTA ? "AP+STA" : 
+                  WiFi.getMode() == WIFI_MODE_AP ? "AP" : 
+                  WiFi.getMode() == WIFI_MODE_STA ? "STA" : "Unknown") + "\",";
+    json += "\"ssid\":\"" + String(WiFi.SSID()) + "\",";
+    json += "\"rssi\":\"" + String(WiFi.RSSI()) + " dBm\"";
+    json += "}";
+
+    request->send(200, "application/json", json);
+}
+
+
 void handle_lastHeard(AsyncWebServerRequest *request)
 {
 	struct pbuf_t aprs;
@@ -6955,7 +7012,18 @@ void webService()
 	async_server.on("/jquery-3.7.1.js", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_jquery(request); });
 	async_server.on("/modes-enabled", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleModesEnabled(request); });				
+					{ handleModesEnabled(request); });		
+	async_server.on("/network-status", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handleNetworkStatus(request); });	
+	async_server.on("/statistics", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handleStatistics(request); });
+	async_server.on("/radio-info", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handleRadioInfo(request); });			
+	async_server.on("/aprs-server", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handleAPRSServer(request); });
+	async_server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handleWiFiInfo(request); });											
+
 	async_server.on(
 		"/update", HTTP_POST, [](AsyncWebServerRequest *request)
 		{
