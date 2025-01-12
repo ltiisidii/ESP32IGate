@@ -45,151 +45,277 @@
 
     <!-- Main Content -->
     <div class="container mt-4" id="contentmain">
-        <!-- RF Analog Module -->
-        <h2 class="text-center mb-4">RF Analog Module</h2>
-        <table class="table table-dark table-striped">
-            <tbody>
-                <tr>
-                    <th>Enable</th>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="enable">
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Module Type</th>
-                    <td>
-                        <select class="form-select" id="moduleType">
-                            <option>NONE</option>
-                            <option>SA868_VHF</option>
-                            <option>SA868_UHF</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th>TX Frequency</th>
-                    <td>
-                        <input type="text" class="form-control" id="txFrequency" value="144.3900"> MHz
-                    </td>
-                </tr>
-                <tr>
-                    <th>RX Frequency</th>
-                    <td>
-                        <input type="text" class="form-control" id="rxFrequency" value="144.3900"> MHz
-                    </td>
-                </tr>
-                <tr>
-                    <th>TX CTCSS</th>
-                    <td>
-                        <select class="form-select" id="txCtcss">
-                            <option>0.0</option>
-                            <option>67.0</option>
-                            <option>71.9</option>
-                        </select> Hz
-                    </td>
-                </tr>
-                <tr>
-                    <th>RX CTCSS</th>
-                    <td>
-                        <select class="form-select" id="rxCtcss">
-                            <option>0.0</option>
-                            <option>67.0</option>
-                            <option>71.9</option>
-                        </select> Hz
-                    </td>
-                </tr>
-                <tr>
-                    <th>Narrow/Wide</th>
-                    <td>
-                        <select class="form-select" id="narrowWide">
-                            <option>12.5KHz</option>
-                            <option>25.5KHz</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th>TX Power</th>
-                    <td>
-                        <select class="form-select" id="txPower">
-                            <option>LOW</option>
-                            <option>HIGH</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th>VOLUME</th>
-                    <td>
-                        <input type="range" class="form-range" id="volume" min="1" max="8" value="6">
-                    </td>
-                </tr>
-                <tr>
-                    <th>SQL Level</th>
-                    <td>
-                        <input type="range" class="form-range" id="sqlLevel" min="1" max="8" value="1">
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <div class="text-center">
-            <button class="btn btn-primary">Apply Changes</button>
+    <!-- RF Analog Module -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-light">
+            RF Analog Module
+        </div>
+        <div class="card-body bg-dark text-light">    
+            <!-- Formulario para RF Analog Module -->
+            <form method="POST" action="/radio">
+                <input type="hidden" name="commitRadio" value="1">
+                <table class="table table-dark table-striped">
+                    <tbody>
+                        <tr>
+                            <th>Enable</th>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enable" name="radioEnable">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Module Type</th>
+                            <td>
+                                <select class="form-select" id="moduleType" name="moduleType">
+                                    <option value="0">NONE</option>
+                                    <option value="1">SA868_VHF</option>
+                                    <option value="2">SA868_UHF</option>
+                                    <option value="3">SR_FRS</option>
+                                    <option value="4">SR_MURS</option>
+                                    <option value="5">SR_GMRS</option>
+                                    <option value="6">SR_HAM</option>
+                                    <option value="7">SR_CB</option>
+                                    <option value="8">SR_CUSTOM</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>TX Frequency</th>
+                            <td>
+                                <input type="text" class="form-control" id="txFrequency" name="txFrequency" value="144.3900"> MHz
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>RX Frequency</th>
+                            <td>
+                                <input type="text" class="form-control" id="rxFrequency" name="rxFrequency" value="144.3900"> MHz
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>TX CTCSS</th>
+                            <td>
+                                <select class="form-select" id="txCtcss" name="txCtcss">
+                                    <option value="0">0.0</option>
+                                    <option value="67">67.0</option>
+                                    <option value="71.9">71.9</option>
+                                    <option value="74.4">74.4</option>
+                                    <option value="77">77.0</option>
+                                    <option value="79.7">79.7</option>
+                                    <option value="82.5">82.5</option>
+                                    <option value="85.4">85.4</option>
+                                    <option value="88.5">88.5</option>
+                                    <option value="91.5">91.5</option>
+                                    <option value="94.8">94.8</option>
+                                    <option value="97.4">97.4</option>
+                                    <option value="100">100.0</option>
+                                    <option value="103.5">103.5</option>
+                                    <option value="107.2">107.2</option>
+                                    <option value="110.9">110.9</option>
+                                    <option value="114.8">114.8</option>
+                                    <option value="118.8">118.8</option>
+                                    <option value="123">123.0</option>
+                                    <option value="127.3">127.3</option>
+                                    <option value="131.8">131.8</option>
+                                    <option value="136.5">136.5</option>
+                                    <option value="141.3">141.3</option>
+                                    <option value="146.2">146.2</option>
+                                    <option value="151.4">151.4</option>
+                                    <option value="156.7">156.7</option>
+                                    <option value="162.2">162.2</option>
+                                    <option value="167.9">167.9</option>
+                                    <option value="173.8">173.8</option>
+                                    <option value="179.9">179.9</option>
+                                    <option value="186.2">186.2</option>
+                                    <option value="192.8">192.8</option>
+                                    <option value="203.5">203.5</option>
+                                    <option value="210.7">210.7</option>
+                                    <option value="218.1">218.1</option>
+                                    <option value="225.7">225.7</option>
+                                    <option value="233.6">233.6</option>
+                                    <option value="241.8">241.8</option>
+                                    <option value="250.3">250.3</option>
+                                </select> Hz
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>RX CTCSS</th>
+                            <td>
+                                <select class="form-select" id="rxCtcss" name="rxCtcss">
+                                    <option value="0">0.0</option>
+                                    <option value="67">67.0</option>
+                                    <option value="71.9">71.9</option>
+                                    <option value="74.4">74.4</option>
+                                    <option value="77">77.0</option>
+                                    <option value="79.7">79.7</option>
+                                    <option value="82.5">82.5</option>
+                                    <option value="85.4">85.4</option>
+                                    <option value="88.5">88.5</option>
+                                    <option value="91.5">91.5</option>
+                                    <option value="94.8">94.8</option>
+                                    <option value="97.4">97.4</option>
+                                    <option value="100">100.0</option>
+                                    <option value="103.5">103.5</option>
+                                    <option value="107.2">107.2</option>
+                                    <option value="110.9">110.9</option>
+                                    <option value="114.8">114.8</option>
+                                    <option value="118.8">118.8</option>
+                                    <option value="123">123.0</option>
+                                    <option value="127.3">127.3</option>
+                                    <option value="131.8">131.8</option>
+                                    <option value="136.5">136.5</option>
+                                    <option value="141.3">141.3</option>
+                                    <option value="146.2">146.2</option>
+                                    <option value="151.4">151.4</option>
+                                    <option value="156.7">156.7</option>
+                                    <option value="162.2">162.2</option>
+                                    <option value="167.9">167.9</option>
+                                    <option value="173.8">173.8</option>
+                                    <option value="179.9">179.9</option>
+                                    <option value="186.2">186.2</option>
+                                    <option value="192.8">192.8</option>
+                                    <option value="203.5">203.5</option>
+                                    <option value="210.7">210.7</option>
+                                    <option value="218.1">218.1</option>
+                                    <option value="225.7">225.7</option>
+                                    <option value="233.6">233.6</option>
+                                    <option value="241.8">241.8</option>
+                                    <option value="250.3">250.3</option>
+                                </select> Hz
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Narrow/Wide</th>
+                            <td>
+                                <select class="form-select" id="narrowWide" name="narrowWide">
+                                    <option value="12.5KHz">12.5KHz</option>
+                                    <option value="25.5KHz">25.5KHz</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>TX Power</th>
+                            <td>
+                                <select class="form-select" id="txPower" name="txPower">
+                                    <option value="LOW">LOW</option>
+                                    <option value="HIGH">HIGH</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>VOLUME</th>
+                            <td>
+                                <input type="range" class="form-range" id="volume" name="volume" min="1" max="8" value="" oninput="updateVolumeValue(this.value)">
+                                <span id="volumeValue">6</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>SQL Level</th>
+                            <td>
+                                <input type="range" class="form-range" id="sqlLevel" name="sqlLevel" min="1" max="8" value="" oninput="updateSqlValue(this.value)">
+                                <span id="sqlValue">1</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center">
+                    <button class="btn btn-primary">Apply Changes</button>
+                </div>
+            </form>
+            </div>
         </div>
 
         <hr class="my-5">
 
         <!-- AFSK/TNC Configuration -->
-        <h2 class="text-center mb-4">AFSK/TNC Configuration</h2>
-        <table class="table table-dark table-striped">
-            <tbody>
-                <tr>
-                    <th>Modem Type</th>
-                    <td>
-                        <select class="form-select" id="modemType">
-                            <option>AFSK_300</option>
-                            <option>AFSK_1200</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Audio HPF</th>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="audioHpf">
-                        </div>
-                        <span>*Audio high pass filter >1KHz cutoff 10Khz</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Audio BPF</th>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="audioBpf">
-                        </div>
-                        <span>*Audio band pass filter 1Khz-2.5KHz</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>TX Time Slot</th>
-                    <td>
-                        <input type="text" class="form-control" id="txTimeSlot" value="2000"> mSec.
-                    </td>
-                </tr>
-                <tr>
-                    <th>Preamble</th>
-                    <td>
-                        <input type="text" class="form-control" id="preamble" value="300"> mSec.
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <div class="text-center">
-            <button class="btn btn-primary">Apply Changes</button>
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-light">
+                AFSK/TNC Configuration
+            </div>
+            <div class="card-body bg-dark text-light">
+                <!-- Formulario para AFSK/TNC Configuration -->
+                <form method="POST" action="/radio">
+                    <input type="hidden" name="commitTNC" value="1">
+                    <table class="table table-dark table-striped">
+                        <tbody>
+                            <tr>
+                                <th>Modem Type</th>
+                                <td>
+                                    <select class="form-select" id="modemType" name="modemType">
+                                        <option value="0">AFSK_300</option>
+                                        <option value="1">AFSK_1200</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Audio HPF</th>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="audioHpf" name="audioHpf">
+                                    </div>
+                                    <span>*Audio high pass filter >1KHz cutoff 10Khz</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Audio BPF</th>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="audioBpf" name="audioBpf">
+                                    </div>
+                                    <span>*Audio band pass filter 1Khz-2.5KHz</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>TX Time Slot</th>
+                                <td>
+                                    <input type="text" class="form-control" id="txTimeSlot" name="txTimeSlot" value="2000"> mSec.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Preamble</th>
+                                <td>
+                                    <select class="form-select" id="preamble" name="preamble">
+                                        <option value="100">100</option>
+                                        <option value="200">200</option>
+                                        <option value="300">300</option>
+                                        <option value="400">400</option>
+                                        <option value="500">500</option>
+                                        <option value="600">600</option>
+                                        <option value="700">700</option>
+                                        <option value="800">800</option>
+                                        <option value="900">900</option>
+                                        <option value="1000">1000</option>
+                                        <option value="1500">1500</option>
+                                        <option value="2000">2000</option>
+                                    </select>
+                                    mSec.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-center">
+                        <button class="btn btn-primary">Apply Changes</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
     <!-- Footer -->
     <footer class="bg-primary text-center text-light py-3 mt-5">
         ESP32IGate Web Configuration - &copy; 2025
     </footer>
+
+    <script>
+        // Actualiza el valor dinámicamente para el slider de VOLUME
+        function updateVolumeValue(value) {
+            document.getElementById("volumeValue").textContent = value;
+        }
+    
+        // Actualiza el valor dinámicamente para el slider de SQL Level
+        function updateSqlValue(value) {
+            document.getElementById("sqlValue").textContent = value;
+        }
+    </script>
+    
 </body>
 </html>

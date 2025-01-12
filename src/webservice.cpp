@@ -1113,471 +1113,45 @@ void event_lastHeard()
 	}
 }
 
-void handle_radio(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-	// bool noiseEn=false;
-	bool radioEnable = false;
-	if (request->hasArg("commitRadio"))
-	{
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-			if (request->argName(i) == "radioEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-					{
-						radioEnable = true;
-					}
-				}
-			}
+void handle_radio_post(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
 
-			if (request->argName(i) == "nw_band")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-					{
-						config.band = request->arg(i).toInt();
-						// if (request->arg(i).toInt())
-						// 	config.band = 1;
-						// else
-						// 	config.band = 0;
-					}
-				}
-			}
+    if (request->hasArg("commitRadio")) {
+        bool radioEnable = request->hasArg("radioEnable") && request->arg("radioEnable") == "OK";
+        config.rf_en = radioEnable;
 
-			if (request->argName(i) == "volume")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.volume = request->arg(i).toInt();
-				}
-			}
+        if (request->hasArg("rf_type")) config.rf_type = request->arg("rf_type").toInt();
+        if (request->hasArg("tx_freq")) config.freq_tx = request->arg("tx_freq").toFloat();
+        if (request->hasArg("rx_freq")) config.freq_rx = request->arg("rx_freq").toFloat();
+        if (request->hasArg("tx_ctcss")) config.tone_tx = request->arg("tx_ctcss").toInt();
+        if (request->hasArg("rx_ctcss")) config.tone_rx = request->arg("rx_ctcss").toInt();
+        if (request->hasArg("nw_band")) config.band = request->arg("nw_band").toInt();
+        if (request->hasArg("rf_power")) config.rf_power = request->arg("rf_power").toInt() == 1;
+        if (request->hasArg("volume")) config.volume = request->arg("volume").toInt();
+        if (request->hasArg("sql_level")) config.sql_level = request->arg("sql_level").toInt();
 
-			if (request->argName(i) == "rf_power")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-					{
-						if (request->arg(i).toInt())
-							config.rf_power = true;
-						else
-							config.rf_power = false;
-					}
-				}
-			}
+        saveEEPROM(); // Guardar la configuración
+        RF_MODULE(false); // Reiniciar el módulo RF con los nuevos parámetros
 
-			if (request->argName(i) == "sql_level")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.sql_level = request->arg(i).toInt();
-				}
-			}
+        request->send(200, "text/html", "OK");
+    } else if (request->hasArg("commitTNC")) {
+        config.audio_hpf = request->hasArg("HPF") && request->arg("HPF") == "OK";
+        config.audio_bpf = request->hasArg("BPF") && request->arg("BPF") == "OK";
+        if (request->hasArg("timeSlot")) config.tx_timeslot = request->arg("timeSlot").toInt();
+        if (request->hasArg("preamble")) config.preamble = request->arg("preamble").toInt();
+        if (request->hasArg("modem_type")) config.modem_type = request->arg("modem_type").toInt();
 
-			if (request->argName(i) == "tx_freq")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.freq_tx = request->arg(i).toFloat();
-				}
-			}
-			if (request->argName(i) == "rx_freq")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.freq_rx = request->arg(i).toFloat();
-				}
-			}
+        afskSetHPF(config.audio_hpf);
+        afskSetBPF(config.audio_bpf);
 
-			if (request->argName(i) == "tx_offset")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.offset_tx = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "rx_offset")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.offset_rx = request->arg(i).toInt();
-				}
-			}
+        saveEEPROM(); // Guardar la configuración
 
-			if (request->argName(i) == "tx_ctcss")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.tone_tx = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "rx_ctcss")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.tone_rx = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "rf_type")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.rf_type = request->arg(i).toInt();
-				}
-			}
-		}
-		// config.noise=noiseEn;
-		// config.agc=agcEn;
-		config.rf_en = radioEnable;
-		String html = "OK";
-		request->send(200, "text/html", html); // send to someones browser when asked
-		saveEEPROM();
-		delay(500);
-		RF_MODULE(false);
-	}
-	else if (request->hasArg("commitTNC"))
-	{
-		bool hpf = 0;
-		bool bpf = 0;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			if (request->argName(i) == "HPF")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-					{
-						hpf = true;
-					}
-				}
-			}
-			if (request->argName(i) == "BPF")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-					{
-						bpf = true;
-					}
-				}
-			}
-			if (request->argName(i) == "timeSlot")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-					{
-						config.tx_timeslot = request->arg(i).toInt();
-					}
-				}
-			}
-			if (request->argName(i) == "preamble")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-					{
-						config.preamble = request->arg(i).toInt();
-					}
-				}
-			}
-			if (request->argName(i) == "modem_type")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.modem_type = request->arg(i).toInt();
-				}
-			}
-		}
-		config.audio_hpf = hpf;
-		config.audio_bpf = bpf;
-		afskSetHPF(config.audio_hpf);
-		afskSetBPF(config.audio_bpf);
-		String html = "OK";
-		request->send(200, "text/html", html); // send to someones browser when asked
-		saveEEPROM();
-	}
-	else
-	{
-		String html = "<script type=\"text/javascript\">\n";
-		html += "var sliderVol = document.getElementById(\"sliderVolume\");\n";
-		html += "var outputVol = document.getElementById(\"volShow\");\n";
-		html += "var sliderSql = document.getElementById(\"sliderSql\");\n";
-		html += "var outputSql = document.getElementById(\"sqlShow\");\n";
-		html += "outputVol.innerHTML = sliderVol.value;\n";
-		html += "outputSql.innerHTML = sliderSql.value;\n";
-		html += "\n";
-		html += "sliderVol.oninput = function () {\n";
-		html += "outputVol.innerHTML = this.value;\n";
-		html += "}\n";
-		html += "sliderSql.oninput = function () {\n";
-		html += "outputSql.innerHTML = this.value;\n";
-		html += "}\n";
-		html += "\n";
-		html += "$('form').submit(function (e) {\n";
-		html += "e.preventDefault();\n";
-		html += "var data = new FormData(e.currentTarget);\n";
-		html += "if(e.currentTarget.id===\"formRadio\") document.getElementById(\"submitRadio\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formTNC\") document.getElementById(\"submitTNC\").disabled=true;\n";
-		html += "$.ajax({\n";
-		html += "url: '/radio',\n";
-		html += "type: 'POST',\n";
-		html += "data: data,\n";
-		html += "contentType: false,\n";
-		html += "processData: false,\n";
-		html += "success: function (data) {\n";
-		html += "alert(\"Submited Successfully\");\n";
-		html += "},\n";
-		html += "error: function (data) {\n";
-		html += "alert(\"An error occurred.\");\n";
-		html += "}\n";
-		html += "});\n";
-		html += "});\n";
-		html += "function rfType(){\n";
-		html += "var type = document.getElementById(\"rf_type\").value;\n";
-		html += "if(type==1||type==4||type==7){document.getElementById(\"tx_freq\").setAttribute(\"max\",174);document.getElementById(\"rx_freq\").setAttribute(\"max\",174);};\n";
-		html += "if(type==1){document.getElementById(\"tx_freq\").setAttribute(\"min\",134);document.getElementById(\"rx_freq\").setAttribute(\"min\",134);};\n";
-		html += "if(type==4||type==7){document.getElementById(\"tx_freq\").setAttribute(\"min\",136);document.getElementById(\"rx_freq\").setAttribute(\"min\",136);};\n";
-		html += "if(type==2||type==5||type==8){document.getElementById(\"tx_freq\").setAttribute(\"max\",470);document.getElementById(\"rx_freq\").setAttribute(\"max\",470);};\n";
-		html += "if(type==2||type==5||type==8){document.getElementById(\"tx_freq\").setAttribute(\"min\",400);document.getElementById(\"rx_freq\").setAttribute(\"min\",400);};\n";
-		html += "if(type==3){document.getElementById(\"tx_freq\").setAttribute(\"min\",320);document.getElementById(\"rx_freq\").setAttribute(\"min\",320);};\n";
-		html += "if(type==3){document.getElementById(\"tx_freq\").setAttribute(\"max\",400);document.getElementById(\"rx_freq\").setAttribute(\"max\",400);};\n";
-		html += "if(type==6){document.getElementById(\"tx_freq\").setAttribute(\"min\",350);document.getElementById(\"rx_freq\").setAttribute(\"min\",350);};\n";
-		html += "if(type==6){document.getElementById(\"tx_freq\").setAttribute(\"max\",390);document.getElementById(\"rx_freq\").setAttribute(\"max\",390);};\n";
-		html += "if(type==1||type==4||type==7){document.getElementById(\"tx_freq\").setAttribute(\"value\",144.390);document.getElementById(\"rx_freq\").setAttribute(\"value\",144.390);};\n";
-		html += "if(type==2||type==5||type==8){document.getElementById(\"tx_freq\").setAttribute(\"value\",432.5);document.getElementById(\"rx_freq\").setAttribute(\"value\",432.5);};\n";
-		html += "\n";
-		html += "}\n";
-		html += "</script>\n";
-		html += "<form id='formRadio' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>RF Analog Module</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Enable:</b></td>\n";
-		String radioEnFlag = "";
-		if (config.rf_en)
-			radioEnFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"radioEnable\" value=\"OK\" " + radioEnFlag + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Module Type:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"rf_type\" id=\"rf_type\" onchange=\"rfType()\">\n";
-		for (int i = 0; i < 9; i++)
-		{
-			if (config.rf_type == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(RF_TYPE[i]) + "</option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(RF_TYPE[i]) + "</option>\n";
-		}
-		html += "</select>\n";
-		html += "</td>\n";
-		float freqMin = 0;
-		float freqMax = 0;
-		switch (config.rf_type)
-		{
-		case RF_SA868_VHF:
-			freqMin = 134.0F;
-			freqMax = 174.0F;
-			break;
-		case RF_SR_1WV:
-		case RF_SR_2WVS:
-			freqMin = 136.0F;
-			freqMax = 174.0F;
-			break;
-		case RF_SA868_350:
-			freqMin = 320.0F;
-			freqMax = 400.0F;
-			break;
-		case RF_SR_1W350:
-			freqMin = 350.0F;
-			freqMax = 390.0F;
-			break;
-		case RF_SA868_UHF:
-		case RF_SR_1WU:
-		case RF_SR_2WUS:
-			freqMin = 400.0F;
-			freqMax = 470.0F;
-			break;
-		default:
-			freqMin = 134.0F;
-			freqMax = 500.0F;
-			break;
-		}
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>TX Frequency:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input type=\"number\" id=\"tx_freq\" name=\"tx_freq\" min=\"" + String(freqMin, 4) + "\" max=\"" + String(freqMax, 4) + "\"\n";
-		html += "step=\"0.0001\" value=\"" + String(config.freq_tx, 4) + "\" /> MHz</td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RX Frequency:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input type=\"number\" id=\"rx_freq\" name=\"rx_freq\" min=\"" + String(freqMin, 4) + "\" max=\"" + String(freqMax, 4) + "\"\n";
-		html += "step=\"0.0001\" value=\"" + String(config.freq_rx, 4) + "\" /> Mhz</td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>TX CTCSS:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"tx_ctcss\" id=\"tx_ctcss\">\n";
-		for (int i = 0; i < 39; i++)
-		{
-			if (config.tone_tx == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(ctcss[i], 1) + "</option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(ctcss[i], 1) + "</option>\n";
-		}
-		html += "</select> Hz\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RX CTCSS:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"rx_ctcss\" id=\"rx_ctcss\">\n";
-		html += "<option value=\"0\" selected>0.0</option>\n";
-		for (int i = 0; i < 39; i++)
-		{
-			if (config.tone_rx == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(ctcss[i], 1) + "</option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(ctcss[i], 1) + "</option>\n";
-		}
-		html += "</select> Hz\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Narrow/Wide:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"nw_band\" id=\"nw_band\">\n";
-		String cmSelNWT = "";
-		String cmSelNWF = "";
-		if (config.band)
-		{
-			cmSelNWT = "selected";
-		}
-		else
-		{
-			cmSelNWF = "selected";
-		}
-		html += "<option value=\"1\" " + cmSelNWT + ">25.0KHz</option>\n";
-		html += "<option value=\"0\" " + cmSelNWF + ">12.5KHz</option>\n";
-		html += "</select>\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>TX Power:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"rf_power\" id=\"rf_power\">\n";
-		String cmRfPwrF = "";
-		String cmRfPwrT = "";
-		if (config.rf_power)
-		{
-			cmRfPwrT = "selected";
-		}
-		else
-		{
-			cmRfPwrF = "selected";
-		}
-		html += "<option value=\"1\" " + cmRfPwrT + ">HIGH</option>\n";
-		html += "<option value=\"0\" " + cmRfPwrF + ">LOW</option>\n";
-		html += "</select>\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>VOLUME:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input id=\"sliderVolume\" name=\"volume\" type=\"range\"\n";
-		html += "min=\"1\" max=\"8\" value=\"" + String(config.volume) + "\" /><b><span style=\"font-size: 14pt;\" id=\"volShow\">" + String(config.volume) + "</span></b></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>SQL Level:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input id=\"sliderSql\" name=\"sql_level\" type=\"range\"\n";
-		html += "min=\"0\" max=\"8\" value=\"" + String(config.sql_level) + "\" /><b><span style=\"font-size: 14pt;\" id=\"sqlShow\">" + String(config.sql_level) + "</span></b></td>\n";
-		html += "</tr>\n";
-		html += "</table>\n";
-		html += "<div class=\"form-group\">\n";
-		html += "<label class=\"col-sm-4 col-xs-12 control-label\"></label>\n";
-		html += "<div class=\"col-sm-2 col-xs-4\"><button type='submit' id='submitRadio' name=\"commitRadio\"> Apply Change </button></div>\n";
-		html += "</div><br />\n";
-		html += "<input type=\"hidden\" name=\"commitRadio\"/>\n";
-		html += "</form>";
-
-		// AFSK,TNC Configuration
-		html += "<form id='formTNC' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>AFSK/TNC Configuration</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Modem Type:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"modem_type\" id=\"modem_type\" \">\n";
-		for (int i = 0; i < 2; i++)
-		{
-			if (config.modem_type == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(MODEM_TYPE[i]) + "</option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(MODEM_TYPE[i]) + "</option>\n";
-		}
-		html += "</select>\n";
-		html += "</td>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Audio HPF:</b></td>\n";
-		String strFlag = "";
-		if (config.audio_hpf)
-			strFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"HPF\" value=\"OK\" " + strFlag + "><span class=\"slider round\"></span></label><label style=\"vertical-align: bottom;font-size: 8pt;\"><i> *Audio high pass filter >1KHz cutoff 10Khz</i></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Audio BPF:</b></td>\n";
-		strFlag = "";
-		if (config.audio_bpf)
-			strFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"BPF\" value=\"OK\" " + strFlag + "><span class=\"slider round\"></span></label><label style=\"vertical-align: bottom;font-size: 8pt;\"><i> *Audio band pass filter 1Khz-2.5KHz</i></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>TX Time Slot:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input type=\"number\" name=\"timeSlot\" min=\"2000\" max=\"99999\"\n";
-		html += "step=\"1000\" value=\"" + String(config.tx_timeslot) + "\" /> mSec.</td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Preamble:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"preamble\">\n";
-		for (int i = 1; i < 10; i++)
-		{
-			if (config.preamble == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(i * 100) + "</option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(i * 100) + "</option>\n";
-		}
-		html += "</select> mSec.\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-
-		html += "</table>\n";
-		html += "<div class=\"col-sm-2 col-xs-4\"><button type='submit' id='submitTNC'  name=\"commitTNC\"> Apply Change </button></div>\n";
-		html += "<br />\n";
-		html += "<input type=\"hidden\" name=\"commitTNC\"/>\n";
-		html += "</form>";
-		request->send(200, "text/html", html); // send to someones browser when asked
-	}
+        request->send(200, "text/html", "OK");
+    } else {
+        request->send(400, "text/html", "Invalid request");
+    }
 }
 
 void handle_vpn(AsyncWebServerRequest *request)
@@ -6888,7 +6462,7 @@ void webService()
 	async_server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_logout(request); });
 	async_server.on("/radio", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_radio(request); });
+					{ handle_radio_post(request); });			
 	async_server.on("/vpn", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_vpn(request); });
 	async_server.on("/mod", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
