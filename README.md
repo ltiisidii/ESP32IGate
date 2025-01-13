@@ -52,8 +52,10 @@ ESP32APRS is an Internet Gateway (IGate), Digital Repeater (Digi), Tracker, Weat
 
 ## Web Service Screenshots
 
-![Dashboard Screen](image/ESP32IGate_Screen_dashboard.png) ![IGate Screen](image/ESP32IGate_Screen_igate.png)  
-![Radio Screen](image/ESP32IGate_Screen_radio.png) ![Mod Screen](image/ESP32IGate_Screen_mod.png)
+![Dashboard Screen](image/ESP32IGate_Screen_new-dashboard.png)
+![Radio Screen](image/ESP32IGate_Screen_new-radio.png)
+![IGate Screen](image/ESP32IGate_Screen_igate.png)  
+![Mod Screen](image/ESP32IGate_Screen_mod.png)
 
 ---
 
