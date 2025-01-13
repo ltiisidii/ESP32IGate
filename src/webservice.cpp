@@ -6430,79 +6430,34 @@ void handle_about(AsyncWebServerRequest *request)
 	request->send(200, "text/html", webString); // send to someones browser when asked
 }
 
-void handle_gnss(AsyncWebServerRequest *request)
-{
-	webString = "<html>\n<head>\n";
-	webString += "<script src=\"https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js\"></script>\n";
-	webString += "<script src=\"https://code.highcharts.com/highcharts.js\"></script>\n";
-	webString += "<script src=\"https://code.highcharts.com/highcharts-more.js\"></script>\n";
-	webString += "<script language=\"JavaScript\">";
+void handle_gnss(AsyncWebServerRequest *request) {
+    if (!SPIFFS.begin(true)) {
+        Serial.println("Error montando SPIFFS");
+        request->send(500, "text/plain", "Error al montar SPIFFS");
+        return;
+    }
 
-	// Add some life
-	webString += "function gnss() { \n"; // the chart may be destroyed
-	webString += "var Vrms=0;\nvar dBV=-40;\nvar active=0;var raw=\"\";var timeStamp;\n";
-	// webString += "if (chart.series) {\n";
-	// webString += "var left = chart.series[0].points[0];\n";
-	// webString += "const ws = new WebSocket(\"ws://" + WiFi.localIP().toString() + ":81/ws_gnss\");\n";
-	webString += "var host='ws://'+location.hostname+':81/ws_gnss'\n";
-	webString += "const ws = new WebSocket(host);\n";
-	webString += "ws.onopen = function() { console.log('Connection opened');};\n ws.onclose = function() { console.log('Connection closed');};\n";
-	webString += "ws.onmessage = function(event) {\n  console.log(event.data);\n";
-	webString += "const jsonR=JSON.parse(event.data);\n";
-	webString += "document.getElementById(\"en\").innerHTML=parseInt(jsonR.en);\n";
-	webString += "document.getElementById(\"lat\").innerHTML=parseFloat(jsonR.lat);\n";
-	webString += "document.getElementById(\"lng\").innerHTML=parseFloat(jsonR.lng);\n";
-	webString += "document.getElementById(\"alt\").innerHTML=parseFloat(jsonR.alt);\n";
-	webString += "document.getElementById(\"spd\").innerHTML=parseFloat(jsonR.spd);\n";
-	webString += "document.getElementById(\"csd\").innerHTML=parseFloat(jsonR.csd);\n";
-	webString += "document.getElementById(\"hdop\").innerHTML=parseFloat(jsonR.hdop);\n";
-	webString += "document.getElementById(\"sat\").innerHTML=parseInt(jsonR.sat);\n";
-	// webString += "active=parseInt(jsonR.Active);\n";
-	// webString += "Vrms=parseFloat(jsonR.mVrms)/1000;\n";
-	// webString += "dBV=20.0*Math.log10(Vrms);\n";
-	// webString += "if(dBV<-40) dBV=-40;\n";
-	webString += "raw=jsonR.RAW;\n";
-	webString += "timeStamp=Number(jsonR.timeStamp);\n";
-	// webString += "if(active==1){\nleft.update(dBV,false);\nchart.redraw();\n";
-	// webString += "var date=new Date(timeStamp * 1000);\n";
-	// webString += "var head=date+\"[\"+Vrms.toFixed(3)+\"Vrms,\"+dBV.toFixed(1)+\"dBV]\\n\";\n";
-	// webString += "document.getElementById(\"raw_txt\").value+=head+atob(raw)+\"\\n\";\n";
-	webString += "var textArea=document.getElementById(\"raw_txt\");\n";
-	webString += "textArea.value+=atob(raw)+\"\\n\";\n";
-	webString += "textArea.scrollTop = textArea.scrollHeight;\n";
-	webString += "}\n";
-	// webString += "}};\n";
-	// webString += "$('#vumeter').highcharts(json, chartFunction);\n";
-	webString += "};\n</script>\n";
-	webString += "</head><body onload=\"gnss()\">\n";
+    File file = SPIFFS.open("/gnss.html", "r");
+    if (!file) {
+        request->send(500, "text/plain", "Error abriendo gnss.html");
+        return;
+    }
 
-	webString += "<table width=\"200\" border=\"1\">";
-	webString += "<th colspan=\"2\" style=\"background-color: #00BCD4;\"><span><b>GNSS Information</b></span></th>\n";
-	// webString += "<tr><th width=\"200\"><span><b>Name</b></span></th><th><span><b>Information</b></span></th></tr>";
-	webString += "<tr><td align=\"right\"><b>Enable: </b></td><td align=\"left\"> <label id=\"en\">" + String(config.gnss_enable) + "</label></td></tr>";
-	webString += "<tr><td align=\"right\"><b>Latitude: </b></td><td align=\"left\"> <label id=\"lat\">" + String(gps.location.lat(), 5) + "</label></td></tr>";
-	webString += "<tr><td align=\"right\"><b>Longitude: </b></td><td align=\"left\"> <label id=\"lng\">" + String(gps.location.lng(), 5) + "</label></td></tr>";
-	webString += "<tr><td align=\"right\"><b>Altitude: </b></td><td align=\"left\"> <label id=\"alt\">" + String(gps.altitude.meters(), 2) + "</label> m.</td></tr>";
-	webString += "<tr><td align=\"right\"><b>Speed: </b></td><td align=\"left\"> <label id=\"spd\">" + String(gps.speed.kmph(), 2) + "</label> km/h</td></tr>";
-	webString += "<tr><td align=\"right\"><b>Course: </b></td><td align=\"left\"> <label id=\"csd\">" + String(gps.course.deg(), 1) + "</label></td></tr>";
-	webString += "<tr><td align=\"right\"><b>HDOP: </b></td><td align=\"left\"> <label id=\"hdop\">" + String(gps.hdop.hdop(), 2) + "</label> </td></tr>";
-	webString += "<tr><td align=\"right\"><b>SAT: </b></td><td align=\"left\"> <label id=\"sat\">" + String(gps.satellites.value()) + "</label> </td></tr>";
-	webString += "</table><table>";
-	// webString += "<tr><td><form accept-charset=\"UTF-8\" action=\"/test\" class=\"form-horizontal\" id=\"test_form\" method=\"post\">\n";
-	// webString += "<div style=\"margin-left: 20px;\"><input type='submit' class=\"btn btn-danger\" name=\"sendBeacon\" value='SEND BEACON'></div><br />\n";
-	// webString += "<div style=\"margin-left: 20px;\">TNC2 RAW: <input id=\"raw\" name=\"raw\" type=\"text\" size=\"60\" value=\"" + String(config.aprs_mycall) + ">APE32I,WIDE1-1:>Test Status\"/></div>\n";
-	// webString += "<div style=\"margin-left: 20px;\"><input type='submit' class=\"btn btn-primary\" name=\"sendRaw\" value='SEND RAW'></div> <br />\n";
-	// webString += "</form></td></tr>\n";
-	// webString += "<tr><td><hr width=\"80%\" /></td></tr>\n";
-	// webString += "<tr><td><div id=\"vumeter\" style=\"width: 300px; height: 200px; margin: 10px;\"></div></td>\n";
-	webString += "<tr><td><b>Terminal:</b><br /><textarea id=\"raw_txt\" name=\"raw_txt\" rows=\"30\" cols=\"80\" /></textarea></td></tr>\n";
-	webString += "</table>\n";
+    // Leer el contenido del archivo
+    String html = file.readString();
+    file.close();
 
-	webString += "</body></html>\n";
-	request->send(200, "text/html", webString); // send to someones browser when asked
+    // Reemplazar marcadores con valores dinámicos
+    html.replace("%Latitude%", String(gps.location.lat(), 5));
+    html.replace("%Longitude%", String(gps.location.lng(), 5));
+    html.replace("%Altitude%", String(gps.altitude.meters(), 2) + " m");
+    html.replace("%Speed%", String(gps.speed.kmph(), 2) + " km/h");
+    html.replace("%Course%", String(gps.course.deg(), 1));
+    html.replace("%HDOP%", String(gps.hdop.hdop(), 2));
+    html.replace("%Satellites%", String(gps.satellites.value()));
 
-	delay(100);
-	webString.clear();
+    // Enviar el HTML modificado al cliente
+    request->send(200, "text/html", html);
 }
 
 void handle_default()
