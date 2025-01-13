@@ -25,6 +25,26 @@ AsyncWebSocket ws_gnss("/ws_gnss");
 // Create an Event Source on /events
 AsyncEventSource lastheard_events("/eventHeard");
 
+String loadHtmlTemplate(const char* path) {
+    if (!SPIFFS.begin(true)) {
+        Serial.println("Failed to mount SPIFFS");
+        return "";
+    }
+
+    File file = SPIFFS.open(path, "r");
+    if (!file || file.isDirectory()) {
+        Serial.println("Failed to open file");
+        return "";
+    }
+
+    String html;
+    while (file.available()) {
+        html += file.readString();
+    }
+    file.close();
+    return html;
+}
+
 String webString;
 
 bool defaultSetting = false;
@@ -1113,7 +1133,7 @@ void event_lastHeard()
 	}
 }
 
-void handle_radio_post(AsyncWebServerRequest *request) {
+/* void handle_radio_post(AsyncWebServerRequest *request) {
     if (!request->authenticate(config.http_username, config.http_password)) {
         return request->requestAuthentication();
     }
@@ -1152,6 +1172,74 @@ void handle_radio_post(AsyncWebServerRequest *request) {
     } else {
         request->send(400, "text/html", "Invalid request");
     }
+}
+ */
+
+void handle_radio_get(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/radio.html");
+
+    // Reemplazar valores dinámicos
+    html.replace("%VOLUME%", String(config.volume));
+    html.replace("%SQL_LEVEL%", String(config.sql_level));
+    html.replace("%TX_FREQ%", String(config.freq_tx, 4));
+    html.replace("%RX_FREQ%", String(config.freq_rx, 4));
+    html.replace("%TX_CTCSS%", String(config.tone_tx));
+    html.replace("%RX_CTCSS%", String(config.tone_rx));
+    html.replace("%RF_TYPE%", String(config.rf_type));
+    html.replace("%RADIO_ENABLE%", config.rf_en ? "checked" : "");
+    html.replace("%TX_POWER_SELECTED_HIGH%", config.rf_power ? "selected" : "");
+    html.replace("%TX_POWER_SELECTED_LOW%", !config.rf_power ? "selected" : "");
+    html.replace("%NARROW_WIDE_SELECTED_NARROW%", !config.band ? "selected" : "");
+    html.replace("%NARROW_WIDE_SELECTED_WIDE%", config.band ? "selected" : "");
+
+    request->send(200, "text/html", html);
+}
+
+void handle_radio_post(AsyncWebServerRequest *request) {
+    if (request->hasArg("volume")) {
+        config.volume = request->arg("volume").toInt();
+    }
+
+    if (request->hasArg("sqlLevel")) {
+        config.sql_level = request->arg("sqlLevel").toInt();
+    }
+
+    if (request->hasArg("tx_freq")) {
+        config.freq_tx = request->arg("tx_freq").toFloat();
+    }
+
+    if (request->hasArg("rx_freq")) {
+        config.freq_rx = request->arg("rx_freq").toFloat();
+    }
+
+    if (request->hasArg("tx_ctcss")) {
+        config.tone_tx = request->arg("tx_ctcss").toInt();
+    }
+
+    if (request->hasArg("rx_ctcss")) {
+        config.tone_rx = request->arg("rx_ctcss").toInt();
+    }
+
+    if (request->hasArg("rf_type")) {
+        config.rf_type = request->arg("rf_type").toInt();
+    }
+
+    if (request->hasArg("radioEnable")) {
+        config.rf_en = true;
+    } else {
+        config.rf_en = false;
+    }
+
+    if (request->hasArg("txPower")) {
+        config.rf_power = (request->arg("txPower") == "HIGH");
+    }
+
+    if (request->hasArg("narrowWide")) {
+        config.band = (request->arg("narrowWide") == "1");
+    }
+
+    saveEEPROM(); // Guardar cambios
+    request->redirect("/radio"); // Redirigir a la página
 }
 
 void handle_vpn(AsyncWebServerRequest *request)
@@ -6461,8 +6549,10 @@ void webService()
 	// 				{ handle_symbol2(request); });
 	async_server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_logout(request); });
-	async_server.on("/radio", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_radio_post(request); });			
+	async_server.on("/radio", HTTP_GET, [](AsyncWebServerRequest *request) {
+		handle_radio_get(request);});
+	async_server.on("/radio", HTTP_POST, [](AsyncWebServerRequest *request) {
+		handle_radio_post(request);});		
 	async_server.on("/vpn", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_vpn(request); });
 	async_server.on("/mod", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
