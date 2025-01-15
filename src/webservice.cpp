@@ -5267,184 +5267,73 @@ void handle_tnc2(AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/tnc2.html", "text/html");
 }
 
-void handle_about(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-	char strCID[50];
-	uint64_t chipid = ESP.getEfuseMac();
-	sprintf(strCID, "%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
+void handle_about_get(AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/about.html")) {
+        File file = SPIFFS.open("/about.html", "r");
+        String html = file.readString();
+        file.close();
 
-	webString.clear();
-	webString += "<table style=\"text-align:unset;border-width:0px;background:unset\"><tr style=\"background:unset;\"><td width=\"49%\" style=\"border:unset;\">";
+        // Determinar modo WiFi
+        String wifiMode;
+        if (config.wifi_mode == WIFI_AP_FIX) {
+            wifiMode = "AP";
+        } else if (config.wifi_mode == WIFI_STA_FIX) {
+            wifiMode = "STA";
+        } else if (config.wifi_mode == WIFI_AP_STA_FIX) {
+            wifiMode = "AP+STA";
+        } else {
+            wifiMode = "OFF";
+        }
+        html.replace("%WIFI_MODE%", wifiMode);
 
-	webString += "<table>";
-	webString += "<th colspan=\"2\"><span><b>System Information</b></span></th>\n";
-	// webString += "<tr><th width=\"200\"><span><b>Name</b></span></th><th><span><b>Information</b></span></th></tr>";
-	webString += "<tr><td align=\"right\"><b>Hardware Version: </b></td><td align=\"left\"> ESP32DR Simple,ESP32DR_SA868,DIY </td></tr>";
-	webString += "<tr><td align=\"right\"><b>Firmware Version: </b></td><td align=\"left\"> V" + String(VERSION) + String(VERSION_BUILD) + "</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>RF Analog Module: </b></td><td align=\"left\"> MODEL: " + String(RF_TYPE[config.rf_type]) + " (" + RF_VERSION + ")</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>ESP32 Model: </b></td><td align=\"left\"> " + String(ESP.getChipModel()) + "</td></tr>";
-	webString += "<tr><td align=\"right\"><b>Chip ID: </b></td><td align=\"left\"> " + String(strCID) + "</td></tr>";
-	webString += "<tr><td align=\"right\"><b>Revision: </b></td><td align=\"left\"> " + String(ESP.getChipRevision()) + "</td></tr>";
-	webString += "<tr><td align=\"right\"><b>Flash: </b></td><td align=\"left\">" + String(ESP.getFlashChipSize() / 1000) + " KByte</td></tr>";
-	webString += "<tr><td align=\"right\"><b>PSRAM: </b></td><td align=\"left\">" + String(ESP.getPsramSize() / 1000) + " KByte</td></tr>";
-	webString += "</table>";
-	webString += "</td><td width=\"2%\" style=\"border:unset;\"></td>";
-	webString += "<td width=\"49%\" style=\"border:unset;\">";
+        // Reemplazo de marcadores dinámicos
+        html.replace("%HARDWARE_VERSION%", "ESP32DR Simple, ESP32DR_SA868, DIY");
+        html.replace("%FIRMWARE_VERSION%", "V" + String(VERSION) + String(VERSION_BUILD));
+        html.replace("%RF_ANALOG_MODULE%", "MODEL: " + String(RF_TYPE[config.rf_type]) + " (" + RF_VERSION + ")");
+        html.replace("%ESP32_MODEL%", String(ESP.getChipModel()));
+        uint64_t chipid = ESP.getEfuseMac();
+        char strCID[50];
+        sprintf(strCID, "%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
+        html.replace("%CHIP_ID%", String(strCID));
+        html.replace("%REVISION%", String(ESP.getChipRevision()));
+        html.replace("%FLASH%", String(ESP.getFlashChipSize() / 1024) + " KByte");
+        html.replace("%PSRAM%", String(ESP.getPsramSize() / 1024) + " KByte");
 
-	webString += "<table>";
-	webString += "<th colspan=\"2\"><span><b>Developer/Support Information</b></span></th>\n";
-	webString += "<tr><td align=\"right\"><b>Author: </b></td><td align=\"left\">Mr.Somkiat Nakhonthai </td></tr>";
-	webString += "<tr><td align=\"right\"><b>Callsign: </b></td><td align=\"left\">HS5TQA</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>Country: </b></td><td align=\"left\">Bangkok,Thailand</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>Github: </b></td><td align=\"left\"><a href=\"https://github.com/nakhonthai\" target=\"_github\">https://github.com/nakhonthai</a></td></tr>";
-	webString += "<tr><td align=\"right\"><b>Youtube: </b></td><td align=\"left\"><a href=\"https://www.youtube.com/@HS5TQA\" target=\"_youtube\">https://www.youtube.com/@HS5TQA</a></td></tr>";
-	webString += "<tr><td align=\"right\"><b>Facebook: </b></td><td align=\"left\"><a href=\"https://www.facebook.com/atten\" target=\"_facebook\">https://www.facebook.com/atten</a></td></tr>";
-	webString += "<tr><td align=\"right\"><b>Chat LINE: </b></td><td align=\"left\"><a href=\"https://line.me/ti/p/Pw5MKwm6Vo\" target=\"_line\">nakhonline</a></td></tr>";
-	webString += "<tr><td align=\"right\"><b>Donate: </b></td><td align=\"left\"><a href=\"https://www.paypal.com/paypalme/hs5tqa\" target=\"_sponsor\">https://www.paypal.com/paypalme/hs5tqa</a></td></tr>";
+        html.replace("%WIFI_MODE%", String(WiFi.getMode() == WIFI_MODE_APSTA ? "AP+STA" : 
+                          WiFi.getMode() == WIFI_MODE_AP ? "AP" : 
+                          WiFi.getMode() == WIFI_MODE_STA ? "STA" : "Unknown"));
+        html.replace("%MAC%", WiFi.macAddress());
+        html.replace("%CHANNEL%", String(WiFi.channel()));
 
-	webString += "</table>";
-	webString += "</td></tr></table><br />";
+        // Determinar potencia WiFi
+        wifi_power_t wpr = WiFi.getTxPower();
+        String wifipower = "20 dBm"; // Default max power
+        if (wpr < 8) { wifipower = "-1 dBm"; }
+        else if (wpr < 21) { wifipower = "2 dBm"; }
+        else if (wpr < 29) { wifipower = "5 dBm"; }
+        else if (wpr < 35) { wifipower = "8.5 dBm"; }
+        else if (wpr < 45) { wifipower = "11 dBm"; }
+        else if (wpr < 53) { wifipower = "13 dBm"; }
+        else if (wpr < 61) { wifipower = "15 dBm"; }
+        else if (wpr < 69) { wifipower = "17 dBm"; }
+        else if (wpr < 75) { wifipower = "18.5 dBm"; }
+        else if (wpr < 77) { wifipower = "19 dBm"; }
+        else if (wpr < 80) { wifipower = "19.5 dBm"; }
+        html.replace("%TX_POWER%", wifipower);
+        html.replace("%SSID%", WiFi.SSID());
+        html.replace("%LOCAL_IP%", WiFi.localIP().toString());
+        html.replace("%GATEWAY_IP%", WiFi.gatewayIP().toString());
+        html.replace("%DNS_IP%", WiFi.dnsIP().toString());
 
-	webString += "<table>\n";
-	webString += "<th colspan=\"2\"><span><b>WiFi Status</b></span></th>\n";
-	webString += "<tr><td align=\"right\"><b>Mode:</b></td>\n";
-	webString += "<td align=\"left\">";
-	if (config.wifi_mode == WIFI_AP_FIX)
-	{
-		webString += "AP";
-	}
-	else if (config.wifi_mode == WIFI_STA_FIX)
-	{
-		webString += "STA";
-	}
-	else if (config.wifi_mode == WIFI_AP_STA_FIX)
-	{
-		webString += "AP+STA";
-	}
-	else
-	{
-		webString += "OFF";
-	}
+        request->send(200, "text/html", html);
+    } else {
+        request->send(404, "text/plain", "404: Not Found");
+    }
+}
 
-	wifi_power_t wpr = WiFi.getTxPower();
-	String wifipower = "";
-	if (wpr < 8)
-	{
-		wifipower = "-1 dBm";
-	}
-	else if (wpr < 21)
-	{
-		wifipower = "2 dBm";
-	}
-	else if (wpr < 29)
-	{
-		wifipower = "5 dBm";
-	}
-	else if (wpr < 35)
-	{
-		wifipower = "8.5 dBm";
-	}
-	else if (wpr < 45)
-	{
-		wifipower = "11 dBm";
-	}
-	else if (wpr < 53)
-	{
-		wifipower = "13 dBm";
-	}
-	else if (wpr < 61)
-	{
-		wifipower = "15 dBm";
-	}
-	else if (wpr < 69)
-	{
-		wifipower = "17 dBm";
-	}
-	else if (wpr < 75)
-	{
-		wifipower = "18.5 dBm";
-	}
-	else if (wpr < 77)
-	{
-		wifipower = "19 dBm";
-	}
-	else if (wpr < 80)
-	{
-		wifipower = "19.5 dBm";
-	}
-	else
-	{
-		wifipower = "20 dBm";
-	}
-
-	webString += "</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>MAC:</b></td>\n";
-	webString += "<td align=\"left\">" + String(WiFi.macAddress()) + "</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>Channel:</b></td>\n";
-	webString += "<td align=\"left\">" + String(WiFi.channel()) + "</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>TX Power:</b></td>\n";
-	webString += "<td align=\"left\">" + wifipower + "</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>SSID:</b></td>\n";
-	webString += "<td align=\"left\">" + String(WiFi.SSID()) + "</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>Local IP:</b></td>\n";
-	webString += "<td align=\"left\">" + WiFi.localIP().toString() + "</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>Gateway IP:</b></td>\n";
-	webString += "<td align=\"left\">" + WiFi.gatewayIP().toString() + "</td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>DNS:</b></td>\n";
-	webString += "<td align=\"left\">" + WiFi.dnsIP().toString() + "</td></tr>\n";
-	webString += "</table><br /><br />\n";
-
-	webString += "<form method='POST' action='#' enctype='multipart/form-data' id='upload_form' class=\"form-horizontal\">\n";
-	webString += "<table>";
-	webString += "<th colspan=\"2\"><span><b>Firmware Update</b></span></th>\n";
-	webString += "<tr><td align=\"right\"><b>File:</b></td><td align=\"left\"><input id=\"file\" name=\"update\" type=\"file\" onchange='sub(this)' /></td></tr>\n";
-	webString += "<tr><td align=\"right\"><b>Progress:</b></td><td><div id='prgbar'><div id='bar' style=\"width: 0px;\"><label id='prg'></label></div></div></td></tr>\n";
-	webString += "</table><br />\n";
-	webString += "<div class=\"col-sm-3 col-xs-4\"><input type='submit' class=\"btn btn-danger\" id=\"update_sumbit\" value='Firmware Update'></div>\n";
-
-	webString += "</form>\n";
-	webString += "<script>"
-				 "function sub(obj){"
-				 "var fileName = obj.value.split('\\\\');"
-				 "document.getElementById('file-input').innerHTML = '   '+ fileName[fileName.length-1];"
-				 "};"
-				 "$('form').submit(function(e){"
-				 "e.preventDefault();"
-				 "var form = $('#upload_form')[0];"
-				 "var data = new FormData(form);"
-				 "document.getElementById('update_sumbit').disabled = true;"
-				 "$.ajax({"
-				 "url: '/update',"
-				 "type: 'POST',"
-				 "data: data,"
-				 "contentType: false,"
-				 "processData:false,"
-				 "xhr: function() {"
-				 "var xhr = new window.XMLHttpRequest();"
-				 "xhr.upload.addEventListener('progress', function(evt) {"
-				 "if (evt.lengthComputable) {"
-				 "var per = evt.loaded / evt.total;"
-				 "$('#prg').html(Math.round(per*100) + '%');"
-				 "$('#bar').css('width',Math.round(per*100) + '%');"
-				 "}"
-				 "}, false);"
-				 "return xhr;"
-				 "},"
-				 "success:function(d, s) {"
-				 "alert('Wait for system reboot 10sec') "
-				 "},"
-				 "error: function (a, b, c) {"
-				 "}"
-				 "});"
-				 "});"
-				 "</script>";
-
-	webString += "</body></html>\n";
-	request->send(200, "text/html", webString); // send to someones browser when asked
+void handle_about_post(AsyncWebServerRequest *request) {
+    // Procesa solicitudes POST para "/about"
+    request->send(200, "text/plain", "POST request to /about received");
 }
 
 void handle_gnss(AsyncWebServerRequest *request) {
@@ -5554,8 +5443,10 @@ void webService()
 					{ handle_gnss(request); });
 	async_server.on("/realtime", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_realtime(request); });
-	async_server.on("/about", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_about(request); });
+    async_server.on("/about", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handle_about_get(request); });
+    async_server.on("/about", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_about_post(request); });
 	async_server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_dashboard(request); });
 	async_server.on("/sidebarInfo", HTTP_GET, [](AsyncWebServerRequest *request)
