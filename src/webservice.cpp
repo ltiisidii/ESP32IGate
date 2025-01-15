@@ -65,139 +65,6 @@ void handle_logout(AsyncWebServerRequest *request)
 	request->send(200, "text/html", webString);
 }
 
-/* void setMainPage(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-
-	webString = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n";
-	webString += "<meta name=\"robots\" content=\"index\" />\n";
-	webString += "<meta name=\"robots\" content=\"follow\" />\n";
-	webString += "<meta name=\"language\" content=\"English\" />\n";
-	webString += "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n";
-	webString += "<meta name=\"GENERATOR\" content=\"configure 20230924\" />\n";
-	webString += "<meta name=\"Author\" content=\"Mr.Somkiat Nakhonthai (HS5TQA)\" />\n";
-	webString += "<meta name=\"Description\" content=\"Web Embedded Configuration\" />\n";
-	webString += "<meta name=\"KeyWords\" content=\"ESP32IGATE,APRS\" />\n";
-	webString += "<meta http-equiv=\"Cache-Control\" content=\"no-cache, no-store, must-revalidate\" />\n";
-	webString += "<meta http-equiv=\"pragma\" content=\"no-cache\" />\n";
-	webString += "<link rel=\"shortcut icon\" href=\"http://www.p00lack.cc/favicon.ico\" type=\"image/x-icon\" />\n";
-	webString += "<meta http-equiv=\"Expires\" content=\"0\" />\n";
-	webString += "<title>ESP32IGATE</title>\n";
-	webString += "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n";
-	webString += "<script src=\"/jquery-3.7.1.js\"></script>\n";
-	webString += "<script type=\"text/javascript\">\n";
-	webString += "function selectTab(evt, tabName) {\n";
-	webString += "var i, tabcontent, tablinks;\n";
-	webString += "tablinks = document.getElementsByClassName(\"nav-tabs\");\n";
-	webString += "for (i = 0; i < tablinks.length; i++) {\n";
-	webString += "tablinks[i].className = tablinks[i].className.replace(\" active\", \"\");\n";
-	webString += "}\n";
-	webString += "\n";
-	webString += "//document.getElementById(tabName).style.display = \"block\";\n";
-	webString += "if (tabName == 'DashBoard') {\n";
-	webString += "$(\"#contentmain\").load(\"/dashboard\");\n";
-	webString += "} else if (tabName == 'Radio') {\n";
-	webString += "$(\"#contentmain\").load(\"/radio\");\n";
-	webString += "} else if (tabName == 'IGATE') {\n";
-	webString += "$(\"#contentmain\").load(\"/igate\");\n";
-	webString += "} else if (tabName == 'DIGI') {\n";
-	webString += "$(\"#contentmain\").load(\"/digi\");\n";
-	webString += "} else if (tabName == 'TRACKER') {\n";
-	webString += "$(\"#contentmain\").load(\"/tracker\");\n";
-	webString += "} else if (tabName == 'WX') {\n";
-	webString += "$(\"#contentmain\").load(\"/wx\");\n";
-	webString += "} else if (tabName == 'TLM') {\n";
-	webString += "$(\"#contentmain\").load(\"/tlm\");\n";
-	webString += "} else if (tabName == 'VPN') {\n";
-	webString += "$(\"#contentmain\").load(\"/vpn\");\n";
-	webString += "} else if (tabName == 'Wireless') {\n";
-	webString += "$(\"#contentmain\").load(\"/wireless\");\n";
-	webString += "} else if (tabName == 'MOD') {\n";
-	webString += "$(\"#contentmain\").load(\"/mod\");\n";
-	webString += "} else if (tabName == 'System') {\n";
-	webString += "$(\"#contentmain\").load(\"/system\");\n";
-	webString += "} else if (tabName == 'About') {\n";
-	webString += "$(\"#contentmain\").load(\"/about\");\n";
-	webString += "}\n";
-	webString += "\n";
-	webString += "if (evt != null) evt.currentTarget.className += \" active\";\n";
-	webString += "}\n";
-	webString += "if (!!window.EventSource) {";
-	webString += "var source = new EventSource('/eventHeard');";
-
-	webString += "source.addEventListener('open', function(e) {";
-	webString += "console.log(\"Events Connected\");";
-	webString += "}, false);";
-	webString += "source.addEventListener('error', function(e) {";
-	webString += "if (e.target.readyState != EventSource.OPEN) {";
-	webString += "console.log(\"Events Disconnected\");";
-	webString += "}\n}, false);";
-	webString += "source.addEventListener('lastHeard', function(e) {";
-	// webString += "console.log(\"lastHeard\", e.data);";
-	webString += "var lh=document.getElementById(\"lastHeard\");";
-	webString += "if(lh != null) {lh.innerHTML = e.data;}";
-	webString += "}, false);\n}";
-	webString += "</script>\n";
-	webString += "</head>\n";
-	webString += "\n";
-	webString += "<body onload=\"selectTab(event, 'DashBoard')\">\n";
-	webString += "\n";
-	webString += "<div class=\"container\">\n";
-	webString += "<div class=\"header\">\n";
-	// webString += "<div style=\"font-size: 8px; text-align: right; padding-right: 8px;\">ESP32IGate Firmware V" + String(VERSION) + "</div>\n";
-	// webString += "<div style=\"font-size: 8px; text-align: right; padding-right: 8px;\"><a href=\"/logout\">[LOG OUT]</a></div>\n";
-	webString += "<h1>ESP32IGate Project [APRS ALL IN ONE]</h1>\n";
-	webString += "<div style=\"font-size: 8px; text-align: right; padding-right: 8px;\"><a href=\"/logout\">[LOG OUT]</a></div>\n";
-	webString += "<div class=\"row\">\n";
-	webString += "<ul class=\"nav nav-tabs\" style=\"margin: 5px;\">\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'DashBoard')\">DashBoard</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'Radio')\" id=\"btnRadio\">Radio</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'IGATE')\">IGATE</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'DIGI')\">DIGI</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'TRACKER')\">TRACKER</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'WX')\">WX</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'TLM')\">TLM</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'VPN')\">VPN</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'Wireless')\">Wireless</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'MOD')\">MOD</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'System')\">System</button>\n";
-	webString += "<button class=\"nav-tabs\" onclick=\"selectTab(event, 'About')\">About</button>\n";
-	webString += "</ul>\n";
-	webString += "</div>\n";
-	webString += "</div>\n";
-	webString += "\n";
-
-	webString += "<div class=\"contentwide\" id=\"contentmain\"  style=\"font-size: 2pt;\">\n";
-	webString += "\n";
-	webString += "</div>\n";
-	webString += "<br />\n";
-	webString += "<div class=\"footer\">\n";
-	webString += "ESP32IGate Web Configuration<br />Copy right ©2023.\n";
-	webString += "<br />\n";
-	webString += "</div>\n";
-	webString += "</div>\n";
-	webString += "<!-- <script type=\"text/javascript\" src=\"/nice-select.min.js\"></script> -->\n";
-	webString += "<script type=\"text/javascript\">\n";
-	webString += "var selectize = document.querySelectorAll('select')\n";
-	webString += "var options = { searchable: true };\n";
-	webString += "selectize.forEach(function (select) {\n";
-	webString += "if (select.length > 30 && null === select.onchange && !select.name.includes(\"ExtendedId\")) {\n";
-	webString += "select.classList.add(\"small\", \"selectize\");\n";
-	webString += "tabletd = select.closest('td');\n";
-	webString += "tabletd.style.cssText = 'overflow-x:unset';\n";
-	webString += "NiceSelect.bind(select, options);\n";
-	webString += "}\n";
-	webString += "});\n";
-	webString += "</script>\n";
-	webString += "</body>\n";
-	webString += "</html>";
-	request->send(200, "text/html", webString); // send to someones browser when asked
-	event_lastHeard();
-} */
-
 void setMainPage(AsyncWebServerRequest *request) {
     if (!request->authenticate(config.http_username, config.http_password)) {
         return request->requestAuthentication();
@@ -205,6 +72,54 @@ void setMainPage(AsyncWebServerRequest *request) {
 
     // Servir index.html desde SPIFFS
     request->send(SPIFFS, "/index.html", "text/html");
+}
+
+
+void handle_list_files(AsyncWebServerRequest *request) {
+    // Obtener información de SPIFFS
+    size_t totalBytes = SPIFFS.totalBytes();
+    size_t usedBytes = SPIFFS.usedBytes();
+    size_t freeBytes = totalBytes - usedBytes;
+
+    // Función para formatear tamaños en B, KB, MB
+    auto formatSize = [](size_t bytes) {
+        String result;
+        if (bytes >= 1048576) { // MB
+            result = String((float)bytes / 1048576, 2) + " MB";
+        } else if (bytes >= 1024) { // KB
+            result = String((float)bytes / 1024, 2) + " KB";
+        } else { // Bytes
+            result = String(bytes) + " B";
+        }
+        return result;
+    };
+
+    // Crear HTML dinámico
+    String html = "<!DOCTYPE html><html lang='en'><head><title>Lista de Archivos</title></head><body>";
+    html += "<h1>Archivos en SPIFFS</h1>";
+    html += "<p><b>Espacio Total:</b> " + formatSize(totalBytes) + "</p>";
+    html += "<p><b>Espacio Usado:</b> " + formatSize(usedBytes) + "</p>";
+    html += "<p><b>Espacio Libre:</b> " + formatSize(freeBytes) + "</p>";
+    html += "<ul>";
+
+    // Listar archivos en SPIFFS
+    File root = SPIFFS.open("/");
+    File file = root.openNextFile();
+
+    while (file) {
+        html += "<li>";
+        html += file.name(); // Nombre del archivo
+        html += " - ";
+        html += formatSize(file.size()); // Tamaño del archivo en formato amigable
+        html += "</li>";
+        file = root.openNextFile();
+    }
+
+    html += "</ul>";
+    html += "</body></html>";
+
+    // Enviar HTML como respuesta
+    request->send(200, "text/html", html);
 }
 
 ////////////////////////////////////////////////////////////
@@ -225,156 +140,6 @@ void handle_jquery(AsyncWebServerRequest *request)
 	response->setContentLength(jquery_3_7_1_min_js_gz_len);
 	request->send(response);
 }
-
-/* void handle_dashboard(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-	webString = "<script type=\"text/javascript\">\n";
-	webString += "function reloadSysInfo() {\n";
-	webString += "$(\"#sysInfo\").load(\"/sysinfo\", function () { setTimeout(reloadSysInfo, 60000) });\n";
-	webString += "}\n";
-	webString += "setTimeout(reloadSysInfo(), 100);\n";
-	webString += "function reloadSidebarInfo() {\n";
-	webString += "$(\"#sidebarInfo\").load(\"/sidebarInfo\", function () { setTimeout(reloadSidebarInfo, 10000) });\n";
-	webString += "}\n";
-	webString += "setTimeout(reloadSidebarInfo, 200);\n";
-	webString += "$(window).trigger('resize');\n";
-
-	webString += "</script>\n";
-
-	webString += "<div id=\"sysInfo\">\n";
-	webString += "</div>\n";
-
-	webString += "<br />\n";
-	webString += "<div class=\"nav-status\">\n";
-	webString += "<div id=\"sidebarInfo\">\n";
-	webString += "</div>\n";
-	webString += "<br />\n";
-
-	webString += "<table>\n";
-	webString += "<tr>\n";
-	webString += "<th colspan=\"2\">Radio Info</th>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>Freq TX</td>\n";
-	webString += "<td style=\"background: #ffffff;\">" + String(config.freq_tx, 4) + " MHz</td>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>Freq RX</td>\n";
-	webString += "<td style=\"background: #ffffff;\">" + String(config.freq_rx, 4) + " MHz</td>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>H/L</td>\n";
-	if (config.rf_power)
-		webString += "<td>HIGH</td>\n";
-	else
-		webString += "<td>LOW</td>\n";
-	webString += "</tr>\n";
-	webString += "</table>\n";
-	webString += "\n";
-	webString += "<br />\n";
-	webString += "<table>\n";
-	webString += "<tr>\n";
-	webString += "<th colspan=\"2\">APRS SERVER</th>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>HOST</td>\n";
-	webString += "<td style=\"background: #ffffff;\">" + String(config.aprs_host) + "</td>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>PORT</td>\n";
-	webString += "<td style=\"background: #ffffff;\">" + String(config.aprs_port) + "</td>\n";
-	webString += "</tr>\n";
-	webString += "</table>\n";
-	webString += "<br />\n";
-	webString += "<table>\n";
-	webString += "<tr>\n";
-	webString += "<th colspan=\"2\">WiFi</th>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>MODE</td>\n";
-	String strWiFiMode = "OFF";
-	if (config.wifi_mode == WIFI_STA_FIX)
-	{
-		strWiFiMode = "STA";
-	}
-	else if (config.wifi_mode == WIFI_AP_FIX)
-	{
-		strWiFiMode = "AP";
-	}
-	else if (config.wifi_mode == WIFI_AP_STA_FIX)
-	{
-		strWiFiMode = "AP+STA";
-	}
-	webString += "<td style=\"background: #ffffff;\">" + strWiFiMode + "</td>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>SSID</td>\n";
-	webString += "<td style=\"background: #ffffff;\">" + String(WiFi.SSID()) + "</td>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>RSSI</td>\n";
-	if (WiFi.isConnected())
-		webString += "<td style=\"background: #ffffff;\">" + String(WiFi.RSSI()) + " dBm</td>\n";
-	else
-		webString += "<td style=\"background:#606060; color:#b0b0b0;\" aria-disabled=\"true\">Disconnect</td>\n";
-	webString += "</tr>\n";
-	webString += "</table>\n";
-	webString += "<br />\n";
-#ifdef BLUETOOTH
-	webString += "<table>\n";
-	webString += "<tr>\n";
-
-	webString += "<th colspan=\"2\">Bluetooth</th>\n";
-	webString += "</tr>\n";
-	webString += "<td>Master</td>\n";
-	if (config.bt_master)
-		webString += "<td style=\"background:#0b0; color:#030; width:50%;\">Enabled</td>\n";
-	else
-		webString += "<td style=\"background:#606060; color:#b0b0b0;\" aria-disabled=\"true\">Disabled</td>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>NAME</td>\n";
-	webString += "<td style=\"background: #ffffff;\">" + String(config.bt_name) + "</td>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "<tr>\n";
-	webString += "<td>MODE</td>\n";
-	String btMode = "";
-	if (config.bt_mode == 1)
-	{
-		btMode = "TNC2";
-	}
-	else if (config.bt_mode == 2)
-	{
-		btMode = "KISS";
-	}
-	else
-	{
-		btMode = "NONE";
-	}
-	webString += "<td style=\"background: #ffffff;\">" + btMode + "</td>\n";
-	webString += "</tr>\n";
-	webString += "<tr>\n";
-	webString += "</table>\n";
-#endif
-	webString += "</div>\n";
-
-	webString += "</div>\n";
-	webString += "\n";
-	webString += "<div class=\"content\">\n";
-	webString += "<div id=\"lastHeard\">\n";
-	webString += "</div>\n";
-
-	request->send(200, "text/html", webString); // send to someones browser when asked
-	delay(100);
-	webString.clear();
-	event_lastHeard();
-} */
 
 void handle_dashboard(AsyncWebServerRequest *request) {
     if (!request->authenticate(config.http_username, config.http_password)) {
@@ -529,12 +294,12 @@ void handle_symbol(AsyncWebServerRequest *request)
 		strcat(web, "<tr>\n");
 		for (i = 33; i < 129; i++)
 		{
-			//<td><img onclick="window.opener.setValue(113,2);" src="http://aprs.dprns.com/symbols/icons/113-2.png"></td>
+			//<td><img onclick="window.opener.setValue(113,2);" src="https://aprs.p00lack.cc/symbols/icons/113-2.png"></td>
 			char lnk[128];
 			if (sel == -1)
-				sprintf(lnk, "<td><img onclick=\"window.opener.setValue(%d,1);\" src=\"http://aprs.dprns.com/symbols/icons/%d-1.png\"></td>", i, i);
+				sprintf(lnk, "<td><img onclick=\"window.opener.setValue(%d,1);\" src=\"https://aprs.p00lack.cc/symbols/icons/%d-1.png\"></td>", i, i);
 			else
-				sprintf(lnk, "<td><img onclick=\"window.opener.setValue(%d,%d,1);\" src=\"http://aprs.dprns.com/symbols/icons/%d-1.png\"></td>", sel, i, i);
+				sprintf(lnk, "<td><img onclick=\"window.opener.setValue(%d,%d,1);\" src=\"https://aprs.p00lack.cc/symbols/icons/%d-1.png\"></td>", sel, i, i);
 			strcat(web, lnk);
 
 			if (((i % 16) == 0) && (i < 126))
@@ -549,9 +314,9 @@ void handle_symbol(AsyncWebServerRequest *request)
 		{
 			char lnk[128];
 			if (sel == -1)
-				sprintf(lnk, "<td><img onclick=\"window.opener.setValue(%d,2);\" src=\"http://aprs.dprns.com/symbols/icons/%d-2.png\"></td>", i, i);
+				sprintf(lnk, "<td><img onclick=\"window.opener.setValue(%d,2);\" src=\"https://aprs.p00lack.cc/symbols/icons/%d-2.png\"></td>", i, i);
 			else
-				sprintf(lnk, "<td><img onclick=\"window.opener.setValue(%d,%d,2);\" src=\"http://aprs.dprns.com/symbols/icons/%d-2.png\"></td>", sel, i, i);
+				sprintf(lnk, "<td><img onclick=\"window.opener.setValue(%d,%d,2);\" src=\"https://aprs.p00lack.cc/symbols/icons/%d-2.png\"></td>", sel, i, i);
 			strcat(web, lnk);
 			if (((i % 16) == 0) && (i < 126))
 				strcat(web, "</tr>\n<tr>\n");
@@ -562,35 +327,6 @@ void handle_symbol(AsyncWebServerRequest *request)
 		free(web);
 	}
 }
-
-/* void handle_sysinfo(AsyncWebServerRequest *request)
-{
-	String html = "<table style=\"table-layout: fixed;border-collapse: unset;border-radius: 10px;border-color: #ee800a;border-style: ridge;border-spacing: 1px;border-width: 4px;background: #ee800a;\">\n";
-	html += "<tr>\n";
-	html += "<th><span><b>Up Time</b></span></th>\n";
-	html += "<th><span>Free RAM(KByte)</span></th>\n";
-	html += "<th><span>Free PSRAM(KByte)</span></th>\n";
-	html += "<th><span>SD CARD(MByte)</span></th>\n";
-	html += "<th><span>CPU Temp(C)</span></th>\n";
-
-	html += "</tr>\n";
-	html += "<tr>\n";
-	time_t tn = now() - systemUptime;
-	// String uptime = String(day(tn) - 1, DEC) + "D " + String(hour(tn), DEC) + ":" + String(minute(tn), DEC) + ":" + String(second(tn), DEC);
-	String uptime = String(day(tn) - 1, DEC) + "D " + String(hour(tn), DEC) + ":" + String(minute(tn), DEC);
-	html += "<td><b>" + uptime + "</b></td>\n";
-	html += "<td><b>" + String((float)ESP.getFreeHeap() / 1000, 1) + "/" + String((float)ESP.getHeapSize() / 1000, 1) + "</b></td>\n";
-	html += "<td><b>" + String((float)ESP.getFreePsram() / 1000, 1) + "/" + String((float)ESP.getPsramSize() / 1000, 1) + "</b></td>\n";
-	uint32_t cardTotal = SD.totalBytes() / (1024 * 1024);
-	uint32_t cardUsed = SD.usedBytes() / (1024 * 1024);
-	html += "<td><b>" + String(cardUsed) + "/" + String(cardTotal) + "</b></td>\n";
-	html += "<td><b>" + String((float)(temprature_sens_read() - 32) / 1.8F, 1) + "</b></td>\n";
-	// html += "<td style=\"background: #f00\"><b>" + String(ESP.getCycleCount()) + "</b></td>\n";
-	html += "</tr>\n";
-	html += "</table>\n";
-	request->send(200, "text/html", html); // send to someones browser when asked
-	html.clear();
-} */
 
 void handle_sysinfo(AsyncWebServerRequest *request)
 {
@@ -1132,48 +868,6 @@ void event_lastHeard()
 		log_d("Memory is low!!");
 	}
 }
-
-/* void handle_radio_post(AsyncWebServerRequest *request) {
-    if (!request->authenticate(config.http_username, config.http_password)) {
-        return request->requestAuthentication();
-    }
-
-    if (request->hasArg("commitRadio")) {
-        bool radioEnable = request->hasArg("radioEnable") && request->arg("radioEnable") == "OK";
-        config.rf_en = radioEnable;
-
-        if (request->hasArg("rf_type")) config.rf_type = request->arg("rf_type").toInt();
-        if (request->hasArg("tx_freq")) config.freq_tx = request->arg("tx_freq").toFloat();
-        if (request->hasArg("rx_freq")) config.freq_rx = request->arg("rx_freq").toFloat();
-        if (request->hasArg("tx_ctcss")) config.tone_tx = request->arg("tx_ctcss").toInt();
-        if (request->hasArg("rx_ctcss")) config.tone_rx = request->arg("rx_ctcss").toInt();
-        if (request->hasArg("nw_band")) config.band = request->arg("nw_band").toInt();
-        if (request->hasArg("rf_power")) config.rf_power = request->arg("rf_power").toInt() == 1;
-        if (request->hasArg("volume")) config.volume = request->arg("volume").toInt();
-        if (request->hasArg("sql_level")) config.sql_level = request->arg("sql_level").toInt();
-
-        saveEEPROM(); // Guardar la configuración
-        RF_MODULE(false); // Reiniciar el módulo RF con los nuevos parámetros
-
-        request->send(200, "text/html", "OK");
-    } else if (request->hasArg("commitTNC")) {
-        config.audio_hpf = request->hasArg("HPF") && request->arg("HPF") == "OK";
-        config.audio_bpf = request->hasArg("BPF") && request->arg("BPF") == "OK";
-        if (request->hasArg("timeSlot")) config.tx_timeslot = request->arg("timeSlot").toInt();
-        if (request->hasArg("preamble")) config.preamble = request->arg("preamble").toInt();
-        if (request->hasArg("modem_type")) config.modem_type = request->arg("modem_type").toInt();
-
-        afskSetHPF(config.audio_hpf);
-        afskSetBPF(config.audio_bpf);
-
-        saveEEPROM(); // Guardar la configuración
-
-        request->send(200, "text/html", "OK");
-    } else {
-        request->send(400, "text/html", "Invalid request");
-    }
-}
- */
 
 void handle_radio_get(AsyncWebServerRequest *request) {
     String html = loadHtmlTemplate("/radio.html");
@@ -3324,788 +3018,111 @@ void handle_system(AsyncWebServerRequest *request)
 	}
 }
 
-void handle_igate(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-	bool aprsEn = false;
-	bool rf2inetEn = false;
-	bool inet2rfEn = false;
-	bool posGPS = false;
-	bool bcnEN = false;
-	bool pos2RF = false;
-	bool pos2INET = false;
-	bool timeStamp = false;
+void handle_igate_get(AsyncWebServerRequest *request) {
+// if (!request->authenticate(config.http_username, config.http_password)) {
+//     return request->requestAuthentication();
+// }
+    // Cargar y enviar el HTML
+    String html = loadHtmlTemplate("/igate.html");
 
-	if (request->hasArg("commitIGATE"))
-	{
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
 
-		for (int i = 0; i < request->args(); i++)
-		{
-			if (request->argName(i) == "igateEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						aprsEn = true;
-				}
-			}
-			if (request->argName(i) == "myCall")
-			{
-				if (request->arg(i) != "")
-				{
-					String name = request->arg(i);
-					name.trim();
-					name.toUpperCase();
-					strcpy(config.aprs_mycall, name.c_str());
-				}
-			}
-			if (request->argName(i) == "igateObject")
-			{
-				if (request->arg(i) != "")
-				{
-					String name = request->arg(i);
-					name.trim();
-					strcpy(config.igate_object, name.c_str());
-				}
-				else
-				{
-					memset(config.igate_object, 0, sizeof(config.igate_object));
-				}
-			}
-			if (request->argName(i) == "mySSID")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.aprs_ssid = request->arg(i).toInt();
-					if (config.aprs_ssid > 15)
-						config.aprs_ssid = 13;
-				}
-			}
-			if (request->argName(i) == "igatePosInv")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.igate_interval = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "igatePosLat")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.igate_lat = request->arg(i).toFloat();
-				}
-			}
+    // Reemplazar valores dinámicos
+    html.replace("%IGATE_ENABLE%", config.igate_en ? "checked" : "");
+    html.replace("%MY_CALL%", String(config.aprs_mycall));
+    html.replace("%MY_SSID%", String(config.aprs_ssid));
+    html.replace("%IGATE_TABLE%", String(config.igate_symbol[0]));
+    html.replace("%IGATE_SYMBOL%", String(config.igate_symbol[1]));
+	html.replace("%IGATE_OBJECT%", (config.igate_object && config.igate_object[0] != '\0') ? String(config.igate_object) : "");
+    html.replace("%APRS_HOST%", String(config.aprs_host));
+    html.replace("%APRS_PORT%", String(config.aprs_port));
+    html.replace("%APRS_FILTER%", String(config.aprs_filter));
+    html.replace("%IGATE_COMMENT%", String(config.igate_comment));
+    html.replace("%RF2INET%", config.rf2inet ? "checked" : "");
+    html.replace("%INET2RF%", config.inet2rf ? "checked" : "");
+    html.replace("%IGATE_BCN%", config.igate_bcn ? "checked" : "");
+    html.replace("%IGATE_LAT%", String(config.igate_lat, 5));
+    html.replace("%IGATE_LON%", String(config.igate_lon, 5));
+    html.replace("%IGATE_ALT%", String(config.igate_alt, 2));
 
-			if (request->argName(i) == "igatePosLon")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.igate_lon = request->arg(i).toFloat();
-				}
-			}
-			if (request->argName(i) == "igatePosAlt")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.igate_alt = request->arg(i).toFloat();
-				}
-			}
-			if (request->argName(i) == "igatePosSel")
-			{
-				if (request->arg(i) != "")
-				{
-					if (request->arg(i).toInt() == 1)
-						posGPS = true;
-				}
-			}
+    Serial.println("HTML cargado y procesado correctamente.");
+    request->send(200, "text/html", html);
+}
 
-			if (request->argName(i) == "igateTable")
-			{
-				if (request->arg(i) != "")
-				{
-					config.igate_symbol[0] = request->arg(i).charAt(0);
-				}
-			}
-			if (request->argName(i) == "igateSymbol")
-			{
-				if (request->arg(i) != "")
-				{
-					config.igate_symbol[1] = request->arg(i).charAt(0);
-				}
-			}
-			if (request->argName(i) == "aprsHost")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.aprs_host, request->arg(i).c_str());
-				}
-			}
-			if (request->argName(i) == "aprsPort")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.aprs_port = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "aprsFilter")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.aprs_filter, request->arg(i).c_str());
-				}
-			}
-			if (request->argName(i) == "igatePath")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.igate_path = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "igateComment")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.igate_comment, request->arg(i).c_str());
-				}
-				else
-				{
-					memset(config.igate_comment, 0, sizeof(config.igate_comment));
-				}
-			}
-			if (request->argName(i) == "texttouse")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.igate_phg, request->arg(i).c_str());
-				}
-			}
+void handle_igate_post(AsyncWebServerRequest *request) {
+// if (!request->authenticate(config.http_username, config.http_password)) {
+//     return request->requestAuthentication();
+// }
 
-			if (request->argName(i) == "rf2inetEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						rf2inetEn = true;
-				}
-			}
-			if (request->argName(i) == "inet2rfEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						inet2rfEn = true;
-				}
-			}
-			if (request->argName(i) == "igatePos2RF")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						pos2RF = true;
-				}
-			}
-			if (request->argName(i) == "igatePos2INET")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						pos2INET = true;
-				}
-			}
-			if (request->argName(i) == "igateBcnEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						bcnEN = true;
-				}
-			}
-			if (request->argName(i) == "igateTimeStamp")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						timeStamp = true;
-				}
-			}
-		}
+    if (request->hasArg("igateEnable")) {
+        config.igate_en = request->arg("igateEnable") == "OK";
+    }
 
-		config.igate_en = aprsEn;
-		config.rf2inet = rf2inetEn;
-		config.inet2rf = inet2rfEn;
-		config.igate_gps = posGPS;
-		config.igate_bcn = bcnEN;
-		config.igate_loc2rf = pos2RF;
-		config.igate_loc2inet = pos2INET;
-		config.igate_timestamp = timeStamp;
+    if (request->hasArg("myCall")) {
+        String myCall = request->arg("myCall");
+        myCall.trim();
+        myCall.toUpperCase();
+        strncpy(config.aprs_mycall, myCall.c_str(), sizeof(config.aprs_mycall));
+    }
 
-		saveEEPROM();
-		initInterval = true;
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitIGATEfilter"))
-	{
-		config.rf2inetFilter = 0;
-		config.inet2rfFilter = 0;
-		for (int i = 0; i < request->args(); i++)
-		{
-			// config rf2inet filter
-			if (request->argName(i) == "rf2inetFilterMessage")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.rf2inetFilter |= FILTER_MESSAGE;
-				}
-			}
+    if (request->hasArg("mySSID")) {
+        config.aprs_ssid = request->arg("mySSID").toInt();
+        if (config.aprs_ssid > 15) config.aprs_ssid = 13;
+    }
 
-			if (request->argName(i) == "rf2inetFilterTelemetry")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.rf2inetFilter |= FILTER_TELEMETRY;
-				}
-			}
+    if (request->hasArg("igateTable")) {
+        config.igate_symbol[0] = request->arg("igateTable")[0];
+    }
 
-			if (request->argName(i) == "rf2inetFilterStatus")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.rf2inetFilter |= FILTER_STATUS;
-				}
-			}
+    if (request->hasArg("igateSymbol")) {
+        config.igate_symbol[1] = request->arg("igateSymbol")[0];
+    }
 
-			if (request->argName(i) == "rf2inetFilterWeather")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.rf2inetFilter |= FILTER_WX;
-				}
-			}
+    if (request->hasArg("aprsHost")) {
+        strncpy(config.aprs_host, request->arg("aprsHost").c_str(), sizeof(config.aprs_host));
+    }
 
-			if (request->argName(i) == "rf2inetFilterObject")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.rf2inetFilter |= FILTER_OBJECT;
-				}
-			}
+    if (request->hasArg("aprsPort")) {
+        config.aprs_port = request->arg("aprsPort").toInt();
+    }
 
-			if (request->argName(i) == "rf2inetFilterItem")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.rf2inetFilter |= FILTER_ITEM;
-				}
-			}
+    if (request->hasArg("aprsFilter")) {
+        strncpy(config.aprs_filter, request->arg("aprsFilter").c_str(), sizeof(config.aprs_filter));
+    }
 
-			if (request->argName(i) == "rf2inetFilterQuery")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.rf2inetFilter |= FILTER_QUERY;
-				}
-			}
-			if (request->argName(i) == "rf2inetFilterBuoy")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.rf2inetFilter |= FILTER_BUOY;
-				}
-			}
-			if (request->argName(i) == "rf2inetFilterPosition")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.rf2inetFilter |= FILTER_POSITION;
-				}
-			}
-			// config inet2rf filter
+    if (request->hasArg("igateComment")) {
+        strncpy(config.igate_comment, request->arg("igateComment").c_str(), sizeof(config.igate_comment));
+    }
 
-			if (request->argName(i) == "inet2rfFilterMessage")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.inet2rfFilter |= FILTER_MESSAGE;
-				}
-			}
+    if (request->hasArg("rf2inetEnable")) {
+        config.rf2inet = true;
+    } else {
+        config.rf2inet = false;
+    }
 
-			if (request->argName(i) == "inet2rfFilterTelemetry")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.inet2rfFilter |= FILTER_TELEMETRY;
-				}
-			}
+    if (request->hasArg("inet2rfEnable")) {
+        config.inet2rf = true;
+    } else {
+        config.inet2rf = false;
+    }
 
-			if (request->argName(i) == "inet2rfFilterStatus")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.inet2rfFilter |= FILTER_STATUS;
-				}
-			}
+    if (request->hasArg("igateLat")) {
+        config.igate_lat = request->arg("igateLat").toFloat();
+    }
 
-			if (request->argName(i) == "inet2rfFilterWeather")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.inet2rfFilter |= FILTER_WX;
-				}
-			}
+    if (request->hasArg("igateLon")) {
+        config.igate_lon = request->arg("igateLon").toFloat();
+    }
 
-			if (request->argName(i) == "inet2rfFilterObject")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.inet2rfFilter |= FILTER_OBJECT;
-				}
-			}
+    if (request->hasArg("igateAlt")) {
+        config.igate_alt = request->arg("igateAlt").toFloat();
+    }
 
-			if (request->argName(i) == "inet2rfFilterItem")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.inet2rfFilter |= FILTER_ITEM;
-				}
-			}
-
-			if (request->argName(i) == "inet2rfFilterQuery")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.inet2rfFilter |= FILTER_QUERY;
-				}
-			}
-			if (request->argName(i) == "inet2rfFilterBuoy")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.inet2rfFilter |= FILTER_BUOY;
-				}
-			}
-			if (request->argName(i) == "inet2rfFilterPosition")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.inet2rfFilter |= FILTER_POSITION;
-				}
-			}
-		}
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else
-	{
-
-		String html = "<script type=\"text/javascript\">\n";
-		html += "$('form').submit(function (e) {\n";
-		html += "e.preventDefault();\n";
-		html += "var data = new FormData(e.currentTarget);\n";
-		// html += "document.getElementById(\"submitIGATE\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formIgate\") document.getElementById(\"submitIGATE\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formIgateFilter\") document.getElementById(\"submitIGATEfilter\").disabled=true;\n";
-		html += "$.ajax({\n";
-		html += "url: '/igate',\n";
-		html += "type: 'POST',\n";
-		html += "data: data,\n";
-		html += "contentType: false,\n";
-		html += "processData: false,\n";
-		html += "success: function (data) {\n";
-		html += "alert(\"Submited Successfully\");\n";
-		html += "},\n";
-		html += "error: function (data) {\n";
-		html += "alert(\"An error occurred.\");\n";
-		html += "}\n";
-		html += "});\n";
-		html += "});\n";
-		html += "</script>\n<script type=\"text/javascript\">\n";
-
-		html += "function openWindowSymbol() {\n";
-		html += "var i, l, options = [{\n";
-		html += "value: 'first',\n";
-		html += "text: 'First'\n";
-		html += "}, {\n";
-		html += "value: 'second',\n";
-		html += "text: 'Second'\n";
-		html += "}],\n";
-		html += "newWindow = window.open(\"/symbol\", null, \"height=400,width=400,status=no,toolbar=no,menubar=no,location=no\");\n";
-		html += "}\n";
-
-		html += "function setValue(symbol,table) {\n";
-		html += "document.getElementById('igateSymbol').value = String.fromCharCode(symbol);\n";
-		html += "if(table==1){\n document.getElementById('igateTable').value='/';\n";
-		html += "}else if(table==2){\n document.getElementById('igateTable').value='\\\\';\n}\n";
-		html += "document.getElementById('igateImgSymbol').src = \"http://aprs.dprns.com/symbols/icons/\"+symbol.toString()+'-'+table.toString()+'.png';\n";
-		html += "\n}\n";
-		html += "function calculatePHGR(){document.forms.formIgate.texttouse.value=\"PHG\"+calcPower(document.forms.formIgate.power.value)+calcHeight(document.forms.formIgate.haat.value)+calcGain(document.forms.formIgate.gain.value)+calcDirection(document.forms.formIgate.direction.selectedIndex)}function Log2(e){return Math.log(e)/Math.log(2)}function calcPerHour(e){return e<10?e:String.fromCharCode(65+(e-10))}function calcHeight(e){return String.fromCharCode(48+Math.round(Log2(e/10),0))}function calcPower(e){if(e<1)return 0;if(e>=1&&e<4)return 1;if(e>=4&&e<9)return 2;if(e>=9&&e<16)return 3;if(e>=16&&e<25)return 4;if(e>=25&&e<36)return 5;if(e>=36&&e<49)return 6;if(e>=49&&e<64)return 7;if(e>=64&&e<81)return 8;if(e>=81)return 9}function calcDirection(e){if(e==\"0\")return\"0\";if(e==\"1\")return\"1\";if(e==\"2\")return\"2\";if(e==\"3\")return\"3\";if(e==\"4\")return\"4\";if(e==\"5\")return\"5\";if(e==\"6\")return\"6\";if(e==\"7\")return\"7\";if(e==\"8\")return\"8\"}function calcGain(e){return e>9?\"9\":e<0?\"0\":Math.round(e,0)}\n";
-		html += "function onRF2INETCheck() {\n";
-		html += "if (document.querySelector('#rf2inetEnable').checked) {\n";
-		// Checkbox has been checked
-		html += "document.getElementById(\"rf2inetFilterGrp\").disabled=false;\n";
-		html += "} else {\n";
-		// Checkbox has been unchecked
-		html += "document.getElementById(\"rf2inetFilterGrp\").disabled=true;\n";
-		html += "}\n}\n";
-		html += "function onINET2RFCheck() {\n";
-		html += "if (document.querySelector('#inet2rfEnable').checked) {\n";
-		// Checkbox has been checked
-		html += "document.getElementById(\"inet2rfFilterGrp\").disabled=false;\n";
-		html += "} else {\n";
-		// Checkbox has been unchecked
-		html += "document.getElementById(\"inet2rfFilterGrp\").disabled=true;\n";
-		html += "}\n}\n";
-		html += "</script>\n";
-		delay(1);
-		/************************ IGATE Mode **************************/
-		html += "<form id='formIgate' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		// html += "<h2>[IGATE] Internet Gateway Mode</h2>\n";
-		html += "<table>\n";
-		// html += "<tr>\n";
-		// html += "<th width=\"200\"><span><b>Setting</b></span></th>\n";
-		// html += "<th><span><b>Value</b></span></th>\n";
-		// html += "</tr>\n";
-		html += "<th colspan=\"2\"><span><b>[IGATE] Internet Gateway Mode</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Enable:</b></td>\n";
-		String igateEnFlag = "";
-		if (config.igate_en)
-			igateEnFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"igateEnable\" value=\"OK\" " + igateEnFlag + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Station Callsign:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"7\" size=\"6\" id=\"myCall\" name=\"myCall\" type=\"text\" value=\"" + String(config.aprs_mycall) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Station SSID:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"mySSID\" id=\"mySSID\">\n";
-		for (uint8_t ssid = 0; ssid <= 15; ssid++)
-		{
-			if (config.aprs_ssid == ssid)
-			{
-				html += "<option value=\"" + String(ssid) + "\" selected>" + String(ssid) + "</option>\n";
-			}
-			else
-			{
-				html += "<option value=\"" + String(ssid) + "\">" + String(ssid) + "</option>\n";
-			}
-		}
-		html += "</select></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Station Symbol:</b></td>\n";
-		String table = "1";
-		if (config.igate_symbol[0] == 47)
-			table = "1";
-		if (config.igate_symbol[0] == 92)
-			table = "2";
-		html += "<td style=\"text-align: left;\">Table:<input maxlength=\"1\" size=\"1\" id=\"igateTable\" name=\"igateTable\" type=\"text\" value=\"" + String(config.igate_symbol[0]) + "\" style=\"background-color: rgb(97, 239, 170);\" /> Symbol:<input maxlength=\"1\" size=\"1\" id=\"igateSymbol\" name=\"igateSymbol\" type=\"text\" value=\"" + String(config.igate_symbol[1]) + "\" style=\"background-color: rgb(97, 239, 170);\" /> <img border=\"1\" style=\"vertical-align: middle;\" id=\"igateImgSymbol\" onclick=\"openWindowSymbol();\" src=\"http://aprs.dprns.com/symbols/icons/" + String((int)config.igate_symbol[1]) + "-" + table + ".png\"> <i>*Click icon for select symbol</i></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Item/Obj Name:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"9\" size=\"9\" id=\"igateObject\" name=\"igateObject\" type=\"text\" value=\"" + String(config.igate_object) + "\" /><i> *If not used, leave it blank.In use 3-9 charactor</i></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PATH:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"igatePath\" id=\"igatePath\">\n";
-		for (uint8_t pthIdx = 0; pthIdx < PATH_LEN; pthIdx++)
-		{
-			if (config.igate_path == pthIdx)
-			{
-				html += "<option value=\"" + String(pthIdx) + "\" selected>" + String(PATH_NAME[pthIdx]) + "</option>\n";
-			}
-			else
-			{
-				html += "<option value=\"" + String(pthIdx) + "\">" + String(PATH_NAME[pthIdx]) + "</option>\n";
-			}
-		}
-		html += "</select></td>\n";
-		// html += "<td style=\"text-align: left;\"><input maxlength=\"72\" size=\"72\" id=\"igatePath\" name=\"igatePath\" type=\"text\" value=\"" + String(config.igate_path) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Server Host:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"20\" size=\"20\" id=\"aprsHost\" name=\"aprsHost\" type=\"text\" value=\"" + String(config.aprs_host) + "\" /> *Support APRS-IS of T2THAI at <a href=\"http://aprs.dprns.com:14501\" target=\"_t2thai\">aprs.dprns.com:14580</a></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Server Port:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"1\" max=\"65535\" step=\"1\" id=\"aprsPort\" name=\"aprsPort\" type=\"number\" value=\"" + String(config.aprs_port) + "\" /> *Support AMPR Host at <a href=\"http://aprs.hs5tqa.ampr.org:14501\" target=\"_t2thai\">aprs.hs5tqa.ampr.org:14580</a></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Server Filter:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"30\" size=\"30\" id=\"aprsFilter\" name=\"aprsFilter\" type=\"text\" value=\"" + String(config.aprs_filter) + "\" /> *Filter: <a target=\"_blank\" href=\"http://www.aprs-is.net/javAPRSFilter.aspx\">http://www.aprs-is.net/javAPRSFilter.aspx</a></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Text Comment:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"50\" size=\"50\" id=\"igateComment\" name=\"igateComment\" type=\"text\" value=\"" + String(config.igate_comment) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RF2INET:</b></td>\n";
-		String rf2inetEnFlag = "";
-		if (config.rf2inet)
-			rf2inetEnFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" id=\"rf2inetEnable\" name=\"rf2inetEnable\" onclick=\"onRF2INETCheck()\" value=\"OK\" " + rf2inetEnFlag + "><span class=\"slider round\"></span></label><label style=\"vertical-align: bottom;font-size: 8pt;\"><i> *Switch RF to Internet gateway</i></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>INET2RF:</b></td>\n";
-		String inet2rfEnFlag = "";
-		if (config.inet2rf)
-			inet2rfEnFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" id=\"inet2rfEnable\" name=\"inet2rfEnable\" onclick=\"onINET2RFCheck()\" value=\"OK\" " + inet2rfEnFlag + "><span class=\"slider round\"></span></label><label style=\"vertical-align: bottom;font-size: 8pt;\"><i> *Switch Internet to RF gateway</i></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Time Stamp:</b></td>\n";
-		String timeStampFlag = "";
-		if (config.igate_timestamp)
-			timeStampFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"igateTimeStamp\" value=\"OK\" " + timeStampFlag + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n<tr>";
-
-		html += "<td align=\"right\"><b>POSITION:</b></td>\n";
-		html += "<td align=\"center\">\n";
-		html += "<table>";
-		String igateBcnEnFlag = "";
-		if (config.igate_bcn)
-			igateBcnEnFlag = "checked";
-
-		html += "<tr><td style=\"text-align: right;\">Beacon:</td><td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"igateBcnEnable\" value=\"OK\" " + igateBcnEnFlag + "><span class=\"slider round\"></span></label><label style=\"vertical-align: bottom;font-size: 8pt;\">  Interval:<input min=\"0\" max=\"3600\" step=\"1\" id=\"igatePosInv\" name=\"igatePosInv\" type=\"number\" value=\"" + String(config.igate_interval) + "\" />Sec.</label></td></tr>";
-		String igatePosFixFlag = "";
-		String igatePosGPSFlag = "";
-		String igatePos2RFFlag = "";
-		String igatePos2INETFlag = "";
-		if (config.igate_gps)
-			igatePosGPSFlag = "checked=\"checked\"";
-		else
-			igatePosFixFlag = "checked=\"checked\"";
-
-		if (config.igate_loc2rf)
-			igatePos2RFFlag = "checked";
-		if (config.igate_loc2inet)
-			igatePos2INETFlag = "checked";
-		html += "<tr><td style=\"text-align: right;\">Location:</td><td style=\"text-align: left;\"><input type=\"radio\" name=\"igatePosSel\" value=\"0\" " + igatePosFixFlag + "/>Fix <input type=\"radio\" name=\"igatePosSel\" value=\"1\" " + igatePosGPSFlag + "/>GPS </td></tr>\n";
-		html += "<tr><td style=\"text-align: right;\">TX Channel:</td><td style=\"text-align: left;\"><input type=\"checkbox\" name=\"igatePos2RF\" value=\"OK\" " + igatePos2RFFlag + "/>RF <input type=\"checkbox\" name=\"igatePos2INET\" value=\"OK\" " + igatePos2INETFlag + "/>Internet </td></tr>\n";
-		html += "<tr><td style=\"text-align: right;\">Latitude:</td><td style=\"text-align: left;\"><input min=\"-90\" max=\"90\" step=\"0.00001\" id=\"igatePosLat\" name=\"igatePosLat\" type=\"number\" value=\"" + String(config.igate_lat, 5) + "\" />degrees (positive for North, negative for South)</td></tr>\n";
-		html += "<tr><td style=\"text-align: right;\">Longitude:</td><td style=\"text-align: left;\"><input min=\"-180\" max=\"180\" step=\"0.00001\" id=\"igatePosLon\" name=\"igatePosLon\" type=\"number\" value=\"" + String(config.igate_lon, 5) + "\" />degrees (positive for East, negative for West)</td></tr>\n";
-		html += "<tr><td style=\"text-align: right;\">Altitude:</td><td style=\"text-align: left;\"><input min=\"0\" max=\"10000\" step=\"0.1\" id=\"igatePosAlt\" name=\"igatePosAlt\" type=\"number\" value=\"" + String(config.igate_alt, 2) + "\" /> meter. *Value 0 is not send height</td></tr>\n";
-		html += "</table></td>";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PHG:</b></td>\n";
-		html += "<td align=\"center\">\n";
-		html += "<table>";
-		html += "<tr>\n";
-		html += "<td align=\"right\">Radio TX Power</td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"power\" id=\"power\">\n";
-		html += "<option value=\"1\" selected>1</option>\n";
-		html += "<option value=\"5\">5</option>\n";
-		html += "<option value=\"10\">10</option>\n";
-		html += "<option value=\"15\">15</option>\n";
-		html += "<option value=\"25\">25</option>\n";
-		html += "<option value=\"35\">35</option>\n";
-		html += "<option value=\"50\">50</option>\n";
-		html += "<option value=\"65\">65</option>\n";
-		html += "<option value=\"80\">80</option>\n";
-		html += "</select> Watts</td>\n";
-		html += "</tr>\n";
-		html += "<tr><td style=\"text-align: right;\">Antenna Gain</td><td style=\"text-align: left;\"><input size=\"3\" min=\"0\" max=\"100\" step=\"0.1\" id=\"gain\" name=\"gain\" type=\"number\" value=\"6\" /> dBi</td></tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\">Height</td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"haat\" id=\"haat\">\n";
-		int k = 10;
-		for (uint8_t w = 0; w < 10; w++)
-		{
-			if (w == 0)
-			{
-				html += "<option value=\"" + String(k) + "\" selected>" + String(k) + "</option>\n";
-			}
-			else
-			{
-				html += "<option value=\"" + String(k) + "\">" + String(k) + "</option>\n";
-			}
-			k += k;
-		}
-		html += "</select> Feet</td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\">Antenna/Direction</td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"direction\" id=\"direction\">\n";
-		html += "<option>Omni</option><option>NE</option><option>E</option><option>SE</option><option>S</option><option>SW</option><option>W</option><option>NW</option><option>N</option>\n";
-		html += "</select></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr><td align=\"right\"><b>PHG Text</b></td><td align=\"left\"><input name=\"texttouse\" type=\"text\" size=\"6\" style=\"background-color: rgb(97, 239, 170);\" value=\"" + String(config.igate_phg) + "\"/> <input type=\"button\" value=\"Calculate PHG\" onclick=\"javascript:calculatePHGR()\" /></td></tr>\n";
-		html += "</table></td>";
-		html += "</tr>\n";
-
-		html += "</table><br />\n";
-		html += "<div><button type='submit' id='submitIGATE'  name=\"commitIGATE\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitIGATE\"/>\n";
-		html += "</form><br /><br />";
-		delay(1);
-		html += "<form id='formIgateFilter' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>[IGATE] Filter</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RF2INET Filter:</b></td>\n";
-
-		html += "<td align=\"center\">\n";
-		if (config.rf2inet)
-			html += "<fieldset id=\"rf2inetFilterGrp\">\n";
-		else
-			html += "<fieldset id=\"rf2inetFilterGrp\" disabled>\n";
-		html += "<legend>Filter RF to Internet</legend>\n<table style=\"text-align:unset;border-width:0px;background:unset\">";
-		html += "<tr style=\"background:unset;\">";
-
-		String filterFlageEn = "";
-		if (config.rf2inetFilter & FILTER_MESSAGE)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"rf2inetFilterMessage\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Message</td>\n";
-
-		filterFlageEn = "";
-		if (config.rf2inetFilter & FILTER_STATUS)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"rf2inetFilterStatus\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Status</td>\n";
-
-		filterFlageEn = "";
-		if (config.rf2inetFilter & FILTER_TELEMETRY)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"rf2inetFilterTelemetry\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Telemetry</td>\n";
-
-		filterFlageEn = "";
-		if (config.rf2inetFilter & FILTER_WX)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"rf2inetFilterWeather\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Weather</td>\n";
-
-		filterFlageEn = "";
-		if (config.rf2inetFilter & FILTER_OBJECT)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"rf2inetFilterObject\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Object</td>\n";
-
-		filterFlageEn = "";
-		if (config.rf2inetFilter & FILTER_ITEM)
-			filterFlageEn = "checked";
-		html += "</tr><tr style=\"background:unset;\"><td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"rf2inetFilterItem\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Item</td>\n";
-
-		filterFlageEn = "";
-		if (config.rf2inetFilter & FILTER_QUERY)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"rf2inetFilterQuery\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Query</td>\n";
-
-		filterFlageEn = "";
-		if (config.rf2inetFilter & FILTER_BUOY)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"rf2inetFilterBuoy\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Buoy</td>\n";
-
-		filterFlageEn = "";
-		if (config.rf2inetFilter & FILTER_POSITION)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"rf2inetFilterPosition\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Position</td>\n";
-
-		html += "<td style=\"border:unset;\"></td>";
-		html += "</tr></table></fieldset>\n";
-		html += "</td></tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>INET2RF Filter:</b></td>\n";
-
-		html += "<td align=\"center\">\n";
-		if (config.inet2rf)
-			html += "<fieldset id=\"inet2rfFilterGrp\">\n";
-		else
-			html += "<fieldset id=\"inet2rfFilterGrp\" disabled>\n";
-		html += "<legend>Filter Internet to RF</legend>\n<table style=\"text-align:unset;border-width:0px;background:unset\">";
-		html += "<tr style=\"background:unset;\">";
-
-		filterFlageEn = "";
-		if (config.inet2rfFilter & FILTER_MESSAGE)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"inet2rfFilterMessage\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Message</td>\n";
-
-		filterFlageEn = "";
-		if (config.inet2rfFilter & FILTER_STATUS)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"inet2rfFilterStatus\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Status</td>\n";
-
-		filterFlageEn = "";
-		if (config.inet2rfFilter & FILTER_TELEMETRY)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"inet2rfFilterTelemetry\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Telemetry</td>\n";
-
-		filterFlageEn = "";
-		if (config.inet2rfFilter & FILTER_WX)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"inet2rfFilterWeather\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Weather</td>\n";
-
-		filterFlageEn = "";
-		if (config.inet2rfFilter & FILTER_OBJECT)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"inet2rfFilterObject\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Object</td>\n";
-
-		filterFlageEn = "";
-		if (config.inet2rfFilter & FILTER_ITEM)
-			filterFlageEn = "checked";
-		html += "</tr><tr style=\"background:unset;\"><td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"inet2rfFilterItem\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Item</td>\n";
-
-		filterFlageEn = "";
-		if (config.inet2rfFilter & FILTER_QUERY)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"inet2rfFilterQuery\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Query</td>\n";
-
-		filterFlageEn = "";
-		if (config.inet2rfFilter & FILTER_BUOY)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"inet2rfFilterBuoy\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Buoy</td>\n";
-
-		filterFlageEn = "";
-		if (config.inet2rfFilter & FILTER_POSITION)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"inet2rfFilterPosition\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Position</td>\n";
-
-		html += "<td style=\"border:unset;\"></td>";
-		html += "</tr></table></fieldset>\n";
-		html += "</td></tr>\n";
-
-		html += "</table><br />\n";
-		html += "<div><button type='submit' id='submitIGATEfilter'  name=\"commitIGATEfilter\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitIGATEfilter\"/>\n";
-		html += "</form><br />";
-		request->send(200, "text/html", html); // send to someones browser when asked
-	}
+    saveEEPROM(); // Guardar los cambios
+    request->redirect("/igate");
 }
 
 void handle_digi(AsyncWebServerRequest *request)
@@ -6498,10 +5515,11 @@ void webService()
 	// web client handlers
 	async_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ setMainPage(request); });
+	async_server.on("/list-files", HTTP_GET, [](AsyncWebServerRequest *request) {
+    handle_list_files(request);
+	});				
 	async_server.on("/symbol", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_symbol(request); });
-	// async_server.on("/symbol2", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-	// 				{ handle_symbol2(request); });
 	async_server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_logout(request); });
 	async_server.on("/radio", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -6514,8 +5532,10 @@ void webService()
 					{ handle_mod(request); });
 	async_server.on("/default", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_default(); });
-	async_server.on("/igate", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_igate(request); });
+	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) {
+		handle_igate_get(request);});
+	async_server.on("/igate", HTTP_POST, [](AsyncWebServerRequest *request) {
+		handle_igate_post(request);});
 	async_server.on("/digi", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_digi(request); });
 	async_server.on("/tracker", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)

@@ -1,142 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <title>ESP32IGATE - GNSS</title>
-    <script>
-        function gnss() {
-            let raw = "";
-            const host = 'ws://' + location.hostname + ':81/ws_gnss';
-            const ws = new WebSocket(host);
+<!doctypehtml><html lang=en><meta charset=UTF-8><meta content="width=device-width,initial-scale=1"name=viewport><link href=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css rel=stylesheet><script src=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js></script><title>ESP32IGATE - GNSS</title><script>function gnss() {
+    let raw = "";
+    const host = 'ws://' + location.hostname + ':81/ws_gnss';
+    const ws = new WebSocket(host);
 
-            ws.onopen = function() {
-                console.log('WebSocket connection opened');
-            };
+    ws.onopen = function() {
+        console.log('WebSocket connection opened');
+    };
 
-            ws.onclose = function() {
-                console.log('WebSocket connection closed');
-            };
+    ws.onclose = function() {
+        console.log('WebSocket connection closed');
+    };
 
-            ws.onmessage = function(event) {
-                console.log(event.data);
-                const jsonR = JSON.parse(event.data);
+    ws.onmessage = function(event) {
+        console.log(event.data);
+        const jsonR = JSON.parse(event.data);
 
-                document.getElementById("lat").innerHTML = parseFloat(jsonR.lat).toFixed(5);
-                document.getElementById("lng").innerHTML = parseFloat(jsonR.lng).toFixed(5);
-                document.getElementById("alt").innerHTML = parseFloat(jsonR.alt).toFixed(2) + " m";
-                document.getElementById("spd").innerHTML = parseFloat(jsonR.spd).toFixed(2) + " km/h";
-                document.getElementById("csd").innerHTML = parseFloat(jsonR.csd).toFixed(1);
-                document.getElementById("hdop").innerHTML = parseFloat(jsonR.hdop).toFixed(2);
-                document.getElementById("sat").innerHTML = parseInt(jsonR.sat);
+        document.getElementById("lat").innerHTML = parseFloat(jsonR.lat).toFixed(5);
+        document.getElementById("lng").innerHTML = parseFloat(jsonR.lng).toFixed(5);
+        document.getElementById("alt").innerHTML = parseFloat(jsonR.alt).toFixed(2) + " m";
+        document.getElementById("spd").innerHTML = parseFloat(jsonR.spd).toFixed(2) + " km/h";
+        document.getElementById("csd").innerHTML = parseFloat(jsonR.csd).toFixed(1);
+        document.getElementById("hdop").innerHTML = parseFloat(jsonR.hdop).toFixed(2);
+        document.getElementById("sat").innerHTML = parseInt(jsonR.sat);
 
-                raw = jsonR.RAW;
-                const textArea = document.getElementById("raw_txt");
-                textArea.value += atob(raw) + "\n";
-                textArea.scrollTop = textArea.scrollHeight;
-            };
+        raw = jsonR.RAW;
+        const textArea = document.getElementById("raw_txt");
+        textArea.value += atob(raw) + "\n";
+        textArea.scrollTop = textArea.scrollHeight;
+    };
+}</script><body class="text-light bg-dark"onload=setDefaultValues(),gnss()><div class="container py-3"><h1 class=text-center><a class="text-light text-decoration-none"href=/ >ESP32IGate Project [APRS ALL IN ONE]</a></h1></div><nav class="navbar bg-primary navbar-dark navbar-expand-lg"><div class=container><button aria-controls=navbarNav aria-expanded=false aria-label="Toggle navigation"class=navbar-toggler data-bs-target=#navbarNav data-bs-toggle=collapse type=button><span class=navbar-toggler-icon></span></button><div class="collapse justify-content-center navbar-collapse"id=navbarNav><ul class=navbar-nav><li class=nav-item><a class=nav-link href=/ >Dashboard</a><li class=nav-item><a class=nav-link href=/radio>Radio</a><li class=nav-item><a class=nav-link href=/tnc2>TNC</a><li class=nav-item><a class="nav-link active"href=/gnss>GNSS</a><li class=nav-item><a class=nav-link href=/igate>IGATE</a><li class=nav-item><a class=nav-link href=/digi>Digi</a><li class=nav-item><a class=nav-link href=/tracker>Tracker</a><li class=nav-item><a class=nav-link href=/wx>WX</a><li class=nav-item><a class=nav-link href=/tlm>TLM</a><li class=nav-item><a class=nav-link href=/vpn>VPN</a><li class=nav-item><a class=nav-link href=/wireless>Wireless</a><li class=nav-item><a class=nav-link href=/mod>Mod</a><li class=nav-item><a class=nav-link href=/system>System</a><li class=nav-item><a class=nav-link href=/about>About</a></ul></div></div></nav><div class="container mt-4"><div class="text-light bg-secondary card"><div class="text-center card-header"><h3>GNSS Information</h3></div><div class=card-body><table class="table table-dark table-striped"><tr><td align=right><b>Enable:</b><td align=left><label id=en></label><tr><td align=right><b>Latitude:</b><td align=left><label id=lat></label><tr><td align=right><b>Longitude:</b><td align=left><label id=lng></label><tr><td align=right><b>Altitude:</b><td align=left><label id=alt></label><tr><td align=right><b>Speed:</b><td align=left><label id=spd></label><tr><td align=right><b>Course:</b><td align=left><label id=csd></label><tr><td align=right><b>HDOP:</b><td align=left><label id=hdop></label><tr><td align=right><b>SAT:</b><td align=left><label id=sat></label></table><div><h5>Terminal:</h5><textarea class=form-control id=raw_txt rows=10></textarea></div></div></div></div><footer class="text-light bg-primary mt-4 py-3 text-center">ESP32IGate Web Configuration - © 2025</footer><script>function setDefaultValues() {
+    // Lista de elementos y sus valores por defecto
+    const defaults = {
+        "en": "0",
+        "lat": "0.00000",
+        "lng": "0.00000",
+        "alt": "0.00 m",
+        "spd": "0.00 km/h",
+        "csd": "0.0",
+        "hdop": "0.00",
+        "sat": "0"
+    };
+
+    // Iterar por cada elemento y asignar el valor por defecto si está vacío
+    for (const id in defaults) {
+        const element = document.getElementById(id);
+        if (!element.innerHTML.trim()) {
+            element.innerHTML = defaults[id];
         }
-    </script>
-</head>
-<body class="bg-dark text-light" onload="setDefaultValues(); gnss();">
+    }
+}
 
-    <!-- Header -->
-    <div class="container py-3">
-        <h1 class="text-center">
-            <a href="/" class="text-decoration-none text-light">ESP32IGate Project [APRS ALL IN ONE]</a>
-        </h1>
-    </div>
-
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/gnss">GNSS</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/igate">IGATE</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/digi">Digi</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/tracker">Tracker</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/wx">WX</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/tlm">TLM</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/vpn">VPN</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/mod">Mod</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container mt-4">
-        <div class="card bg-secondary text-light">
-            <div class="card-header text-center">
-                <h3>GNSS Information</h3>
-            </div>
-            <div class="card-body">
-                <table class="table table-dark table-striped">
-                    <tbody>
-                        <tr><td align="right"><b>Enable: </b></td><td align="left"> <label id="en"></label></td></tr>
-                        <tr><td align="right"><b>Latitude: </b></td><td align="left"> <label id="lat"></label></td></tr>
-                        <tr><td align="right"><b>Longitude: </b></td><td align="left"> <label id="lng"></label></td></tr>
-                        <tr><td align="right"><b>Altitude: </b></td><td align="left"> <label id="alt"></label></td></tr>
-                        <tr><td align="right"><b>Speed: </b></td><td align="left"> <label id="spd"></label></td></tr>
-                        <tr><td align="right"><b>Course: </b></td><td align="left"> <label id="csd"></label></td></tr>
-                        <tr><td align="right"><b>HDOP: </b></td><td align="left"> <label id="hdop"></label></td></tr>
-                        <tr><td align="right"><b>SAT: </b></td><td align="left"> <label id="sat"></label></td></tr>                      
-                    </tbody>
-                </table>
-                <div>
-                    <h5>Terminal:</h5>
-                    <textarea id="raw_txt" class="form-control" rows="10"></textarea>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-primary text-center text-light py-3 mt-4">
-        ESP32IGate Web Configuration - &copy; 2025
-    </footer>
-
-    <script>
-        function setDefaultValues() {
-            // Lista de elementos y sus valores por defecto
-            const defaults = {
-                "en": "0",
-                "lat": "0.00000",
-                "lng": "0.00000",
-                "alt": "0.00 m",
-                "spd": "0.00 km/h",
-                "csd": "0.0",
-                "hdop": "0.00",
-                "sat": "0"
-            };
-    
-            // Iterar por cada elemento y asignar el valor por defecto si está vacío
-            for (const id in defaults) {
-                const element = document.getElementById(id);
-                if (!element.innerHTML.trim()) {
-                    element.innerHTML = defaults[id];
-                }
-            }
-        }
-    
-        // Llamar a la función después de que la página cargue
-        window.onload = function() {
-            setDefaultValues();
-            gnss(); // Llama también a la función gnss para conectar el WebSocket
-        };
-    </script>   
-
-</body>
-</html>
+// Llamar a la función después de que la página cargue
+window.onload = function() {
+    setDefaultValues();
+    gnss(); // Llama también a la función gnss para conectar el WebSocket
+};</script>
