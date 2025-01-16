@@ -936,183 +936,61 @@ void handle_radio_post(AsyncWebServerRequest *request) {
     request->redirect("/radio"); // Redirigir a la página
 }
 
-void handle_vpn(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-	if (request->hasArg("commitVPN"))
-	{
-		bool vpnEn = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
+void handle_vpn(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
 
-			if (request->argName(i) == "vpnEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					// if (isValidNumber(request->arg(i)))
-					if (String(request->arg(i)) == "OK")
-						vpnEn = true;
-				}
-			}
+    if (request->method() == HTTP_POST) {
+        if (request->hasArg("vpnEnable")) {
+            config.vpn = (request->arg("vpnEnable") == "OK");
+        }
+        if (request->hasArg("wg_peer_address")) {
+            strcpy(config.wg_peer_address, request->arg("wg_peer_address").c_str());
+        }
+        if (request->hasArg("wg_port")) {
+            config.wg_port = request->arg("wg_port").toInt();
+        }
+        if (request->hasArg("wg_local_address")) {
+            strcpy(config.wg_local_address, request->arg("wg_local_address").c_str());
+        }
+        if (request->hasArg("wg_netmask_address")) {
+            strcpy(config.wg_netmask_address, request->arg("wg_netmask_address").c_str());
+        }
+        if (request->hasArg("wg_gw_address")) {
+            strcpy(config.wg_gw_address, request->arg("wg_gw_address").c_str());
+        }
+        if (request->hasArg("wg_public_key")) {
+            strcpy(config.wg_public_key, request->arg("wg_public_key").c_str());
+        }
+        if (request->hasArg("wg_private_key")) {
+            strcpy(config.wg_private_key, request->arg("wg_private_key").c_str());
+        }
 
-			// if (request->argName(i) == "taretime") {
-			//	if (request->arg(i) != "")
-			//	{
-			//		//if (isValidNumber(request->arg(i)))
-			//		if (String(request->arg(i)) == "OK")
-			//			taretime = true;
-			//	}
-			// }
-			if (request->argName(i) == "wg_port")
-			{
-				if (request->arg(i) != "")
-				{
-					config.wg_port = request->arg(i).toInt();
-				}
-			}
+        saveEEPROM(); // Guardar los cambios
+        request->send(200, "text/html", "Configuración VPN guardada exitosamente.");
+        return;
+    }
 
-			if (request->argName(i) == "wg_public_key")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.wg_public_key, request->arg(i).c_str());
-					config.wg_public_key[44] = 0;
-				}
-			}
+    // Cargar el HTML desde SPIFFS
+    String html = loadHtmlTemplate("/vpn.html");
+    if (html.isEmpty()) {
+        request->send(500, "text/plain", "Error al cargar el archivo HTML.");
+        return;
+    }
 
-			if (request->argName(i) == "wg_private_key")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.wg_private_key, request->arg(i).c_str());
-					config.wg_private_key[44] = 0;
-				}
-			}
+    // Reemplazar los marcadores con los valores actuales
+    html.replace("%VPN_ENABLE%", config.vpn ? "checked" : "");
+    html.replace("%WG_PEER_ADDRESS%", String(config.wg_peer_address));
+    html.replace("%WG_PORT%", String(config.wg_port));
+    html.replace("%WG_LOCAL_ADDRESS%", String(config.wg_local_address));
+    html.replace("%WG_NETMASK%", String(config.wg_netmask_address));
+    html.replace("%WG_GW%", String(config.wg_gw_address));
+    html.replace("%WG_PUBLIC_KEY%", String(config.wg_public_key));
+    html.replace("%WG_PRIVATE_KEY%", String(config.wg_private_key));
 
-			if (request->argName(i) == "wg_peer_address")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.wg_peer_address, request->arg(i).c_str());
-				}
-			}
-
-			if (request->argName(i) == "wg_local_address")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.wg_local_address, request->arg(i).c_str());
-				}
-			}
-
-			if (request->argName(i) == "wg_netmask_address")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.wg_netmask_address, request->arg(i).c_str());
-				}
-			}
-
-			if (request->argName(i) == "wg_gw_address")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.wg_gw_address, request->arg(i).c_str());
-				}
-			}
-		}
-
-		config.vpn = vpnEn;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else
-	{
-
-		String html = "<script type=\"text/javascript\">\n";
-		html += "$('form').submit(function (e) {\n";
-		html += "e.preventDefault();\n";
-		html += "var data = new FormData(e.currentTarget);\n";
-		html += "if(e.currentTarget.id===\"formVPN\") document.getElementById(\"submitVPN\").disabled=true;\n";
-		html += "$.ajax({\n";
-		html += "url: '/vpn',\n";
-		html += "type: 'POST',\n";
-		html += "data: data,\n";
-		html += "contentType: false,\n";
-		html += "processData: false,\n";
-		html += "success: function (data) {\n";
-		html += "alert(\"Submited Successfully\");\n";
-		html += "},\n";
-		html += "error: function (data) {\n";
-		html += "alert(\"An error occurred.\");\n";
-		html += "}\n";
-		html += "});\n";
-		html += "});\n";
-		html += "</script>\n";
-
-		// html += "<h2>System Setting</h2>\n";
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromVPN\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>Wireguard Configuration</b></span></th>\n";
-		html += "<tr>";
-
-		String syncFlage = "";
-		if (config.vpn)
-			syncFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"vpnEnable\" value=\"OK\" " + syncFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Server Address</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input  size=\"20\" id=\"wg_peer_address\" name=\"wg_peer_address\" type=\"text\" value=\"" + String(config.wg_peer_address) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Server Port</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input id=\"wg_port\" size=\"5\" name=\"wg_port\" type=\"number\" value=\"" + String(config.wg_port) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Local Address</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input id=\"wg_local_address\" name=\"wg_local_address\" type=\"text\" value=\"" + String(config.wg_local_address) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Netmask</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input id=\"wg_netmask_address\" name=\"wg_netmask_address\" type=\"text\" value=\"" + String(config.wg_netmask_address) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Gateway</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input id=\"wg_gw_address\" name=\"wg_gw_address\" type=\"text\" value=\"" + String(config.wg_gw_address) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Public Key</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"50\" maxlength=\"44\" id=\"wg_public_key\" name=\"wg_public_key\" type=\"text\" value=\"" + String(config.wg_public_key) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Private Key</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"50\" maxlength=\"44\" id=\"wg_private_key\" name=\"wg_private_key\" type=\"text\" value=\"" + String(config.wg_private_key) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "</table><br />\n";
-		html += "<td><input class=\"btn btn-primary\" id=\"submitVPN\" name=\"commitVPN\" type=\"submit\" value=\"Save Config\" maxlength=\"80\"/></td>\n";
-		html += "<input type=\"hidden\" name=\"commitVPN\"/>\n";
-		html += "</form>\n";
-
-		request->send(200, "text/html", html); // send to someones browser when asked
-	}
+    // Enviar el HTML modificado al cliente
+    request->send(200, "text/html", html);
 }
 
 void handle_mod(AsyncWebServerRequest *request)
@@ -5411,20 +5289,22 @@ void webService()
 					{ handle_symbol(request); });
 	async_server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_logout(request); });
-	async_server.on("/radio", HTTP_GET, [](AsyncWebServerRequest *request) {
-		handle_radio_get(request);});
-	async_server.on("/radio", HTTP_POST, [](AsyncWebServerRequest *request) {
-		handle_radio_post(request);});		
-	async_server.on("/vpn", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_vpn(request); });
+	async_server.on("/radio", HTTP_GET, [](AsyncWebServerRequest *request) 	
+					{ handle_radio_get(request);});
+	async_server.on("/radio", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_radio_post(request);});		
+	async_server.on("/vpn", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_vpn(request);});
+	async_server.on("/vpn", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_vpn(request);});
 	async_server.on("/mod", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_mod(request); });
 	async_server.on("/default", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_default(); });
-	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) {
-		handle_igate_get(request);});
-	async_server.on("/igate", HTTP_POST, [](AsyncWebServerRequest *request) {
-		handle_igate_post(request);});
+	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_igate_get(request);});
+	async_server.on("/igate", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_igate_post(request);});
 	async_server.on("/digi", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_digi(request); });
 	async_server.on("/tracker", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)

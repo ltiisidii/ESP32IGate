@@ -46,7 +46,7 @@
     <!-- Main Content -->
     <div class="container mt-4">
         <h3 class="text-center">Wireguard Configuration</h3>
-        <form>
+        <form action="/vpn" method="POST">
             <table class="table table-striped table-dark">
                 <tbody>
                     <tr>
@@ -56,7 +56,7 @@
                         <td align="right"><b>Enable</b></td>
                         <td style="text-align: left;">
                             <label class="switch">
-                                <input type="checkbox" name="vpnEnable" value="OK">
+                                <input type="checkbox" name="vpnEnable" value="OK" %VPN_ENABLE%>
                                 <span class="slider round"></span>
                             </label>
                         </td>
@@ -64,54 +64,71 @@
                     <tr>
                         <td align="right"><b>Server Address</b></td>
                         <td style="text-align: left;">
-                            <input size="20" id="wg_peer_address" name="wg_peer_address" type="text" value="vpn.dprns.com">
+                            <input size="20" id="wg_peer_address" name="wg_peer_address" type="text" value="%WG_PEER_ADDRESS%">
                         </td>
                     </tr>
                     <tr>
                         <td align="right"><b>Server Port</b></td>
                         <td style="text-align: left;">
-                            <input id="wg_port" size="5" name="wg_port" type="number" value="51820">
+                            <input id="wg_port" size="5" name="wg_port" type="number" value="%WG_PORT%">
                         </td>
                     </tr>
                     <tr>
                         <td align="right"><b>Local Address</b></td>
                         <td style="text-align: left;">
-                            <input id="wg_local_address" name="wg_local_address" type="text" value="192.168.1.2">
+                            <input id="wg_local_address" name="wg_local_address" type="text" value="%WG_LOCAL_ADDRESS%">
                         </td>
                     </tr>
                     <tr>
                         <td align="right"><b>Netmask</b></td>
                         <td style="text-align: left;">
-                            <input id="wg_netmask_address" name="wg_netmask_address" type="text" value="255.255.255.0">
+                            <input id="wg_netmask_address" name="wg_netmask_address" type="text" value="%WG_NETMASK%">
                         </td>
                     </tr>
                     <tr>
                         <td align="right"><b>Gateway</b></td>
                         <td style="text-align: left;">
-                            <input id="wg_gw_address" name="wg_gw_address" type="text" value="192.168.1.1">
+                            <input id="wg_gw_address" name="wg_gw_address" type="text" value="%WG_GW%">
                         </td>
                     </tr>
                     <tr>
                         <td align="right"><b>Public Key</b></td>
                         <td style="text-align: left;">
-                            <input size="50" maxlength="44" id="wg_public_key" name="wg_public_key" type="text" value="">
+                            <input size="50" maxlength="44" id="wg_public_key" name="wg_public_key" type="text" value="%WG_PUBLIC_KEY%">
                         </td>
                     </tr>
                     <tr>
                         <td align="right"><b>Private Key</b></td>
                         <td style="text-align: left;">
-                            <input size="50" maxlength="44" id="wg_private_key" name="wg_private_key" type="text" value="">
+                            <input size="50" maxlength="44" id="wg_private_key" name="wg_private_key" type="text" value="%WG_PRIVATE_KEY%">
                         </td>
                     </tr>
                 </tbody>
             </table>
-        </form>
+            <div class="text-center mt-3">
+                <button type="submit" class="btn btn-success">Apply Changes</button>
+            </div>
+        </form>        
     </div>
 
     <!-- Footer -->
     <footer class="bg-primary text-center text-light py-3 mt-4">
         ESP32IGate Web Configuration - &copy; 2025
     </footer>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('/vpn', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => alert('Configuración guardada: ' + data))
+            .catch(err => alert('Error: ' + err));
+        });
+    </script>
 
 </body>
 </html>
