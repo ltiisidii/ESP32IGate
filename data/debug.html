@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Debugging Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .card {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            color: #e0e0e0;
+        }
+        .card-header {
+            background-color: #292929;
+            border-bottom: 1px solid #444;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        .card-body p {
+            margin-bottom: 0.5rem;
+        }
+        h1 {
+            color: #ffffff;
+        }
+        a {
+            color: #bb86fc;
+        }
+        a:hover {
+            color: #ffffff;
+        }
+        .text-danger {
+            color: #ff4d4d; /* Color rojo brillante */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center my-4">ESP32 Debugging Dashboard</h1>
+        
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-1 g-4">
+            <!-- Radio Section -->
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">Radio</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Primera columna -->
+                            <div class="col-6">
+                                <h6 class="card-title">RF Analog Module:</h6>
+                                <p>Enable: <span id="rfEnable"></span></p>
+                                <p>Module Type: <span id="rfModuleType"></span></p>
+                                <p>TX Frequency: <span id="txFrequency"></span></p>
+                                <p>RX Frequency: <span id="rxFrequency"></span></p>
+                                <p>TX Power: <span id="txPower"></span></p>
+                                <p>Volume: <span id="volume"></span></p>
+                                <p>SQL Level: <span id="sqlLevel"></span></p>
+                            </div>
+                            <!-- Segunda columna -->
+                            <div class="col-6">
+                                <h6 class="mt-3">AFSK/TNC Configuration:</h6>
+                                <p>Modem Type: <span id="modemType"></span></p>
+                                <p>Audio HPF: <span id="audioHpf"></span></p>
+                                <p>Audio BPF: <span id="audioBpf"></span></p>
+                                <p>TX Time Slot: <span id="txTimeSlot"></span></p>
+                                <p>Preamble: <span id="preamble"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-2">
+                <!-- IGate Section -->
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">IGate</div>
+                        <div class="card-body">
+                            <p>Enable: <span id="igateEnable"></span></p>
+                            <p>Station Callsign: <span id="igateCallsign"></span></p>
+                            <p>Station SSID: <span id="igateSsid"></span></p>
+                            <p>PATH: <span id="igatePath"></span></p>
+                            <p>Text Comment: <span id="igateComment"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Digipeater Section -->
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">Digipeater</div>
+                        <div class="card-body">
+                            <p>Enable: <span id="digiEnable"></span></p>
+                            <p>Station Callsign: <span id="digiCallsign"></span></p>
+                            <p>Station SSID: <span id="digiSsid"></span></p>
+                            <p>PATH: <span id="digiPath"></span></p>
+                            <p>Text Comment: <span id="digiComment"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tracker Section -->
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">Tracker</div>
+                        <div class="card-body">
+                            <p>Enable: <span id="trackerEnable"></span></p>
+                            <p>Station Callsign: <span id="trackerCallsign"></span></p>
+                            <p>Station SSID: <span id="trackerSsid"></span></p>
+                            <p>PATH: <span id="trackerPath"></span></p>
+                            <p>Text Comment: <span id="trackerComment"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WX Section -->
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">WX (Weather)</div>
+                        <div class="card-body">
+                            <p>Enable: <span id="wxEnable"></span></p>
+                            <p>Station Callsign: <span id="wxCallsign"></span></p>
+                            <p>Station SSID: <span id="wxSsid"></span></p>
+                            <p>PATH: <span id="wxPath"></span></p>
+                            <p>Text Comment: <span id="wxComment"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TLM Section -->
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">TLM (Telemetry)</div>
+                        <div class="card-body">
+                            <p>Enable: <span id="tlmEnable"></span></p>
+                            <p>Station Callsign: <span id="tlmCallsign"></span></p>
+                            <p>Station SSID: <span id="tlmSsid"></span></p>
+                            <p>PATH: <span id="tlmPath"></span></p>
+                            <p>Text Comment: <span id="tlmComment"></span></p>
+                        </div>
+                    </div>
+                </div>            
+            </div>
+
+        <!-- Agrupación de Wireless, System Settings y Display Settings -->
+        <div class="row g-2">
+            <!-- Wireless Section -->
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header">Wireless</div>
+                    <div class="card-body">
+                        <h6>WiFi Access Point Configuration:</h6>
+                        <p>Enable: <span id="wifiApEnable"></span></p>
+                        <p>WiFi AP SSID: <span id="wifiApSsid"></span></p>
+                        <h6 class="mt-3">WiFi Multi Station Configuration:</h6>
+                        <p>Station #1 Enable: <span id="wifiSta1Enable"></span></p>
+                        <p>WiFi AP SSID: <span id="wifiSta1Ssid"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings Section -->
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header">System Setting</div>
+                    <div class="card-body">
+                        <p>Local Date/Time: <span id="localDateTime"></span></p>
+                        <p>NTP Host: <span id="ntpHost"></span></p>
+                        <p>Time Zone: <span id="timeZone"></span></p>
+                        <p>Web USER: <span id="webUser"></span></p>
+                        <p>Web PASSWORD: <span id="webPassword"></span></p>
+                        <h6 class="mt-3">Paths:</h6>
+                        <p>PATH_1: <span id="path1"></span></p>
+                        <p>PATH_2: <span id="path2"></span></p>
+                        <p>PATH_3: <span id="path3"></span></p>
+                        <p>PATH_4: <span id="path4"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display Setting Section -->
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header">Display Setting</div>
+                    <div class="card-body">
+                        <p>OLED Enable: <span id="oledEnable"></span></p>
+                        <p>TX Display: <span id="txDisplay"></span></p>
+                        <p>RX Display: <span id="rxDisplay"></span></p>
+                        <p>Head Up: <span id="headUp"></span></p>
+                        <p>Popup Delay: <span id="popupDelay"></span></p>
+                        <p>RX Channel: <span id="rxChannel"></span></p>
+                        <p>Filter DX: <span id="filterDx"></span></p>
+                        <p>Filters: <span id="filters"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    <script>
+        function setTextOrFallback(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (value === undefined || value === null) {
+                element.innerText = "No data";
+                element.classList.add("text-danger"); // Clase para texto rojo
+            } else {
+                element.innerText = value;
+                element.classList.remove("text-danger"); // Remueve el estilo si ya tiene datos
+            }
+        }
+
+        async function fetchDebugData() {
+            try {
+                const response = await fetch('/debug-info');
+                if (!response.ok) throw new Error('Error en la consulta');
+                
+                const data = await response.json();
+
+            // Actualizar los valores para Radio
+            setTextOrFallback("rfEnable", data.radio.rfEnable);
+            setTextOrFallback("rfModuleType", data.radio.rfModuleType);
+            setTextOrFallback("txFrequency", data.radio.txFrequency);
+            setTextOrFallback("rxFrequency", data.radio.rxFrequency);
+            setTextOrFallback("txPower", data.radio.txPower);
+            setTextOrFallback("volume", data.radio.volume);
+            setTextOrFallback("sqlLevel", data.radio.sqlLevel);
+            setTextOrFallback("modemType", data.radio.modemType);
+            setTextOrFallback("audioHpf", data.radio.audioHpf);
+            setTextOrFallback("audioBpf", data.radio.audioBpf);
+            setTextOrFallback("txTimeSlot", data.radio.txTimeSlot);
+            setTextOrFallback("preamble", data.radio.preamble);
+
+            // Actualizar los valores para IGate
+            setTextOrFallback("igateEnable", data.igate.enable);
+            setTextOrFallback("igateCallsign", data.igate.stationCallsign);
+            setTextOrFallback("igateSsid", data.igate.stationSsid);
+            setTextOrFallback("igatePath", data.igate.path);
+            setTextOrFallback("igateComment", data.igate.textComment);
+
+            // Actualizar los valores para Digi
+            setTextOrFallback("digiEnable", data.digi.enable);
+            setTextOrFallback("digiCallsign", data.digi.stationCallsign);
+            setTextOrFallback("digiSsid", data.digi.stationSsid);
+            setTextOrFallback("digiPath", data.digi.path);
+            setTextOrFallback("digiComment", data.digi.textComment);
+
+            // Actualizar los valores para Tracker
+            setTextOrFallback("trackerEnable", data.tracker.enable);
+            setTextOrFallback("trackerCallsign", data.tracker.stationCallsign);
+            setTextOrFallback("trackerSsid", data.tracker.stationSsid);
+            setTextOrFallback("trackerPath", data.tracker.path);
+            setTextOrFallback("trackerComment", data.tracker.textComment);
+
+            // Actualizar los valores para WX
+            setTextOrFallback("wxEnable", data.wx?.enable);
+            setTextOrFallback("wxCallsign", data.wx?.stationCallsign);
+            setTextOrFallback("wxSsid", data.wx?.stationSsid);
+            setTextOrFallback("wxPath", data.wx?.path);
+            setTextOrFallback("wxComment", data.wx?.textComment);
+
+            // Actualizar los valores para TLM
+            setTextOrFallback("tlmEnable", data.tlm?.enable);
+            setTextOrFallback("tlmCallsign", data.tlm?.stationCallsign);
+            setTextOrFallback("tlmSsid", data.tlm?.stationSsid);
+            setTextOrFallback("tlmPath", data.tlm?.path);
+            setTextOrFallback("tlmComment", data.tlm?.textComment);
+
+            // Actualizar los valores para Wireless
+            setTextOrFallback("wifiApEnable", data.wireless?.wifiApEnable);
+            setTextOrFallback("wifiApSsid", data.wireless?.wifiApSsid);
+            setTextOrFallback("wifiSta1Enable", data.wireless?.wifiSta1Enable);
+            setTextOrFallback("wifiSta1Ssid", data.wireless?.wifiSta1Ssid);
+
+            // Actualizar los valores para System
+            setTextOrFallback("localDateTime", data.system.localDateTime);
+            setTextOrFallback("ntpHost", data.system.ntpHost);
+            setTextOrFallback("timeZone", data.system.timeZone);
+            setTextOrFallback("webUser", data.system.webUser);
+            setTextOrFallback("webPassword", data.system.webPassword);
+            setTextOrFallback("path1", data.system.path1);
+            setTextOrFallback("path2", data.system.path2);
+            setTextOrFallback("path3", data.system.path3);
+            setTextOrFallback("path4", data.system.path4);
+
+            // Actualizar los valores para Display Setting
+            setTextOrFallback("oledEnable", data.display?.oledEnable);
+            setTextOrFallback("txDisplay", data.display?.txDisplay);
+            setTextOrFallback("rxDisplay", data.display?.rxDisplay);
+            setTextOrFallback("headUp", data.display?.headUp);
+            setTextOrFallback("popupDelay", data.display?.popupDelay);
+            setTextOrFallback("rxChannel", data.display?.rxChannel);
+            setTextOrFallback("filterDx", data.display?.filterDx);
+            setTextOrFallback("filters", data.display?.filters);
+
+            } catch (error) {
+                console.error("Error al obtener los datos:", error);
+            }
+        }
+
+        // Llama a la función al cargar la página
+        document.addEventListener("DOMContentLoaded", fetchDebugData);
+
+    </script>
+</body>
+</html>

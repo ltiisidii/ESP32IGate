@@ -2254,646 +2254,153 @@ void handle_mod(AsyncWebServerRequest *request)
 	}
 }
 
-void handle_system(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-	if (request->hasArg("updateTimeZone"))
-	{
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			if (request->argName(i) == "SetTimeZone")
-			{
-				if (request->arg(i) != "")
-				{
-					config.timeZone = request->arg(i).toFloat();
-					// Serial.println("WEB Config Time Zone);
-					configTime(3600 * config.timeZone, 0, config.ntp_host);
-				}
-				break;
-			}
+// Manejar solicitud GET para /system
+void handle_system_get(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    String html = loadHtmlTemplate("/system.html");
+
+    // Reemplazo de valores dinámicos
+    html.replace("%WEB_USER%", String(config.http_username));
+    html.replace("%WEB_PASSWORD%", String(config.http_password));
+
+	for (int i = 1; i <= 4; i++) {
+		char argName[10];
+		snprintf(argName, sizeof(argName), "Path_%d", i);
+		if (request->hasArg(argName)) {
+			strncpy(config.path[i - 1], request->arg(argName).c_str(), sizeof(config.path[i - 1]));
 		}
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
 	}
-	else if (request->hasArg("updateTimeNtp"))
-	{
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-			if (request->argName(i) == "SetTimeNtp")
-			{
-				if (request->arg(i) != "")
-				{
-					// Serial.println("WEB Config NTP");
-					strcpy(config.ntp_host, request->arg(i).c_str());
-					configTime(3600 * config.timeZone, 0, config.ntp_host);
-				}
-				break;
-			}
+
+    html.replace("%OLED_ENABLE%", config.oled_enable ? "checked" : "");
+    html.replace("%TX_DISPLAY%", config.tx_display ? "checked" : "");
+    html.replace("%RX_DISPLAY%", config.rx_display ? "checked" : "");
+    html.replace("%HEAD_UP%", config.h_up ? "checked" : "");
+    html.replace("%POPUP_DELAY%", String(config.dispDelay));
+    html.replace("%RX_CHANNEL_INET%", String(config.dispINET));
+	html.replace("%RX_CHANNEL_RF%", String(config.dispRF));
+    html.replace("%FILTER_DX%", String(config.filterDistant));
+    html.replace("%FILTERS%", String(config.dispFilter));
+
+    request->send(200, "text/html", html);
+}
+
+// Manejar solicitud POST para /system
+void handle_system_post(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    // Lógica existente para configuración de zona horaria y NTP
+    if (request->hasArg("SetTimeZone")) {
+        String timeZone = request->arg("SetTimeZone");
+        config.timeZone = timeZone.toFloat();
+        configTime(3600 * config.timeZone, 0, config.ntp_host);
+        saveEEPROM();
+    } else if (request->hasArg("SetTimeNtp")) {
+        String ntpHost = request->arg("SetTimeNtp");
+        strcpy(config.ntp_host, ntpHost.c_str());
+        configTime(3600 * config.timeZone, 0, config.ntp_host);
+        saveEEPROM();
+    } else if (request->hasArg("SetTime")) {
+        String dateTime = request->arg("SetTime");
+        String date = dateTime.substring(0, 10);
+        String time = dateTime.substring(11);
+
+        int yyyy = date.substring(0, 4).toInt();
+        int mm = date.substring(5, 7).toInt();
+        int dd = date.substring(8, 10).toInt();
+        int hh = time.substring(0, 2).toInt();
+        int ii = time.substring(3, 5).toInt();
+        int ss = time.substring(6, 8).toInt();
+
+        tmElements_t timeinfo;
+        timeinfo.Year = yyyy - 1970;
+        timeinfo.Month = mm;
+        timeinfo.Day = dd;
+        timeinfo.Hour = hh;
+        timeinfo.Minute = ii;
+        timeinfo.Second = ss;
+
+        time_t timeStamp = makeTime(timeinfo);
+        time_t rtc = timeStamp - (config.timeZone * 3600);
+        timeval tv = {rtc, 0};
+        timezone tz = {0, 0};
+        settimeofday(&tv, &tz);
+
+        saveEEPROM();
+    } else if (request->hasArg("REBOOT")) {
+        request->send(200, "text/html", "Reiniciando sistema");
+        ESP.restart();
+        return;
+    }
+
+    // Nueva lógica para Web Authentication
+    if (request->hasArg("WebUser")) {
+        String webUser = request->arg("WebUser");
+        strncpy(config.http_username, webUser.c_str(), sizeof(config.http_username));
+    }
+
+    if (request->hasArg("WebPassword")) {
+        String webPassword = request->arg("WebPassword");
+        strncpy(config.http_password, webPassword.c_str(), sizeof(config.http_password));
+    }
+
+	// Nueva lógica para PATH USER Define
+	for (int i = 1; i <= 4; i++) {
+		String argName = "Path_" + String(i);
+		if (request->hasArg(argName.c_str())) { // Convertir a const char* con c_str()
+			size_t length = sizeof(config.path[i - 1]) - 1; // Reservar espacio para el null-terminator
+			strncpy(config.path[i - 1], request->arg(argName.c_str()).c_str(), length);
+			config.path[i - 1][length] = '\0'; // Asegurarse de que termine con null
 		}
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
 	}
-	else if (request->hasArg("updateTime"))
-	{
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-			if (request->argName(i) == "SetTime")
-			{
-				if (request->arg(i) != "")
-				{
-					// struct tm tmn;
-					String date = getValue(request->arg(i), ' ', 0);
-					String time = getValue(request->arg(i), ' ', 1);
-					int yyyy = getValue(date, '-', 0).toInt();
-					int mm = getValue(date, '-', 1).toInt();
-					int dd = getValue(date, '-', 2).toInt();
-					int hh = getValue(time, ':', 0).toInt();
-					int ii = getValue(time, ':', 1).toInt();
-					int ss = getValue(time, ':', 2).toInt();
-					// int ss = 0;
 
-					tmElements_t timeinfo;
-					timeinfo.Year = yyyy - 1970;
-					timeinfo.Month = mm;
-					timeinfo.Day = dd;
-					timeinfo.Hour = hh;
-					timeinfo.Minute = ii;
-					timeinfo.Second = ss;
-					time_t timeStamp = makeTime(timeinfo);
+    // Nueva lógica para Display Settings
+    if (request->hasArg("OLEDEnable")) {
+        config.oled_enable = (request->arg("OLEDEnable") == "OK");
+    }
 
-					// tmstruct.tm_year) + 1900, (tmstruct.tm_mon) + 1, tmstruct.tm_mday, tmstruct.tm_hour, tmstruct.tm_min, tmstruct.tm_sec
+    if (request->hasArg("TXDisplay")) {
+        config.tx_display = (request->arg("TXDisplay") == "OK");
+    }
 
-					time_t rtc = timeStamp - (config.timeZone * 3600);
-					timeval tv = {rtc, 0};
-					timezone tz = {(0) + DST_MN, 0};
-					settimeofday(&tv, &tz);
+    if (request->hasArg("RXDisplay")) {
+        config.rx_display = (request->arg("RXDisplay") == "OK");
+    }
 
-					// Serial.println("Update TIME " + request->arg(i));
-					Serial.print("Set New Time at ");
-					Serial.print(dd);
-					Serial.print("/");
-					Serial.print(mm);
-					Serial.print("/");
-					Serial.print(yyyy);
-					Serial.print(" ");
-					Serial.print(hh);
-					Serial.print(":");
-					Serial.print(ii);
-					Serial.print(":");
-					Serial.print(ss);
-					Serial.print(" ");
-					Serial.println(timeStamp);
-				}
-				break;
-			}
-		}
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("REBOOT"))
-	{
-		esp_restart();
-	}
-	else if (request->hasArg("commitWebAuth"))
-	{
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-			if (request->argName(i) == "webauth_user")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.http_username, request->arg(i).c_str());
-				}
-			}
-			if (request->argName(i) == "webauth_pass")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.http_password, request->arg(i).c_str());
-				}
-			}
-		}
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitPath"))
-	{
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-			if (request->argName(i) == "path1")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.path[0], request->arg(i).c_str());
-				}
-			}
-			if (request->argName(i) == "path2")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.path[1], request->arg(i).c_str());
-				}
-			}
-			if (request->argName(i) == "path3")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.path[1], request->arg(i).c_str());
-				}
-			}
-			if (request->argName(i) == "path4")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.path[3], request->arg(i).c_str());
-				}
-			}
-		}
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitDISP"))
-	{
-		bool dispRX = false;
-		bool dispTX = false;
-		bool dispRF = false;
-		bool dispINET = false;
-		bool oledEN = false;
+    if (request->hasArg("HeadUp")) {
+        config.h_up = (request->arg("HeadUp") == "OK");
+    }
 
-		config.dispFilter = 0;
+    if (request->hasArg("PopupDelay")) {
+        config.dispDelay = request->arg("PopupDelay").toInt();
+    }
 
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-			if (request->argName(i) == "oledEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-					{
-						oledEN = true;
-					}
-				}
-			}
-			if (request->argName(i) == "filterMessage")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.dispFilter |= FILTER_MESSAGE;
-				}
-			}
+    if (request->hasArg("RXChannel_RF")) {
+        config.dispRF = request->arg("RXChannel").toInt();
+    }
 
-			if (request->argName(i) == "filterTelemetry")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.dispFilter |= FILTER_TELEMETRY;
-				}
-			}
+	if (request->hasArg("RXChannel_INET")) {
+        config.dispINET = request->arg("RXChannel").toInt();
+    }
 
-			if (request->argName(i) == "filterStatus")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.dispFilter |= FILTER_STATUS;
-				}
-			}
+    if (request->hasArg("FilterDX")) {
+        config.filterDistant = request->arg("FilterDX").toFloat();
+    }
 
-			if (request->argName(i) == "filterWeather")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.dispFilter |= FILTER_WX;
-				}
-			}
+    if (request->hasArg("Filters")) {
+        String filters = request->arg("Filters");
+        config.dispFilter = filters.toInt();
+    }
 
-			if (request->argName(i) == "filterObject")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.dispFilter |= FILTER_OBJECT;
-				}
-			}
+    // Guardar cambios en EEPROM
+    saveEEPROM();
 
-			if (request->argName(i) == "filterItem")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.dispFilter |= FILTER_ITEM;
-				}
-			}
-
-			if (request->argName(i) == "filterQuery")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.dispFilter |= FILTER_QUERY;
-				}
-			}
-			if (request->argName(i) == "filterBuoy")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.dispFilter |= FILTER_BUOY;
-				}
-			}
-			if (request->argName(i) == "filterPosition")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.dispFilter |= FILTER_POSITION;
-				}
-			}
-
-			if (request->argName(i) == "dispRF")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						dispRF = true;
-				}
-			}
-
-			if (request->argName(i) == "dispINET")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						dispINET = true;
-				}
-			}
-			if (request->argName(i) == "txdispEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						dispTX = true;
-				}
-			}
-			if (request->argName(i) == "rxdispEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						dispRX = true;
-				}
-			}
-
-			if (request->argName(i) == "dispDelay")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-					{
-						config.dispDelay = request->arg(i).toInt();
-						if (config.dispDelay < 0)
-							config.dispDelay = 0;
-					}
-				}
-			}
-
-			if (request->argName(i) == "oled_timeout")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-					{
-						config.oled_timeout = request->arg(i).toInt();
-						if (config.oled_timeout < 0)
-							config.oled_timeout = 0;
-					}
-				}
-			}
-			if (request->argName(i) == "filterDX")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-					{
-						config.filterDistant = request->arg(i).toInt();
-					}
-				}
-			}
-		}
-
-		config.oled_enable = oledEN;
-		config.dispINET = dispINET;
-		config.dispRF = dispRF;
-		config.rx_display = dispRX;
-		config.tx_display = dispTX;
-		// config.filterMessage = filterMessage;
-		// config.filterStatus = filterStatus;
-		// config.filterTelemetry = filterTelemetry;
-		// config.filterWeather = filterWeather;
-		// config.filterTracker = filterTracker;
-		// config.filterMove = filterMove;
-		// config.filterPosition = filterPosition;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else
-	{
-
-		struct tm tmstruct;
-		char strTime[20];
-		tmstruct.tm_year = 0;
-		getLocalTime(&tmstruct, 5000);
-		sprintf(strTime, "%d-%02d-%02d %02d:%02d:%02d", (tmstruct.tm_year) + 1900, (tmstruct.tm_mon) + 1, tmstruct.tm_mday, tmstruct.tm_hour, tmstruct.tm_min, tmstruct.tm_sec);
-
-		String html = "<script type=\"text/javascript\">\n";
-		html += "$('form').submit(function (e) {\n";
-		html += "e.preventDefault();\n";
-		html += "var data = new FormData(e.currentTarget);\n";
-		html += "if(e.currentTarget.id===\"formTime\") document.getElementById(\"updateTime\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formNTP\") document.getElementById(\"updateTimeNtp\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formTimeZone\") document.getElementById(\"updateTimeZone\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formReboot\") document.getElementById(\"REBOOT\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formDisp\") document.getElementById(\"submitDISP\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formWebAuth\") document.getElementById(\"submitWebAuth\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formPath\") document.getElementById(\"submitPath\").disabled=true;\n";
-		html += "$.ajax({\n";
-		html += "url: '/system',\n";
-		html += "type: 'POST',\n";
-		html += "data: data,\n";
-		html += "contentType: false,\n";
-		html += "processData: false,\n";
-		html += "success: function (data) {\n";
-		html += "alert(\"Submited Successfully\");\n";
-		html += "},\n";
-		html += "error: function (data) {\n";
-		html += "alert(\"An error occurred.\");\n";
-		html += "}\n";
-		html += "});\n";
-		html += "});\n";
-		html += "</script>\n";
-
-		// html += "<h2>System Setting</h2>\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>System Setting</b></span></th>\n";
-		html += "<tr>";
-		// html += "<form accept-charset=\"UTF-8\" action=\"#\" enctype='multipart/form-data' id=\"formTime\" method=\"post\">\n";
-		html += "<td style=\"text-align: right;\">LOCAL<br/>DATE/TIME </td>\n";
-		html += "<td style=\"text-align: left;\"><br /><form accept-charset=\"UTF-8\" action=\"#\" enctype='multipart/form-data' id=\"formTime\" method=\"post\">\n<input name=\"SetTime\" type=\"text\" value=\"" + String(strTime) + "\" />\n";
-		html += "<span class=\"input-group-addon\">\n<span class=\"glyphicon glyphicon-calendar\">\n</span></span>\n";
-		// html += "<div class=\"col-sm-3 col-xs-6\"><button class=\"btn btn-primary\" data-args=\"[true]\" data-method=\"getDate\" type=\"button\" data-related-target=\"#SetTime\" />Get Date</button></div>\n";
-		html += "<button type='submit' id='updateTime'  name=\"commit\"> Time Update </button>\n";
-		html += "<input type=\"hidden\" name=\"updateTime\"/></form>\n</td>\n";
-		// html += "<input class=\"btn btn-primary\" id=\"updateTime\" name=\"updateTime\" type=\"submit\" value=\"Time Update\" maxlength=\"80\"/></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td style=\"text-align: right;\">NTP Host </td>\n";
-		html += "<td style=\"text-align: left;\"><br /><form accept-charset=\"UTF-8\" action=\"#\" enctype='multipart/form-data' id=\"formNTP\" method=\"post\"><input name=\"SetTimeNtp\" type=\"text\" value=\"" + String(config.ntp_host) + "\" />\n";
-		html += "<button type='submit' id='updateTimeNtp'  name=\"commit\"> NTP Update </button>\n";
-		html += "<input type=\"hidden\" name=\"updateTimeNtp\"/></form>\n</td>\n";
-		// html += "<input class=\"btn btn-primary\" id=\"updateTimeNtp\" name=\"updateTimeNtp\" type=\"submit\" value=\"NTP Update\" maxlength=\"80\"/></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td style=\"text-align: right;\">Time Zone </td>\n";
-		html += "<td style=\"text-align: left;\"><br /><form accept-charset=\"UTF-8\" action=\"#\" enctype='multipart/form-data' id=\"formTimeZone\" method=\"post\">\n";
-		html += "<select name=\"SetTimeZone\" id=\"SetTimeZone\">\n";
-		for (int i = 0; i < 40; i++)
-		{
-			if (config.timeZone == tzList[i].tz)
-				html += "<option value=\"" + String(tzList[i].tz, 1) + "\" selected>" + String(tzList[i].name) + " Sec</option>\n";
-			else
-				html += "<option value=\"" + String(tzList[i].tz, 1) + "\" >" + String(tzList[i].name) + " Sec</option>\n";
-		}
-		html += "</select>";
-		html += "<button type='submit' id='updateTimeZone'  name=\"commit\"> TZ Update </button>\n";
-		html += "<input type=\"hidden\" name=\"updateTimeZone\"/></form>\n</td>\n";
-		// html += "<input class=\"btn btn-primary\" id=\"updateTimeZone\" name=\"updateTimeZone\" type=\"submit\" value=\"TZ Update\" maxlength=\"80\"/></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td style=\"text-align: right;\">SYSTEM REBOOT </td>\n";
-		html += "<td style=\"text-align: left;\"><br /><form accept-charset=\"UTF-8\" action=\"#\" enctype='multipart/form-data' id=\"formReboot\" method=\"post\"> <button type='submit' id='REBOOT'  name=\"commit\" style=\"background-color:red;color:white\"> REBOOT </button>\n";
-		html += " <input type=\"hidden\" name=\"REBOOT\"/></form>\n</td>\n";
-		// html += "<td style=\"text-align: left;\"><input type='submit' class=\"btn btn-danger\" id=\"REBOOT\" name=\"REBOOT\" value='REBOOT'></td>\n";
-		html += "</tr></table><br /><br />\n";
-
-		/************************ WEB AUTH **************************/
-		html += "<form id='formWebAuth' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>Web Authentication</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Web USER:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"32\" maxlength=\"32\" class=\"form-control\" name=\"webauth_user\" type=\"text\" value=\"" + String(config.http_username) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Web PASSWORD:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"63\" maxlength=\"63\" class=\"form-control\" name=\"webauth_pass\" type=\"password\" value=\"" + String(config.http_password) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "</table><br />\n";
-		html += "<div><button type='submit' id='submitWebAuth'  name=\"commit\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitWebAuth\"/>\n";
-		html += "</form><br /><br />";
-
-		/************************ PATH USER define **************************/
-		html += "<form id='formPath' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>PATH USER Define</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PATH_1:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"72\" maxlength=\"72\" class=\"form-control\" name=\"path1\" type=\"text\" value=\"" + String(config.path[0]) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PATH_2:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"72\" maxlength=\"72\" class=\"form-control\" name=\"path2\" type=\"text\" value=\"" + String(config.path[1]) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PATH_3:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"72\" maxlength=\"72\" class=\"form-control\" name=\"path3\" type=\"text\" value=\"" + String(config.path[2]) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PATH_4:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"72\" maxlength=\"72\" class=\"form-control\" name=\"path4\" type=\"text\" value=\"" + String(config.path[3]) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "</table><br />\n";
-		html += "<div><button type='submit' id='submitPath'  name=\"commitPath\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitPath\"/>\n";
-		html += "</form><br /><br />";
-		delay(1);
-// log_d("%s",html.c_str());
-// log_d("Length: %d",html.length());
-#ifdef OLED
-		html += "<form id='formDisp' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		// html += "<h2>Display Setting</h2>\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>Display Setting</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td style=\"text-align: right;\"><b>OLED Enable</b></td>\n";
-		String oledFlageEn = "";
-		if (config.oled_enable == true)
-			oledFlageEn = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"oledEnable\" value=\"OK\" " + oledFlageEn + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td style=\"text-align: right;\"><b>TX Display</b></td>\n";
-		String txdispFlageEn = "";
-		if (config.tx_display == true)
-			txdispFlageEn = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"txdispEnable\" value=\"OK\" " + txdispFlageEn + "><span class=\"slider round\"></span></label><label style=\"vertical-align: bottom;font-size: 8pt;\"> <i>*All TX Packet for display affter filter.</i></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td style=\"text-align: right;\"><b>RX Display</b></td>\n";
-		String rxdispFlageEn = "";
-		if (config.rx_display == true)
-			rxdispFlageEn = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"rxdispEnable\" value=\"OK\" " + rxdispFlageEn + "><span class=\"slider round\"></span></label><label style=\"vertical-align: bottom;font-size: 8pt;\"> <i>*All RX Packet for display affter filter.</i></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td style=\"text-align: right;\"><b>Head Up</b></td>\n";
-		String hupFlageEn = "";
-		if (config.h_up == true)
-			hupFlageEn = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"hupEnable\" value=\"OK\" " + hupFlageEn + "><span class=\"slider round\"></span></label><label style=\"vertical-align: bottom;font-size: 8pt;\"> <i>*The compass will rotate in the direction of movement.</i></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td style=\"text-align: right;\"><b>Popup Delay</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"dispDelay\" id=\"dispDelay\">\n";
-		for (int i = 0; i < 16; i += 1)
-		{
-			if (config.dispDelay == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(i) + " Sec</option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(i) + " Sec</option>\n";
-		}
-		html += "</select>\n";
-		html += "</td></tr>\n";
-		html += "<tr>\n";
-		html += "<td style=\"text-align: right;\"><b>OLED Sleep</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"oled_timeout\" id=\"oled_timeout\">\n";
-		for (int i = 0; i <= 600; i += 30)
-		{
-			if (config.oled_timeout == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(i) + " Sec</option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(i) + " Sec</option>\n";
-		}
-		html += "</select>\n";
-		html += "</td></tr>\n";
-		String rfFlageEn = "";
-		if (config.dispRF == true)
-			rfFlageEn = "checked";
-		String inetFlageEn = "";
-		if (config.dispINET == true)
-			inetFlageEn = "checked";
-		html += "<tr><td style=\"text-align: right;\"><b>RX Channel</b></td><td style=\"text-align: left;\"><input type=\"checkbox\" name=\"dispRF\" value=\"OK\" " + rfFlageEn + "/>RF <input type=\"checkbox\" name=\"dispINET\" value=\"OK\" " + inetFlageEn + "/>Internet </td></tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Filter DX:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input type=\"number\" name=\"filterDX\" min=\"0\" max=\"9999\"\n";
-		html += "step=\"1\" value=\"" + String(config.filterDistant) + "\" /> Km.  <label style=\"vertical-align: bottom;font-size: 8pt;\"> <i>*Value 0 is all distant allow.</i></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Filter:</b></td>\n";
-
-		html += "<td align=\"center\">\n";
-		html += "<fieldset id=\"filterDispGrp\">\n";
-		html += "<legend>Filter popup display</legend>\n<table style=\"text-align:unset;border-width:0px;background:unset\">";
-		html += "<tr style=\"background:unset;\">";
-
-		// html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"dispTNC\" name=\"dispTNC\" type=\"checkbox\" value=\"OK\" " + rfFlageEn + "/>From RF</td>\n";
-
-		// html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"dispINET\" name=\"dispINET\" type=\"checkbox\" value=\"OK\" " + inetFlageEn + "/>From INET</td>\n";
-
-		String filterMessageFlageEn = "";
-		if (config.dispFilter & FILTER_MESSAGE)
-			filterMessageFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"filterMessage\" name=\"filterMessage\" type=\"checkbox\" value=\"OK\" " + filterMessageFlageEn + "/>Message</td>\n";
-
-		String filterStatusFlageEn = "";
-		if (config.dispFilter & FILTER_STATUS)
-			filterStatusFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"filterStatus\" name=\"filterStatus\" type=\"checkbox\" value=\"OK\" " + filterStatusFlageEn + "/>Status</td>\n";
-
-		String filterTelemetryFlageEn = "";
-		if (config.dispFilter & FILTER_TELEMETRY)
-			filterTelemetryFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"filterTelemetry\" name=\"filterTelemetry\" type=\"checkbox\" value=\"OK\" " + filterTelemetryFlageEn + "/>Telemetry</td>\n";
-
-		String filterWeatherFlageEn = "";
-		if (config.dispFilter & FILTER_WX)
-			filterWeatherFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"filterWeather\" name=\"filterWeather\" type=\"checkbox\" value=\"OK\" " + filterWeatherFlageEn + "/>Weather</td>\n";
-
-		String filterObjectFlageEn = "";
-		if (config.dispFilter & FILTER_OBJECT)
-			filterObjectFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"filterObject\" name=\"filterObject\" type=\"checkbox\" value=\"OK\" " + filterObjectFlageEn + "/>Object</td>\n";
-
-		String filterItemFlageEn = "";
-		if (config.dispFilter & FILTER_ITEM)
-			filterItemFlageEn = "checked";
-		html += "</tr><tr style=\"background:unset;\"><td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"filterItem\" name=\"filterItem\" type=\"checkbox\" value=\"OK\" " + filterItemFlageEn + "/>Item</td>\n";
-
-		String filterQueryFlageEn = "";
-		if (config.dispFilter & FILTER_QUERY)
-			filterQueryFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"filterQuery\" name=\"filterQuery\" type=\"checkbox\" value=\"OK\" " + filterQueryFlageEn + "/>Query</td>\n";
-
-		String filterBuoyFlageEn = "";
-		if (config.dispFilter & FILTER_BUOY)
-			filterBuoyFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"filterBuoy\" name=\"filterBuoy\" type=\"checkbox\" value=\"OK\" " + filterBuoyFlageEn + "/>Buoy</td>\n";
-
-		String filterPositionFlageEn = "";
-		if (config.dispFilter & FILTER_POSITION)
-			filterPositionFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" id=\"filterPosition\" name=\"filterPosition\" type=\"checkbox\" value=\"OK\" " + filterPositionFlageEn + "/>Position</td>\n";
-
-		html += "<td style=\"border:unset;\"></td>";
-		html += "</tr></table></fieldset>\n";
-
-		html += "</td></tr></table><br />\n";
-		html += "<div><button type='submit' id='submitDISP'  name=\"commitDISP\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitDISP\"/>\n";
-		html += "</form><br />";
-#endif
-		request->send(200, "text/html", html); // send to someones browser when asked
-	}
+    // Responder con éxito
+    request->send(200, "text/html", "Configuración guardada.");
 }
 
 void handle_igate_get(AsyncWebServerRequest *request) {
@@ -4726,303 +4233,89 @@ void handle_tracker(AsyncWebServerRequest *request)
 	request->send(200, "text/html", html); // send to someones browser when asked
 }
 
-void handle_wireless(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-	if (request->hasArg("commitWiFiAP"))
-	{
-		bool wifiAP = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			if (request->argName(i) == "wifiAP")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-					{
-						wifiAP = true;
-					}
-				}
-			}
+void handleWirelessGet(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
 
-			if (request->argName(i) == "wifi_ssidAP")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.wifi_ap_ssid, request->arg(i).c_str());
-				}
-			}
-			if (request->argName(i) == "wifi_passAP")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.wifi_ap_pass, request->arg(i).c_str());
-				}
-			}
-		}
-		if (wifiAP)
-		{
-			config.wifi_mode |= WIFI_AP_FIX;
-		}
-		else
-		{
-			config.wifi_mode &= ~WIFI_AP_FIX;
-		}
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitWiFiClient"))
-	{
-		bool wifiSTA = false;
-		String nameSSID, namePASS;
-		for (int n = 0; n < 5; n++)
-			config.wifi_sta[n].enable = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			if (request->argName(i) == "wificlient")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-					{
-						wifiSTA = true;
-					}
-				}
-			}
+    String html = "";
+    File file = SPIFFS.open("/wireless.html", "r");
+    if (!file) {
+        request->send(500, "text/plain", "Error loading wireless.html");
+        return;
+    }
+    while (file.available()) {
+        html += file.readString();
+    }
+    file.close();
 
-			for (int n = 0; n < 5; n++)
-			{
-				nameSSID = "wifiStation" + String(n);
-				if (request->argName(i) == nameSSID)
-				{
-					if (request->arg(i) != "")
-					{
-						if (String(request->arg(i)) == "OK")
-						{
-							config.wifi_sta[n].enable = true;
-						}
-					}
-				}
-				nameSSID = "wifi_ssid" + String(n);
-				if (request->argName(i) == nameSSID)
-				{
-					if (request->arg(i) != "")
-					{
-						strcpy(config.wifi_sta[n].wifi_ssid, request->arg(i).c_str());
-					}
-				}
-				namePASS = "wifi_pass" + String(n);
-				if (request->argName(i) == namePASS)
-				{
-					if (request->arg(i) != "")
-					{
-						strcpy(config.wifi_sta[n].wifi_pass, request->arg(i).c_str());
-					}
-				}
-			}
+	// Reemplazar el marcador para WiFi STA Enable principal
+    html.replace("%STA_ENABLE%", (config.wifi_mode & WIFI_STA_FIX) ? "checked" : "");
 
-			if (request->argName(i) == "wifi_pwr")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.wifi_power = (int8_t)request->arg(i).toInt();
-				}
-			}
-		}
-		if (wifiSTA)
-		{
-			config.wifi_mode |= WIFI_STA_FIX;
-		}
-		else
-		{
-			config.wifi_mode &= ~WIFI_STA_FIX;
-		}
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-		WiFi.setTxPower((wifi_power_t)config.wifi_power);
-	}
-	else
-	{
-		String html = "<script type=\"text/javascript\">\n";
-		html += "$('form').submit(function (e) {\n";
-		html += "e.preventDefault();\n";
-		html += "var data = new FormData(e.currentTarget);\n";
-		html += "if(e.currentTarget.id===\"formBluetooth\") document.getElementById(\"submitBluetooth\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formWiFiAP\") document.getElementById(\"submitWiFiAP\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formWiFiClient\") document.getElementById(\"submitWiFiClient\").disabled=true;\n";
-		html += "$.ajax({\n";
-		html += "url: '/wireless',\n";
-		html += "type: 'POST',\n";
-		html += "data: data,\n";
-		html += "contentType: false,\n";
-		html += "processData: false,\n";
-		html += "success: function (data) {\n";
-		html += "alert(\"Submited Successfully\");\n";
-		html += "},\n";
-		html += "error: function (data) {\n";
-		html += "alert(\"An error occurred.\");\n";
-		html += "}\n";
-		html += "});\n";
-		html += "});\n";
-		html += "</script>\n";
-		/************************ WiFi AP **************************/
-		html += "<form id='formWiFiAP' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		// html += "<h2>WiFi Access Point</h2>\n";
-		html += "<table>\n";
-		// html += "<tr>\n";
-		// html += "<th width=\"200\"><span><b>Setting</b></span></th>\n";
-		// html += "<th><span><b>Value</b></span></th>\n";
-		// html += "</tr>\n";
-		html += "<th colspan=\"2\"><span><b>WiFi Access Point</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\" width=\"120\"><b>Enable:</b></td>\n";
-		String wifiAPEnFlag = "";
-		if (config.wifi_mode & WIFI_AP_FIX)
-			wifiAPEnFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"wifiAP\" value=\"OK\" " + wifiAPEnFlag + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>WiFi AP SSID:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"32\" maxlength=\"32\" class=\"form-control\" id=\"wifi_ssidAP\" name=\"wifi_ssidAP\" type=\"text\" value=\"" + String(config.wifi_ap_ssid) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>WiFi AP PASSWORD:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input size=\"63\" maxlength=\"63\" class=\"form-control\" id=\"wifi_passAP\" name=\"wifi_passAP\" type=\"password\" value=\"" + String(config.wifi_ap_pass) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "</table><br />\n";
-		html += "<div><button type='submit' id='submitWiFiAP'  name=\"commit\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitWiFiAP\"/>\n";
-		html += "</form><br />";
-		/************************ WiFi Client **************************/
-		html += "<br />\n";
-		html += "<form id='formWiFiClient' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>WiFi Multi Station</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>WiFi STA Enable:</b></td>\n";
-		String wifiClientEnFlag = "";
-		if (config.wifi_mode & WIFI_STA_FIX)
-			wifiClientEnFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"wificlient\" value=\"OK\" " + wifiClientEnFlag + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>WiFi RF Power:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"wifi_pwr\" id=\"wifi_pwr\">\n";
-		for (int i = 0; i < 12; i++)
-		{
-			if (config.wifi_power == (int8_t)wifiPwr[i][0])
-				html += "<option value=\"" + String((int8_t)wifiPwr[i][0]) + "\" selected>" + String(wifiPwr[i][1], 1) + " dBm</option>\n";
-			else
-				html += "<option value=\"" + String((int8_t)wifiPwr[i][0]) + "\" >" + String(wifiPwr[i][1], 1) + " dBm</option>\n";
-		}
-		html += "</select>\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-		for (int n = 0; n < 5; n++)
-		{
-			html += "<tr>\n";
-			html += "<td align=\"right\"><b>Station #" + String(n + 1) + ":</b></td>\n";
-			html += "<td align=\"center\">\n";
-			html += "<fieldset id=\"filterDispGrp" + String(n + 1) + "\">\n";
-			html += "<legend>WiFi Station #" + String(n + 1) + "</legend>\n<table style=\"text-align:unset;border-width:0px;background:unset\">";
-			html += "<tr style=\"background:unset;\">";
-			// html += "<tr>\n";
-			html += "<td align=\"right\" width=\"120\"><b>Enable:</b></td>\n";
-			String wifiClientEnFlag = "";
-			if (config.wifi_sta[n].enable)
-				wifiClientEnFlag = "checked";
-			html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"wifiStation" + String(n) + "\" value=\"OK\" " + wifiClientEnFlag + "><span class=\"slider round\"></span></label></td>\n";
-			html += "</tr>\n";
-			html += "<tr>\n";
-			html += "<td align=\"right\"><b>WiFi SSID:</b></td>\n";
-			html += "<td style=\"text-align: left;\"><input size=\"32\" maxlength=\"32\" name=\"wifi_ssid" + String(n) + "\" type=\"text\" value=\"" + String(config.wifi_sta[n].wifi_ssid) + "\" /></td>\n";
-			html += "</tr>\n";
-			html += "<tr>\n";
-			html += "<td align=\"right\"><b>WiFi PASSWORD:</b></td>\n";
-			html += "<td style=\"text-align: left;\"><input size=\"63\" maxlength=\"63\" name=\"wifi_pass" + String(n) + "\" type=\"password\" value=\"" + String(config.wifi_sta[n].wifi_pass) + "\" /></td>\n";
-			html += "</tr>\n";
-			html += "</tr></table></fieldset>\n";
-			html += "</td></tr>\n";
-		}
+    html.replace("%AP_ENABLE%", (config.wifi_mode & WIFI_AP_FIX) ? "checked" : "");
+    html.replace("%AP_SSID%", String(config.wifi_ap_ssid));
+    html.replace("%AP_PASSWORD%", String(config.wifi_ap_pass));
 
-		html += "</table><br />\n";
-		html += "<div><button type='submit' id='submitWiFiClient'  name=\"commit\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitWiFiClient\"/>\n";
-		html += "</form><br />";
-		/************************ Bluetooth **************************/
-#ifdef BLUETOOTH
-		html += "<br />\n";
-		html += "<form id='formBluetooth' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		// html += "<h2>Bluetooth Master (BLE)</h2>\n";
-		html += "<table>\n";
-		// html += "<tr>\n";
-		// html += "<th width=\"200\"><span><b>Setting</b></span></th>\n";
-		// html += "<th><span><b>Value</b></span></th>\n";
-		// html += "</tr>\n";
-		html += "<th colspan=\"2\"><span><b>Bluetooth Master (BLE)</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Enable:</b></td>\n";
-		String btEnFlag = "";
-		if (config.bt_master)
-			btEnFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"btMaster\" value=\"OK\" " + btEnFlag + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>NAME:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"20\" id=\"bt_name\" name=\"bt_name\" type=\"text\" value=\"" + String(config.bt_name) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>UUID:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"37\" size=\"38\" id=\"bt_uuid\" name=\"bt_uuid\" type=\"text\" value=\"" + String(config.bt_uuid) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>UUID RX:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"37\" size=\"38\" id=\"bt_uuid_rx\" name=\"bt_uuid_rx\" type=\"text\" value=\"" + String(config.bt_uuid_rx) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>UUID TX:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"37\" size=\"38\" id=\"bt_uuid_tx\" name=\"bt_uuid_tx\" type=\"text\" value=\"" + String(config.bt_uuid_tx) + "\" /></td>\n";
-		html += "</tr>\n";
+    for (int i = 0; i < 5; i++) {
+        html.replace("%STA" + String(i + 1) + "_ENABLE%", config.wifi_sta[i].enable ? "checked" : "");
+        html.replace("%STA" + String(i + 1) + "_SSID%", String(config.wifi_sta[i].wifi_ssid));
+        html.replace("%STA" + String(i + 1) + "_PASSWORD%", String(config.wifi_sta[i].wifi_pass));
+    }
 
-		html += "<td align=\"right\"><b>MODE:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"bt_mode\" id=\"bt_mode\">\n";
-		String btModeOff = "";
-		String btModeTNC2 = "";
-		String btModeKISS = "";
-		if (config.bt_mode == 1)
-		{
-			btModeTNC2 = "selected";
-		}
-		else if (config.bt_mode == 2)
-		{
-			btModeKISS = "selected";
-		}
-		else
-		{
-			btModeOff = "selected";
-		}
-		html += "<option value=\"0\" " + btModeOff + ">NONE</option>\n";
-		html += "<option value=\"1\" " + btModeTNC2 + ">TNC2</option>\n";
-		html += "<option value=\"2\" " + btModeKISS + ">KISS</option>\n";
-		html += "</select>\n";
+    request->send(200, "text/html", html);
+}
 
-		html += "<label style=\"font-size: 8pt;text-align: right;\">*See the following for generating UUIDs: <a href=\"https://www.uuidgenerator.net\" target=\"_blank\">https://www.uuidgenerator.net</a></label></td>\n";
-		html += "</tr>\n";
-		html += "</table><br />\n";
-		html += "<div><button type='submit' id='submitBluetooth'  name=\"commit\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitBluetooth\"/>\n";
-		html += "</form>";
-#endif
-		request->send(200, "text/html", html); // send to someones browser when asked
-	}
+void handleWirelessPost(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    if (request->hasArg("commitWiFiAP")) {
+        config.wifi_mode &= ~WIFI_AP_FIX;
+        if (request->hasArg("wifiAP") && request->arg("wifiAP") == "OK") {
+            config.wifi_mode |= WIFI_AP_FIX;
+        }
+        if (request->hasArg("wifi_ssidAP")) {
+            strncpy(config.wifi_ap_ssid, request->arg("wifi_ssidAP").c_str(), sizeof(config.wifi_ap_ssid));
+        }
+        if (request->hasArg("wifi_passAP")) {
+            strncpy(config.wifi_ap_pass, request->arg("wifi_passAP").c_str(), sizeof(config.wifi_ap_pass));
+        }
+    }
+
+    if (request->hasArg("commitWiFiClient")) {
+        config.wifi_mode &= ~WIFI_STA_FIX;
+        if (request->hasArg("wificlient") && request->arg("wificlient") == "OK") {
+            config.wifi_mode |= WIFI_STA_FIX;
+        }
+
+        for (int i = 0; i < 5; i++) {
+            config.wifi_sta[i].enable = false;
+        }
+
+        for (uint8_t i = 0; i < request->args(); i++) {
+            for (int n = 0; n < 5; n++) {
+                String enableKey = "wifiStation" + String(n);
+                if (request->argName(i) == enableKey && request->arg(i) == "OK") {
+                    config.wifi_sta[n].enable = true;
+                }
+                String ssidKey = "wifi_ssid" + String(n);
+                if (request->argName(i) == ssidKey) {
+                    strncpy(config.wifi_sta[n].wifi_ssid, request->arg(i).c_str(), sizeof(config.wifi_sta[n].wifi_ssid));
+                }
+                String passKey = "wifi_pass" + String(n);
+                if (request->argName(i) == passKey) {
+                    strncpy(config.wifi_sta[n].wifi_pass, request->arg(i).c_str(), sizeof(config.wifi_sta[n].wifi_pass));
+                }
+            }
+            if (request->argName(i) == "wifi_pwr" && isValidNumber(request->arg(i))) {
+                config.wifi_power = (int8_t)request->arg(i).toInt();
+            }
+        }
+    }
+
+    saveEEPROM();
+    request->redirect("/wireless");
 }
 
 extern bool afskSync;
@@ -5244,6 +4537,107 @@ void handle_gnss(AsyncWebServerRequest *request) {
     request->send(200, "text/html", html);
 }
 
+void handleDebugPage(AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/debug.html", "text/html");
+}
+
+void handleDebugData(AsyncWebServerRequest *request) {
+    String json = "{";
+
+    // Sección Radio
+    json += "\"radio\":{";
+    json += "\"rfEnable\":\"" + String(config.rf_en ? "On" : "Off") + "\",";
+    json += "\"rfModuleType\":\"" + String(config.rf_type == RF_SA868_VHF ? "SA868_VHF" : "Other") + "\",";
+    json += "\"txFrequency\":\"" + String(config.freq_tx, 4) + " MHz\",";
+    json += "\"rxFrequency\":\"" + String(config.freq_rx, 4) + " MHz\",";
+    json += "\"txPower\":\"" + String(config.rf_power == HIGH ? "High" : "Low") + "\",";
+    json += "\"volume\":\"" + String(config.volume) + "\",";
+    json += "\"sqlLevel\":\"" + String(config.sql_level) + "\",";
+    json += "\"modemType\":\"" + String(config.modem_type == 1 ? "AFSK1200" : "Other") + "\",";
+    json += "\"audioHpf\":\"" + String(config.audio_hpf ? "On" : "Off") + "\",";
+    json += "\"audioBpf\":\"" + String(config.audio_bpf ? "On" : "Off") + "\",";
+    json += "\"txTimeSlot\":\"" + String(config.tx_timeslot) + " ms\",";
+    json += "\"preamble\":\"" + String(config.preamble) + "\"";
+    json += "},";
+
+    // Sección IGate
+    json += "\"igate\":{";
+    json += "\"enable\":\"" + String(config.igate_en ? "On" : "Off") + "\",";
+    json += "\"stationCallsign\":\"" + String(config.aprs_mycall) + "\",";
+    json += "\"stationSsid\":\"" + String(config.aprs_ssid) + "\",";
+    json += "\"path\":\"" + String(config.igate_path) + "\",";
+    json += "\"textComment\":\"" + String(config.igate_comment) + "\"";
+    json += "},";
+
+    // Sección Digi
+    json += "\"digi\":{";
+    json += "\"enable\":\"" + String(config.digi_en ? "On" : "Off") + "\",";
+    json += "\"stationCallsign\":\"" + String(config.digi_mycall) + "\",";
+    json += "\"stationSsid\":\"" + String(config.digi_ssid) + "\",";
+    json += "\"path\":\"" + String(config.digi_path) + "\",";
+    json += "\"textComment\":\"" + String(config.digi_comment) + "\"";
+    json += "},";
+
+    // Sección Tracker
+    json += "\"tracker\":{";
+    json += "\"enable\":\"" + String(config.trk_en ? "On" : "Off") + "\",";
+    json += "\"stationCallsign\":\"" + String(config.trk_mycall) + "\",";
+    json += "\"stationSsid\":\"" + String(config.trk_ssid) + "\",";
+    json += "\"path\":\"" + String(config.trk_path) + "\",";
+    json += "\"textComment\":\"" + String(config.trk_comment) + "\"";
+    json += "},";
+
+	// Sección WX
+	json += "\"wx\":{";
+	json += "\"enable\":\"" + String(config.wx_en ? "On" : "Off") + "\",";
+	json += "\"stationCallsign\":\"" + String(config.wx_mycall) + "\",";
+	json += "\"stationSsid\":\"" + String(config.wx_ssid) + "\",";
+	json += "\"path\":\"" + String(config.wx_path) + "\",";
+	json += "\"textComment\":\"" + String(config.wx_comment) + "\"";
+	json += "},";
+
+	// Sección TLM
+	json += "\"tlm\":{";
+	json += "\"enable\":\"" + String(config.tlm0_en ? "On" : "Off") + "\",";
+	json += "\"stationCallsign\":\"" + String(config.tlm0_mycall) + "\",";
+	json += "\"stationSsid\":\"" + String(config.tlm0_ssid) + "\",";
+	json += "\"path\":\"" + String(config.tlm0_path) + "\",";
+	json += "\"textComment\":\"" + String(config.tlm0_comment) + "\"";
+	json += "},";
+
+    // Sección System
+	json += "\"system\":{";
+	json += "\"localDateTime\":\"" + String(now()) + "\",";
+	json += "\"ntpHost\":\"" + String(config.ntp_host) + "\",";
+	json += "\"timeZone\":\"" + String(config.timeZone) + "\",";
+	json += "\"webUser\":\"" + String(config.http_username) + "\",";
+	json += "\"webPassword\":\"****\",";
+	json += "\"paths\":{";
+	json += "\"path1\":\"" + String(config.path[0]) + "\",";
+	json += "\"path2\":\"" + String(config.path[1]) + "\",";
+	json += "\"path3\":\"" + String(config.path[2]) + "\",";
+	json += "\"path4\":\"" + String(config.path[3]) + "\"";
+	json += "}";
+	json += "},";
+
+	json += "\"display\":{";
+	json += "\"oledEnable\":\"" + String(config.oled_enable ? "On" : "Off") + "\",";
+	json += "\"txDisplay\":\"" + String(config.tx_display ? "On" : "Off") + "\",";
+	json += "\"rxDisplay\":\"" + String(config.rx_display ? "On" : "Off") + "\",";
+	json += "\"headUp\":\"" + String(config.h_up ? "On" : "Off") + "\",";
+	json += "\"popupDelay\":\"" + String(config.dispDelay) + " ms\",";
+	json += "\"rxChannelRF\":\"" + String(config.dispRF) + "\",";
+	json += "\"rxChannelINET\":\"" + String(config.dispINET) + "\",";
+	json += "\"filterDx\":\"" + String(config.filterDistant) + "\",";
+	json += "\"filters\":\"" + String(config.dispFilter) + "\"";
+    json += "}"; // Sin coma final
+
+    json += "}"; // Cerramos el JSON principal
+
+    // Enviar respuesta al cliente
+    request->send(200, "application/json", json);
+}
+
 void handle_default()
 {
 	defaultSetting = true;
@@ -5313,10 +4707,14 @@ void webService()
 					{ handle_wx(request); });
 	async_server.on("/tlm", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_tlm(request); });
-	async_server.on("/system", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_system(request); });
-	async_server.on("/wireless", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_wireless(request); });
+	async_server.on("/system", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_system_get(request);});
+	async_server.on("/system", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_system_post(request);});					
+	async_server.on("/wireless", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleWirelessGet(request);});
+	async_server.on("/wireless", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleWirelessPost(request);});
 	async_server.on("/tnc2", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_tnc2(request); });
 	async_server.on("/gnss", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -5350,8 +4748,11 @@ void webService()
 	async_server.on("/aprs-server", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handleAPRSServer(request); });
 	async_server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleWiFiInfo(request); });											
-
+					{ handleWiFiInfo(request); });		
+	async_server.on("/debug-info", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handleDebugData(request); });															
+	async_server.on("/debug", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handleDebugPage(request); });	
 	async_server.on(
 		"/update", HTTP_POST, [](AsyncWebServerRequest *request)
 		{

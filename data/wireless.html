@@ -56,15 +56,15 @@
                 <form>
                     <div class="mb-3">
                         <label for="apEnable" class="form-label">Enable:</label>
-                        <input type="checkbox" id="apEnable" class="form-check-input">
+                        <input type="checkbox" id="apEnable" name="apEnable" class="form-check-input" %AP_ENABLE%>
                     </div>
                     <div class="mb-3">
                         <label for="apSSID" class="form-label">WiFi AP SSID:</label>
-                        <input type="text" id="apSSID" class="form-control">
+                        <input type="text" id="apSSID" name="apSSID" class="form-control" value="%AP_SSID%">
                     </div>
                     <div class="mb-3">
                         <label for="apPassword" class="form-label">WiFi AP Password:</label>
-                        <input type="password" id="apPassword" class="form-control">
+                        <input type="password" id="apPassword" name="apPassword" class="form-control" value="%AP_PASSWORD%">
                     </div>
                     <button type="button" class="btn btn-primary">Apply Changes</button>
                 </form>
@@ -80,49 +80,43 @@
                 <form>
                     <div class="mb-3">
                         <label for="staEnable" class="form-label">WiFi STA Enable:</label>
-                        <input type="checkbox" id="staEnable" class="form-check-input">
+                        <input type="checkbox" id="staEnable" name="staEnable" class="form-check-input" %STA_ENABLE%>
                     </div>
 
                     <!-- Station Tables -->
                     <table class="table table-dark table-bordered">
                         <thead>
                             <tr>
-                                <th>Station</th>
-                                <th>Enable</th>
-                                <th>WiFi SSID</th>
-                                <th>WiFi Password</th>
+                                <td>Station #1</td>
+                                <td><input type="checkbox" id="station1Enable" name="station1Enable" class="form-check-input" %STA1_ENABLE%></td>
+                                <td><input type="text" id="station1SSID" name="station1SSID" class="form-control" value="%STA1_SSID%"></td>
+                                <td><input type="password" id="station1Password" name="station1Password" class="form-control" value="%STA1_PASSWORD%"></td>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Station #1</td>
-                                <td><input type="checkbox" id="station1Enable" class="form-check-input"></td>
-                                <td><input type="text" id="station1SSID" class="form-control"></td>
-                                <td><input type="password" id="station1Password" class="form-control"></td>
-                            </tr>
-                            <tr>
                                 <td>Station #2</td>
-                                <td><input type="checkbox" id="station2Enable" class="form-check-input"></td>
-                                <td><input type="text" id="station2SSID" class="form-control"></td>
-                                <td><input type="password" id="station2Password" class="form-control"></td>
+                                <td><input type="checkbox" id="station2Enable" name="station2Enable" class="form-check-input" %STA1_ENABLE%></td>
+                                <td><input type="text" id="station2SSID" name="station2SSID" class="form-control" value="%STA2_SSID%"></td>
+                                <td><input type="password" id="station1Password" name="station2Password" class="form-control" value="%STA2_PASSWORD%"></td>
                             </tr>
                             <tr>
                                 <td>Station #3</td>
-                                <td><input type="checkbox" id="station3Enable" class="form-check-input"></td>
-                                <td><input type="text" id="station3SSID" class="form-control"></td>
-                                <td><input type="password" id="station3Password" class="form-control"></td>
+                                <td><input type="checkbox" id="station3Enable" name="station3Enable" class="form-check-input" %STA1_ENABLE%></td>
+                                <td><input type="text" id="station3SSID" name="station3SSID" class="form-control" value="%STA3_SSID%"></td>
+                                <td><input type="password" id="station3Password" name="station3Password" class="form-control" value="%STA3_PASSWORD%"></td>
                             </tr>
                             <tr>
                                 <td>Station #4</td>
-                                <td><input type="checkbox" id="station4Enable" class="form-check-input"></td>
-                                <td><input type="text" id="station4SSID" class="form-control"></td>
-                                <td><input type="password" id="station4Password" class="form-control"></td>
+                                <td><input type="checkbox" id="station4Enable" name="station4Enable" class="form-check-input" %STA1_ENABLE%></td>
+                                <td><input type="text" id="station4SSID" name="station4SSID" class="form-control" value="%STA4_SSID%"></td>
+                                <td><input type="password" id="station4Password" name="station4Password" class="form-control" value="%STA4_PASSWORD%"></td>
                             </tr>
                             <tr>
                                 <td>Station #5</td>
-                                <td><input type="checkbox" id="station5Enable" class="form-check-input"></td>
-                                <td><input type="text" id="station5SSID" class="form-control"></td>
-                                <td><input type="password" id="station5Password" class="form-control"></td>
+                                <td><input type="checkbox" id="station5Enable" name="station5Enable" class="form-check-input" %STA1_ENABLE%></td>
+                                <td><input type="text" id="station5SSID" name="station5SSID" class="form-control" value="%STA5_SSID%"></td>
+                                <td><input type="password" id="station5Password" name="station5Password" class="form-control" value="%STA5_PASSWORD%"></td>
                             </tr>
                         </tbody>
                     </table>

@@ -53,7 +53,7 @@
                 <th>LOCAL DATE/TIME</th>
                 <td>
                     <div class="d-flex align-items-center">
-                        <input type="text" class="form-control me-2" id="localDateTime">
+                        <input type="text" class="form-control me-2" id="localDateTime" value="%localDateTime%">
                         <button class="btn btn-primary" id="timeUpdate">Time Update</button>
                     </div>
                 </td>
@@ -62,7 +62,7 @@
                 <th>NTP Host</th>
                 <td>
                     <div class="d-flex align-items-center">
-                        <input type="text" class="form-control me-2" id="ntpHost">
+                        <input type="text" class="form-control me-2" id="ntpHost" value="%ntpHost%"">
                         <button class="btn btn-primary" id="ntpUpdate">NTP Update</button>
                     </div>
                 </td>
@@ -72,31 +72,31 @@
                 <td>
                     <div class="d-flex align-items-center">
                         <select class="form-select me-2" id="timeZone">
-                            <option value="-12">GMT -12:00 International Date Line West</option>
-                            <option value="-11">GMT -11:00 Midway Island, Samoa</option>
-                            <option value="-10">GMT -10:00 Hawaii</option>
-                            <option value="-9">GMT -09:00 Alaska</option>
-                            <option value="-8">GMT -08:00 Pacific Time (US & Canada), Tijuana</option>
-                            <option value="-7">GMT -07:00 Mountain Time (US & Canada)</option>
-                            <option value="-6">GMT -06:00 Central Time (US & Canada), Mexico City</option>
-                            <option value="-5">GMT -05:00 Eastern Time (US & Canada), Bogota, Lima</option>
-                            <option value="-4">GMT -04:00 Atlantic Time (Canada), Caracas, La Paz</option>
-                            <option value="-3">GMT -03:00 Brasilia, Buenos Aires, Georgetown</option>
-                            <option value="-2">GMT -02:00 Mid-Atlantic</option>
-                            <option value="-1">GMT -01:00 Azores, Cape Verde Islands</option>
-                            <option value="0">GMT 00:00 London, Lisbon, Casablanca</option>
-                            <option value="1">GMT +01:00 Amsterdam, Berlin, Rome, Paris, Madrid</option>
-                            <option value="2">GMT +02:00 Athens, Cairo, Jerusalem, Johannesburg</option>
-                            <option value="3">GMT +03:00 Baghdad, Riyadh, Moscow, Nairobi</option>
-                            <option value="4">GMT +04:00 Abu Dhabi, Baku, Muscat</option>
-                            <option value="5">GMT +05:00 Islamabad, Karachi, Tashkent</option>
-                            <option value="6">GMT +06:00 Almaty, Dhaka, Colombo</option>
-                            <option value="7">GMT +07:00 Bangkok, Hanoi, Jakarta</option>
-                            <option value="8">GMT +08:00 Beijing, Singapore, Hong Kong</option>
-                            <option value="9">GMT +09:00 Tokyo, Seoul, Yakutsk</option>
-                            <option value="10">GMT +10:00 Sydney, Guam, Vladivostok</option>
-                            <option value="11">GMT +11:00 Magadan, Solomon Islands, New Caledonia</option>
-                            <option value="12">GMT +12:00 Auckland, Wellington, Fiji</option>
+                            <option value="-12" %timeZoneSelected-12%>GMT -12:00 International Date Line West</option>
+                            <option value="-11" %timeZoneSelected-11%>GMT -11:00 Midway Island, Samoa</option>
+                            <option value="-10" %timeZoneSelected-10%>GMT -10:00 Hawaii</option>
+                            <option value="-9" %timeZoneSelected-9%>GMT -09:00 Alaska</option>
+                            <option value="-8" %timeZoneSelected-8%>GMT -08:00 Pacific Time (US & Canada), Tijuana</option>
+                            <option value="-7" %timeZoneSelected-7%>GMT -07:00 Mountain Time (US & Canada)</option>
+                            <option value="-6" %timeZoneSelected-6%>GMT -06:00 Central Time (US & Canada), Mexico City</option>
+                            <option value="-5" %timeZoneSelected-5%>GMT -05:00 Eastern Time (US & Canada), Bogota, Lima</option>
+                            <option value="-4" %timeZoneSelected-4%>GMT -04:00 Atlantic Time (Canada), Caracas, La Paz</option>
+                            <option value="-3" %timeZoneSelected-3%>GMT -03:00 Brasilia, Buenos Aires, Georgetown</option>
+                            <option value="-2" %timeZoneSelected-2%>GMT -02:00 Mid-Atlantic</option>
+                            <option value="-1" %timeZoneSelected-1%>GMT -01:00 Azores, Cape Verde Islands</option>
+                            <option value="0" %timeZoneSelected0%>GMT 00:00 London, Lisbon, Casablanca</option>
+                            <option value="1" %timeZoneSelected1%>GMT +01:00 Amsterdam, Berlin, Rome, Paris, Madrid</option>
+                            <option value="2" %timeZoneSelected2%>GMT +02:00 Athens, Cairo, Jerusalem, Johannesburg</option>
+                            <option value="3" %timeZoneSelected3%>GMT +03:00 Baghdad, Riyadh, Moscow, Nairobi</option>
+                            <option value="4" %timeZoneSelected4%>GMT +04:00 Abu Dhabi, Baku, Muscat</option>
+                            <option value="5" %timeZoneSelected5%>GMT +05:00 Islamabad, Karachi, Tashkent</option>
+                            <option value="6" %timeZoneSelected6%>GMT +06:00 Almaty, Dhaka, Colombo</option>
+                            <option value="7" %timeZoneSelected7%>GMT +07:00 Bangkok, Hanoi, Jakarta</option>
+                            <option value="8" %timeZoneSelected8%>GMT +08:00 Beijing, Singapore, Hong Kong</option>
+                            <option value="9" %timeZoneSelected9%>GMT +09:00 Tokyo, Seoul, Yakutsk</option>
+                            <option value="10" %timeZoneSelected10%>GMT +10:00 Sydney, Guam, Vladivostok</option>
+                            <option value="11" %timeZoneSelected11%>GMT +11:00 Magadan, Solomon Islands, New Caledonia</option>
+                            <option value="12" %timeZoneSelected12%>GMT +12:00 Auckland, Wellington, Fiji</option>                            
                         </select>                        
                         <button class="btn btn-primary" id="tzUpdate">TZ Update</button>
                     </div>
@@ -120,8 +120,8 @@
         <h2 class="text-center mt-5 mb-4">Web Authentication</h2>
         <table class="table table-dark table-striped">
             <tbody>
-                <tr><th>Web USER</th><td><input type="text" class="form-control" id="webUser"></td></tr>
-                <tr><th>Web PASSWORD</th><td><input type="password" class="form-control" id="webPassword"></td></tr>
+                <tr><th>Web USER</th><td><input type="text" class="form-control" id="webUser" value="%webUser%"></td></tr>
+                <tr><th>Web PASSWORD</th><td><input type="password" class="form-control" id="webPassword" value="%webPassword%"></td></tr>
             </tbody>
         </table>
         <!-- Apply Changes -->
@@ -133,10 +133,10 @@
         <h2 class="text-center mt-5 mb-4">PATH USER Define</h2>
         <table class="table table-dark table-striped">
             <tbody>
-                <tr><th>PATH_1</th><td><input type="text" class="form-control" id="path1"></td></tr>
-                <tr><th>PATH_2</th><td><input type="text" class="form-control" id="path2"></td></tr>
-                <tr><th>PATH_3</th><td><input type="text" class="form-control" id="path3"></td></tr>
-                <tr><th>PATH_4</th><td><input type="text" class="form-control" id="path4"></td></tr>
+                <tr><th>PATH_1</th><td><input type="text" class="form-control" id="path1" value="%path1%"></td></tr>
+                <tr><th>PATH_2</th><td><input type="text" class="form-control" id="path2" value="%path2%"></td></tr>
+                <tr><th>PATH_3</th><td><input type="text" class="form-control" id="path3" value="%path3%"></td></tr>
+                <tr><th>PATH_4</th><td><input type="text" class="form-control" id="path4" value="%path4%"></td></tr>
             </tbody>
         </table>
         <!-- Apply Changes for PATH USER Define -->
@@ -145,82 +145,152 @@
         </div>
 
         <!-- Display Setting -->
-        <h2 class="text-center mt-5 mb-4">Display Setting</h2>
-        <table class="table table-dark table-striped">
-            <tbody>
-                <tr>
-                    <th>OLED Enable</th>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="oledEnable">
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <th>TX Display</th>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="txDisplay">
-                        </div>
-                        <span class="small text-muted">*All TX Packet for display after filter.</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>RX Display</th>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="rxDisplay">
-                        </div>
-                        <span class="small text-muted">*All RX Packet for display after filter.</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Head Up</th>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="headUp">
-                        </div>
-                        <span class="small text-muted">*The compass will rotate in the direction of movement.</span>
-                    </td>
-                </tr>
-                <tr><th>Popup Delay</th><td><input type="number" class="form-control" id="popupDelay"></td></tr>
-                <tr><th>OLED Sleep</th><td><input type="number" class="form-control" id="oledSleep"></td></tr>
-                <tr><th>RX Channel</th><td><input type="text" class="form-control" id="rxChannel"></td></tr>
-                <tr><th>Filter DX</th><td><input type="number" class="form-control" id="filterDx"> Km <span class="small text-muted">*Value 0 is all distance allowed.</span></td></tr>
-            </tbody>
-        </table>
-
-        <!-- Filter -->
-        <h3 class="text-center mt-5 mb-4">Filter</h3>
-        <p class="text-center small text-light">Filter popup display</p>
-        <table class="table table-dark table-striped">
-            <tbody>
-                <tr>
-                    <td><input type="checkbox" id="message"> Message</td>
-                    <td><input type="checkbox" id="status"> Status</td>
-                    <td><input type="checkbox" id="telemetry"> Telemetry</td>
-                    <td><input type="checkbox" id="weather"> Weather</td>
-                    <td><input type="checkbox" id="object"> Object</td>
-                </tr>
-                <tr>
-                    <td><input type="checkbox" id="item"> Item</td>
-                    <td><input type="checkbox" id="query"> Query</td>
-                    <td><input type="checkbox" id="buoy"> Buoy</td>
-                    <td><input type="checkbox" id="position"> Position</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Apply Changes -->
-        <div class="text-center mt-4 mb-5">
-            <button class="btn btn-primary">Apply Changes</button>
+        <div class="card text-bg-dark mb-4">
+            <div class="card-header text-center bg-primary">
+                <h2>Display Setting</h2>
+            </div>
+            <div class="card-body">
+                <form action="/display" method="POST">
+                    <table class="table table-dark table-striped">
+                <tbody>
+                    <tr>
+                        <th>OLED Enable</th>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="oledEnable" name="oledEnable" %oledEnable%>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>TX Display</th>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="txDisplay" name="txDisplay" %txDisplay%>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>RX Display</th>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="rxDisplay" name="rxDisplay" %rxDisplay%>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Head Up</th>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="headUp" name="headUp" %headUp%>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Popup Delay</th>
+                        <td>
+                            <select class="form-select" id="popupDelay" name="popupDelay">
+                                <!-- Generar opciones dinámicamente -->
+                                <option value="0" %popupDelay0%>0 Sec</option>
+                                <option value="1" %popupDelay1%>1 Sec</option>
+                                <option value="2" %popupDelay2%>2 Sec</option>
+                                <option value="3" %popupDelay3%>3 Sec</option>
+                                <!-- Agregar más opciones si es necesario -->
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>RX Channel</th>
+                        <td>
+                            <input type="checkbox" id="rxChannelRF" name="rxChannelRF" %rxChannelRF%> RF
+                            <input type="checkbox" id="rxChannelINET" name="rxChannelINET" %rxChannelINET%> Internet
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filter DX</th>
+                        <td>
+                            <input type="number" class="form-control" id="filterDx" name="filterDx" value="%filterDx%"> Km
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filters</th>
+                        <td>
+                            <input type="checkbox" id="filterMessage" name="filterMessage" %filterMessage%> Message
+                            <input type="checkbox" id="filterStatus" name="filterStatus" %filterStatus%> Status
+                            <input type="checkbox" id="filterTelemetry" name="filterTelemetry" %filterTelemetry%> Telemetry
+                            <input type="checkbox" id="filterWeather" name="filterWeather" %filterWeather%> Weather
+                            <input type="checkbox" id="filterObject" name="filterObject" %filterObject%> Object
+                            <input type="checkbox" id="filterItem" name="filterItem" %filterItem%> Item
+                            <input type="checkbox" id="filterQuery" name="filterQuery" %filterQuery%> Query
+                            <input type="checkbox" id="filterBuoy" name="filterBuoy" %filterBuoy%> Buoy
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="text-center mt-3">
+                <button class="btn btn-primary" type="submit">Apply Changes</button>
+            </div>
+        </form>
+            </div>
         </div>
-    </div>
 
     <!-- Footer -->
     <footer class="bg-primary text-center text-light py-3">
         ESP32IGate Web Configuration - &copy; 2025
     </footer>
 
+    <script>
+        // Actualizar fecha y hora local
+        document.getElementById("timeUpdate").addEventListener("click", function () {
+            const localDateTime = document.getElementById("localDateTime").value;
+            fetch("/system", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `SetTime=${encodeURIComponent(localDateTime)}`
+            })
+            .then(response => response.text())
+            .then(data => alert(data))
+            .catch(error => console.error("Error:", error));
+        });
+    
+        // Actualizar NTP Host
+        document.getElementById("ntpUpdate").addEventListener("click", function () {
+            const ntpHost = document.getElementById("ntpHost").value;
+            fetch("/system", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `SetTimeNtp=${encodeURIComponent(ntpHost)}`
+            })
+            .then(response => response.text())
+            .then(data => alert(data))
+            .catch(error => console.error("Error:", error));
+        });
+    
+        // Actualizar zona horaria
+        document.getElementById("tzUpdate").addEventListener("click", function () {
+            const timeZone = document.getElementById("timeZone").value;
+            fetch("/system", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `SetTimeZone=${encodeURIComponent(timeZone)}`
+            })
+            .then(response => response.text())
+            .then(data => alert(data))
+            .catch(error => console.error("Error:", error));
+        });
+    
+        // Reiniciar el sistema
+        document.getElementById("systemReboot").addEventListener("click", function () {
+            if (confirm("¿Seguro que deseas reiniciar el sistema?")) {
+                fetch("/system", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: "REBOOT=true"
+                })
+                .then(response => response.text())
+                .then(data => alert(data))
+                .catch(error => console.error("Error:", error));
+            }
+        });
+    </script>
 </body>
 </html>

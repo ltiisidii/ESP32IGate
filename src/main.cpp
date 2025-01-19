@@ -2017,7 +2017,7 @@ void setup()
     display.setCursor(60, 40);
     display.printf("FW Ver %s%c", VERSION, VERSION_BUILD);
     display.setCursor(65, 5);
-    display.print("Copy@2022");
+    display.print("Copy@2025");
     display.display();
 
     delay(1000);
