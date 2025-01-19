@@ -80,10 +80,20 @@
                         <div class="card-header">IGate</div>
                         <div class="card-body">
                             <p>Enable: <span id="igateEnable"></span></p>
+                            <p>RF to Internet: <span id="rf2inet"></span></p>
+                            <p>Internet to RF: <span id="inet2rf"></span></p>
                             <p>Station Callsign: <span id="igateCallsign"></span></p>
                             <p>Station SSID: <span id="igateSsid"></span></p>
-                            <p>PATH: <span id="igatePath"></span></p>
-                            <p>Text Comment: <span id="igateComment"></span></p>
+                            <p>Path: <span id="igatePath"></span></p>
+                            <p>Host: <span id="aprsHost"></span></p>
+                            <p>Port: <span id="aprsPort"></span></p>
+                            <p>Passcode: <span id="aprsPasscode"></span></p>
+                            <p>Symbol: <span id="igateSymbol"></span></p>
+                            <p>Latitude: <span id="igateLatitude"></span></p>
+                            <p>Longitude: <span id="igateLongitude"></span></p>
+                            <p>Altitude: <span id="igateAltitude"></span></p>
+                            <p>Interval: <span id="igateInterval"></span></p>
+                            <p>Comment: <span id="igateComment"></span></p>
                         </div>
                     </div>
                 </div>
@@ -91,16 +101,26 @@
                 <!-- Digipeater Section -->
                 <div class="col">
                     <div class="card">
-                        <div class="card-header">Digipeater</div>
+                        <div class="card-header">Digipeater (Digi)</div>
                         <div class="card-body">
                             <p>Enable: <span id="digiEnable"></span></p>
+                            <p>Location to RF: <span id="digiLoc2Rf"></span></p>
+                            <p>Location to Internet: <span id="digiLoc2Inet"></span></p>
+                            <p>Filter: <span id="digiFilter"></span></p>
                             <p>Station Callsign: <span id="digiCallsign"></span></p>
                             <p>Station SSID: <span id="digiSsid"></span></p>
-                            <p>PATH: <span id="digiPath"></span></p>
-                            <p>Text Comment: <span id="digiComment"></span></p>
+                            <p>Path: <span id="digiPath"></span></p>
+                            <p>Latitude: <span id="digiLatitude"></span></p>
+                            <p>Longitude: <span id="digiLongitude"></span></p>
+                            <p>Altitude: <span id="digiAltitude"></span></p>
+                            <p>Interval: <span id="digiInterval"></span></p>
+                            <p>Timestamp: <span id="digiTimestamp"></span></p>
+                            <p>Delay: <span id="digiDelay"></span></p>
+                            <p>Symbol: <span id="digiSymbol"></span></p>
+                            <p>Comment: <span id="digiComment"></span></p>
                         </div>
                     </div>
-                </div>
+                </div>               
 
                 <!-- Tracker Section -->
                 <div class="col">
@@ -108,41 +128,71 @@
                         <div class="card-header">Tracker</div>
                         <div class="card-body">
                             <p>Enable: <span id="trackerEnable"></span></p>
+                            <p>Location to RF: <span id="trackerLoc2Rf"></span></p>
+                            <p>Location to Internet: <span id="trackerLoc2Inet"></span></p>
+                            <p>Smart Beacon: <span id="trackerSmartBeacon"></span></p>
+                            <p>Compressed: <span id="trackerCompressed"></span></p>
+                            <p>Altitude Included: <span id="trackerAltitudeIncluded"></span></p>
+                            <p>Timestamp: <span id="trackerTimestamp"></span></p>
+                            <p>High Speed: <span id="trackerHighSpeed"></span></p>
+                            <p>Low Speed: <span id="trackerLowSpeed"></span></p>
+                            <p>Min Interval: <span id="trackerMinInterval"></span></p>
+                            <p>Max Interval: <span id="trackerMaxInterval"></span></p>
+                            <p>Min Angle: <span id="trackerMinAngle"></span></p>
+                            <p>Slow Interval: <span id="trackerSlowInterval"></span></p>
                             <p>Station Callsign: <span id="trackerCallsign"></span></p>
                             <p>Station SSID: <span id="trackerSsid"></span></p>
-                            <p>PATH: <span id="trackerPath"></span></p>
-                            <p>Text Comment: <span id="trackerComment"></span></p>
+                            <p>Path: <span id="trackerPath"></span></p>
+                            <p>Latitude: <span id="trackerLatitude"></span></p>
+                            <p>Longitude: <span id="trackerLongitude"></span></p>
+                            <p>Altitude: <span id="trackerAltitude"></span></p>
+                            <p>Interval: <span id="trackerInterval"></span></p>
+                            <p>Symbol: <span id="trackerSymbol"></span></p>
+                            <p>Moving Symbol: <span id="trackerMovingSymbol"></span></p>
+                            <p>Stopped Symbol: <span id="trackerStoppedSymbol"></span></p>
+                            <p>Comment: <span id="trackerComment"></span></p>
                         </div>
                     </div>
-                </div>
+                </div>               
 
                 <!-- WX Section -->
                 <div class="col">
                     <div class="card">
-                        <div class="card-header">WX (Weather)</div>
+                        <div class="card-header">Weather Station (WX)</div>
                         <div class="card-body">
                             <p>Enable: <span id="wxEnable"></span></p>
+                            <p>Location to RF: <span id="wxLoc2Rf"></span></p>
+                            <p>Location to Internet: <span id="wxLoc2Inet"></span></p>
                             <p>Station Callsign: <span id="wxCallsign"></span></p>
                             <p>Station SSID: <span id="wxSsid"></span></p>
-                            <p>PATH: <span id="wxPath"></span></p>
-                            <p>Text Comment: <span id="wxComment"></span></p>
+                            <p>Path: <span id="wxPath"></span></p>
+                            <p>Latitude: <span id="wxLatitude"></span></p>
+                            <p>Longitude: <span id="wxLongitude"></span></p>
+                            <p>Altitude: <span id="wxAltitude"></span></p>
+                            <p>Interval: <span id="wxInterval"></span></p>
+                            <p>Comment: <span id="wxComment"></span></p>
                         </div>
                     </div>
-                </div>
+                </div>               
 
                 <!-- TLM Section -->
                 <div class="col">
                     <div class="card">
-                        <div class="card-header">TLM (Telemetry)</div>
+                        <div class="card-header">Telemetry (TLM)</div>
                         <div class="card-body">
                             <p>Enable: <span id="tlmEnable"></span></p>
+                            <p>Location to RF: <span id="tlmLoc2Rf"></span></p>
+                            <p>Location to Internet: <span id="tlmLoc2Inet"></span></p>
                             <p>Station Callsign: <span id="tlmCallsign"></span></p>
                             <p>Station SSID: <span id="tlmSsid"></span></p>
-                            <p>PATH: <span id="tlmPath"></span></p>
-                            <p>Text Comment: <span id="tlmComment"></span></p>
+                            <p>Path: <span id="tlmPath"></span></p>
+                            <p>Data Interval: <span id="tlmDataInterval"></span></p>
+                            <p>Info Interval: <span id="tlmInfoInterval"></span></p>
+                            <p>Active Bits: <span id="tlmActiveBits"></span></p>
+                            <p>Comment: <span id="tlmComment"></span></p>
                         </div>
                     </div>
-                </div>            
+                </div>                
             </div>
 
         <!-- Agrupación de Wireless, System Settings y Display Settings -->
@@ -235,7 +285,8 @@
                         <p>RX Display: <span id="rxDisplay"></span></p>
                         <p>Head Up: <span id="headUp"></span></p>
                         <p>Popup Delay: <span id="popupDelay"></span></p>
-                        <p>RX Channel: <span id="rxChannel"></span></p>
+                        <p>RX Channel - RF: <span id="rxChannelRF"></span></p>
+                        <p>RX Channel - Internet: <span id="rxChannelINET"></span></p>
                         <p>Filter DX: <span id="filterDx"></span></p>
                         <p>Filters: <span id="filters"></span></p>
                     </div>
@@ -281,38 +332,88 @@
 
             // Actualizar los valores para IGate
             setTextOrFallback("igateEnable", data.igate.enable);
+            setTextOrFallback("rf2inet", data.igate.rf2inet);
+            setTextOrFallback("inet2rf", data.igate.inet2rf);
             setTextOrFallback("igateCallsign", data.igate.stationCallsign);
             setTextOrFallback("igateSsid", data.igate.stationSsid);
             setTextOrFallback("igatePath", data.igate.path);
-            setTextOrFallback("igateComment", data.igate.textComment);
+            setTextOrFallback("aprsHost", data.igate.host);
+            setTextOrFallback("aprsPort", data.igate.port);
+            setTextOrFallback("aprsPasscode", data.igate.passcode);
+            setTextOrFallback("igateSymbol", data.igate.symbol);
+            setTextOrFallback("igateLatitude", data.igate.latitude);
+            setTextOrFallback("igateLongitude", data.igate.longitude);
+            setTextOrFallback("igateAltitude", data.igate.altitude);
+            setTextOrFallback("igateInterval", data.igate.interval);
+            setTextOrFallback("igateComment", data.igate.comment);
 
             // Actualizar los valores para Digi
             setTextOrFallback("digiEnable", data.digi.enable);
+            setTextOrFallback("digiLoc2Rf", data.digi.locationToRf);
+            setTextOrFallback("digiLoc2Inet", data.digi.locationToInet);
+            setTextOrFallback("digiFilter", data.digi.filter);
             setTextOrFallback("digiCallsign", data.digi.stationCallsign);
             setTextOrFallback("digiSsid", data.digi.stationSsid);
             setTextOrFallback("digiPath", data.digi.path);
-            setTextOrFallback("digiComment", data.digi.textComment);
+            setTextOrFallback("digiLatitude", data.digi.latitude);
+            setTextOrFallback("digiLongitude", data.digi.longitude);
+            setTextOrFallback("digiAltitude", data.digi.altitude);
+            setTextOrFallback("digiInterval", data.digi.interval);
+            setTextOrFallback("digiTimestamp", data.digi.timestamp);
+            setTextOrFallback("digiDelay", data.digi.delay);
+            setTextOrFallback("digiSymbol", data.digi.symbol);
+            setTextOrFallback("digiComment", data.digi.comment);
 
             // Actualizar los valores para Tracker
             setTextOrFallback("trackerEnable", data.tracker.enable);
+            setTextOrFallback("trackerLoc2Rf", data.tracker.locationToRf);
+            setTextOrFallback("trackerLoc2Inet", data.tracker.locationToInet);
+            setTextOrFallback("trackerSmartBeacon", data.tracker.smartBeacon);
+            setTextOrFallback("trackerCompressed", data.tracker.compressed);
+            setTextOrFallback("trackerAltitudeIncluded", data.tracker.altitudeIncluded);
+            setTextOrFallback("trackerTimestamp", data.tracker.timestamp);
+            setTextOrFallback("trackerHighSpeed", data.tracker.highSpeed);
+            setTextOrFallback("trackerLowSpeed", data.tracker.lowSpeed);
+            setTextOrFallback("trackerMinInterval", data.tracker.minInterval);
+            setTextOrFallback("trackerMaxInterval", data.tracker.maxInterval);
+            setTextOrFallback("trackerMinAngle", data.tracker.minAngle);
+            setTextOrFallback("trackerSlowInterval", data.tracker.slowInterval);
             setTextOrFallback("trackerCallsign", data.tracker.stationCallsign);
             setTextOrFallback("trackerSsid", data.tracker.stationSsid);
             setTextOrFallback("trackerPath", data.tracker.path);
-            setTextOrFallback("trackerComment", data.tracker.textComment);
+            setTextOrFallback("trackerLatitude", data.tracker.latitude);
+            setTextOrFallback("trackerLongitude", data.tracker.longitude);
+            setTextOrFallback("trackerAltitude", data.tracker.altitude);
+            setTextOrFallback("trackerInterval", data.tracker.interval);
+            setTextOrFallback("trackerSymbol", data.tracker.symbol);
+            setTextOrFallback("trackerMovingSymbol", data.tracker.movingSymbol);
+            setTextOrFallback("trackerStoppedSymbol", data.tracker.stoppedSymbol);
+            setTextOrFallback("trackerComment", data.tracker.comment);
 
             // Actualizar los valores para WX
-            setTextOrFallback("wxEnable", data.wx?.enable);
-            setTextOrFallback("wxCallsign", data.wx?.stationCallsign);
-            setTextOrFallback("wxSsid", data.wx?.stationSsid);
-            setTextOrFallback("wxPath", data.wx?.path);
-            setTextOrFallback("wxComment", data.wx?.textComment);
+            setTextOrFallback("wxEnable", data.wx.enable);
+            setTextOrFallback("wxLoc2Rf", data.wx.locationToRf);
+            setTextOrFallback("wxLoc2Inet", data.wx.locationToInet);
+            setTextOrFallback("wxCallsign", data.wx.stationCallsign);
+            setTextOrFallback("wxSsid", data.wx.stationSsid);
+            setTextOrFallback("wxPath", data.wx.path);
+            setTextOrFallback("wxLatitude", data.wx.latitude);
+            setTextOrFallback("wxLongitude", data.wx.longitude);
+            setTextOrFallback("wxAltitude", data.wx.altitude);
+            setTextOrFallback("wxInterval", data.wx.interval);
+            setTextOrFallback("wxComment", data.wx.comment);
 
             // Actualizar los valores para TLM
-            setTextOrFallback("tlmEnable", data.tlm?.enable);
-            setTextOrFallback("tlmCallsign", data.tlm?.stationCallsign);
-            setTextOrFallback("tlmSsid", data.tlm?.stationSsid);
-            setTextOrFallback("tlmPath", data.tlm?.path);
-            setTextOrFallback("tlmComment", data.tlm?.textComment);
+            setTextOrFallback("tlmEnable", data.tlm.enable);
+            setTextOrFallback("tlmLoc2Rf", data.tlm.locationToRf);
+            setTextOrFallback("tlmLoc2Inet", data.tlm.locationToInet);
+            setTextOrFallback("tlmCallsign", data.tlm.stationCallsign);
+            setTextOrFallback("tlmSsid", data.tlm.stationSsid);
+            setTextOrFallback("tlmPath", data.tlm.path);
+            setTextOrFallback("tlmDataInterval", data.tlm.dataInterval);
+            setTextOrFallback("tlmInfoInterval", data.tlm.infoInterval);
+            setTextOrFallback("tlmActiveBits", data.tlm.activeBits);
+            setTextOrFallback("tlmComment", data.tlm.comment);
 
             // Actualizar los valores para Wireless
             setTextOrFallback("wifiApEnable", data.wireless?.wifiApEnable);
@@ -339,13 +440,13 @@
             setTextOrFallback("uart0RtsGpio", data.mod?.uart0RtsGpio);            
 
             // RF GPIO Modify
-            setTextOrFallback("rfRxGpio", data.radio?.rfRxGpio);
-            setTextOrFallback("rfTxGpio", data.radio?.rfTxGpio);
-            setTextOrFallback("rfPdGpio", data.radio?.rfPdGpio);
-            setTextOrFallback("rfPttGpio", data.radio?.rfPttGpio);
-            setTextOrFallback("rfBaudrate", data.radio?.rfBaudrate);
-            setTextOrFallback("adcAtten", data.radio?.adcAtten);
-            setTextOrFallback("adcDcOffset", data.radio?.adcDcOffset);            
+            setTextOrFallback("rfRxGpio", data.mod?.rfRxGpio);
+            setTextOrFallback("rfTxGpio", data.mod?.rfTxGpio);
+            setTextOrFallback("rfPdGpio", data.mod?.rfPdGpio);
+            setTextOrFallback("rfPttGpio", data.mod?.rfPttGpio);
+            setTextOrFallback("rfBaudrate", data.mod?.rfBaudrate);
+            setTextOrFallback("adcAtten", data.mod?.adcAtten);
+            setTextOrFallback("adcDcOffset", data.mod?.adcDcOffset);            
 
             // Actualizar los valores para System
             setTextOrFallback("localDateTime", data.system.localDateTime);
@@ -353,10 +454,11 @@
             setTextOrFallback("timeZone", data.system.timeZone);
             setTextOrFallback("webUser", data.system.webUser);
             setTextOrFallback("webPassword", data.system.webPassword);
-            setTextOrFallback("path1", data.system.path1);
-            setTextOrFallback("path2", data.system.path2);
-            setTextOrFallback("path3", data.system.path3);
-            setTextOrFallback("path4", data.system.path4);
+            // System Paths
+            setTextOrFallback("path1", data.system.paths.path1);
+            setTextOrFallback("path2", data.system.paths.path2);
+            setTextOrFallback("path3", data.system.paths.path3);
+            setTextOrFallback("path4", data.system.paths.path4);
 
             // Actualizar los valores para Display Setting
             setTextOrFallback("oledEnable", data.display?.oledEnable);
@@ -364,7 +466,8 @@
             setTextOrFallback("rxDisplay", data.display?.rxDisplay);
             setTextOrFallback("headUp", data.display?.headUp);
             setTextOrFallback("popupDelay", data.display?.popupDelay);
-            setTextOrFallback("rxChannel", data.display?.rxChannel);
+            setTextOrFallback("rxChannelRF", data.display?.rxChannelRF);
+            setTextOrFallback("rxChannelINET", data.display?.rxChannelINET)
             setTextOrFallback("filterDx", data.display?.filterDx);
             setTextOrFallback("filters", data.display?.filters);
 

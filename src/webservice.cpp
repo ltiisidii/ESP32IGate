@@ -4541,6 +4541,12 @@ void handleDebugPage(AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/debug.html", "text/html");
 }
 
+String escapeJson(String input) {
+    input.replace("\\", "\\\\");  // Escapar barra invertida
+    input.replace("\"", "\\\"");  // Escapar comillas dobles
+    return input;
+}
+
 void handleDebugData(AsyncWebServerRequest *request) {
     String json = "{";
 
@@ -4561,48 +4567,102 @@ void handleDebugData(AsyncWebServerRequest *request) {
     json += "},";
 
     // Sección IGate
-    json += "\"igate\":{";
-    json += "\"enable\":\"" + String(config.igate_en ? "On" : "Off") + "\",";
-    json += "\"stationCallsign\":\"" + String(config.aprs_mycall) + "\",";
-    json += "\"stationSsid\":\"" + String(config.aprs_ssid) + "\",";
-    json += "\"path\":\"" + String(config.igate_path) + "\",";
-    json += "\"textComment\":\"" + String(config.igate_comment) + "\"";
-    json += "},";
+	json += "\"igate\":{";
+	json += "\"enable\":\"" + String(config.igate_en ? "On" : "Off") + "\",";
+	json += "\"rf2inet\":\"" + String(config.rf2inet ? "On" : "Off") + "\",";
+	json += "\"inet2rf\":\"" + String(config.inet2rf ? "On" : "Off") + "\",";
+	json += "\"locationToInet\":\"" + String(config.igate_loc2inet ? "On" : "Off") + "\",";
+	json += "\"locationToRf\":\"" + String(config.igate_loc2rf ? "On" : "Off") + "\",";
+	json += "\"rf2inetFilter\":\"" + String(config.rf2inetFilter, HEX) + "\",";
+	json += "\"inet2rfFilter\":\"" + String(config.inet2rfFilter, HEX) + "\",";
+	json += "\"stationCallsign\":\"" + String(config.aprs_mycall) + "\",";
+	json += "\"stationSsid\":\"" + String(config.aprs_ssid) + "\",";
+	json += "\"path\":\"" + String(config.igate_path) + "\",";
+	json += "\"host\":\"" + String(config.aprs_host) + "\",";
+	json += "\"port\":\"" + String(config.aprs_port) + "\",";
+	json += "\"passcode\":\"" + String(config.aprs_passcode) + "\",";
+	json += "\"symbol\":\"" + String(config.igate_symbol) + "\",";
+	json += "\"latitude\":\"" + String(config.igate_lat, 4) + "\",";
+	json += "\"longitude\":\"" + String(config.igate_lon, 4) + "\",";
+	json += "\"altitude\":\"" + String(config.igate_alt) + "\",";
+	json += "\"interval\":\"" + String(config.igate_interval) + " s\",";
+	json += "\"comment\":\"" + String(config.igate_comment) + "\"";
+	json += "},";
 
     // Sección Digi
-    json += "\"digi\":{";
-    json += "\"enable\":\"" + String(config.digi_en ? "On" : "Off") + "\",";
-    json += "\"stationCallsign\":\"" + String(config.digi_mycall) + "\",";
-    json += "\"stationSsid\":\"" + String(config.digi_ssid) + "\",";
-    json += "\"path\":\"" + String(config.digi_path) + "\",";
-    json += "\"textComment\":\"" + String(config.digi_comment) + "\"";
-    json += "},";
+	json += "\"digi\":{";
+	json += "\"enable\":\"" + String(config.digi_en ? "On" : "Off") + "\",";
+	json += "\"locationToInet\":\"" + String(config.digi_loc2inet ? "On" : "Off") + "\",";
+	json += "\"locationToRf\":\"" + String(config.digi_loc2rf ? "On" : "Off") + "\",";
+	json += "\"filter\":\"" + String(config.digiFilter, HEX) + "\",";
+	json += "\"stationCallsign\":\"" + String(config.digi_mycall) + "\",";
+	json += "\"stationSsid\":\"" + String(config.digi_ssid) + "\",";
+	json += "\"path\":\"" + String(config.digi_path) + "\",";
+	json += "\"latitude\":\"" + String(config.digi_lat, 4) + "\",";
+	json += "\"longitude\":\"" + String(config.digi_lon, 4) + "\",";
+	json += "\"altitude\":\"" + String(config.digi_alt) + "\",";
+	json += "\"interval\":\"" + String(config.digi_interval) + " s\",";
+	json += "\"timestamp\":\"" + String(config.digi_timestamp ? "On" : "Off") + "\",";
+	json += "\"delay\":\"" + String(config.digi_delay) + " ms\",";
+	json += "\"symbol\":\"" + String(config.digi_symbol) + "\",";
+	json += "\"comment\":\"" + String(config.digi_comment) + "\"";
+	json += "},";
 
     // Sección Tracker
-    json += "\"tracker\":{";
-    json += "\"enable\":\"" + String(config.trk_en ? "On" : "Off") + "\",";
-    json += "\"stationCallsign\":\"" + String(config.trk_mycall) + "\",";
-    json += "\"stationSsid\":\"" + String(config.trk_ssid) + "\",";
-    json += "\"path\":\"" + String(config.trk_path) + "\",";
-    json += "\"textComment\":\"" + String(config.trk_comment) + "\"";
-    json += "},";
+	json += "\"tracker\":{";
+	json += "\"enable\":\"" + String(config.trk_en ? "On" : "Off") + "\",";
+	json += "\"locationToInet\":\"" + String(config.trk_loc2inet ? "On" : "Off") + "\",";
+	json += "\"locationToRf\":\"" + String(config.trk_loc2rf ? "On" : "Off") + "\",";
+	json += "\"smartBeacon\":\"" + String(config.trk_smartbeacon ? "On" : "Off") + "\",";
+	json += "\"compressed\":\"" + String(config.trk_compress ? "On" : "Off") + "\",";
+	json += "\"altitudeIncluded\":\"" + String(config.trk_altitude ? "On" : "Off") + "\",";
+	json += "\"timestamp\":\"" + String(config.trk_timestamp ? "On" : "Off") + "\",";
+	json += "\"highSpeed\":\"" + String(config.trk_hspeed) + " km/h\",";
+	json += "\"lowSpeed\":\"" + String(config.trk_lspeed) + " km/h\",";
+	json += "\"minInterval\":\"" + String(config.trk_mininterval) + " s\",";
+	json += "\"maxInterval\":\"" + String(config.trk_maxinterval) + " s\",";
+	json += "\"minAngle\":\"" + String(config.trk_minangle) + "°\",";
+	json += "\"slowInterval\":\"" + String(config.trk_slowinterval) + " s\",";
+	json += "\"stationCallsign\":\"" + String(config.trk_mycall) + "\",";
+	json += "\"stationSsid\":\"" + String(config.trk_ssid) + "\",";
+	json += "\"path\":\"" + String(config.trk_path) + "\",";
+	json += "\"latitude\":\"" + String(config.trk_lat, 4) + "\",";
+	json += "\"longitude\":\"" + String(config.trk_lon, 4) + "\",";
+	json += "\"altitude\":\"" + String(config.trk_alt) + "\",";
+	json += "\"interval\":\"" + String(config.trk_interval) + " s\",";
+	json += "\"symbol\":\"" + String(config.trk_symbol) + "\",";
+	json += "\"movingSymbol\":\"" + String(config.trk_symmove) + "\",";
+	json += "\"stoppedSymbol\":\"" + escapeJson(String(config.trk_symstop)) + "\",";
+	json += "\"comment\":\"" + String(config.trk_comment) + "\"";
+	json += "},";
 
 	// Sección WX
 	json += "\"wx\":{";
 	json += "\"enable\":\"" + String(config.wx_en ? "On" : "Off") + "\",";
+	json += "\"locationToInet\":\"" + String(config.wx_2inet ? "On" : "Off") + "\",";
+	json += "\"locationToRf\":\"" + String(config.wx_2rf ? "On" : "Off") + "\",";
 	json += "\"stationCallsign\":\"" + String(config.wx_mycall) + "\",";
 	json += "\"stationSsid\":\"" + String(config.wx_ssid) + "\",";
 	json += "\"path\":\"" + String(config.wx_path) + "\",";
-	json += "\"textComment\":\"" + String(config.wx_comment) + "\"";
+	json += "\"latitude\":\"" + String(config.wx_lat, 4) + "\",";
+	json += "\"longitude\":\"" + String(config.wx_lon, 4) + "\",";
+	json += "\"altitude\":\"" + String(config.wx_alt) + "\",";
+	json += "\"interval\":\"" + String(config.wx_interval) + " s\",";
+	json += "\"comment\":\"" + String(config.wx_comment) + "\"";
 	json += "},";
 
 	// Sección TLM
 	json += "\"tlm\":{";
 	json += "\"enable\":\"" + String(config.tlm0_en ? "On" : "Off") + "\",";
+	json += "\"locationToInet\":\"" + String(config.tlm0_2inet ? "On" : "Off") + "\",";
+	json += "\"locationToRf\":\"" + String(config.tlm0_2rf ? "On" : "Off") + "\",";
 	json += "\"stationCallsign\":\"" + String(config.tlm0_mycall) + "\",";
 	json += "\"stationSsid\":\"" + String(config.tlm0_ssid) + "\",";
 	json += "\"path\":\"" + String(config.tlm0_path) + "\",";
-	json += "\"textComment\":\"" + String(config.tlm0_comment) + "\"";
+	json += "\"dataInterval\":\"" + String(config.tlm0_data_interval) + " s\",";
+	json += "\"infoInterval\":\"" + String(config.tlm0_info_interval) + " s\",";
+	json += "\"activeBits\":\"" + String(config.tlm0_BITS_Active, HEX) + "\",";
+	json += "\"comment\":\"" + String(config.tlm0_comment) + "\"";
 	json += "},";
 
 	// Sección MOD
