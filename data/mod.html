@@ -61,11 +61,11 @@
             </div>
             <div class="mb-3">
                 <label for="uart0Tx" class="form-label">TX GPIO:</label>
-                <input type="text" class="form-control" id="uart0Tx">
+                <input min="-1" max="39" name="tx" type="number" class="form-control" id="uart0Tx">
             </div>
             <div class="mb-3">
                 <label for="uart0Rts" class="form-label">RTS/DE GPIO:</label>
-                <input type="text" class="form-control" id="uart0Rts">
+                <input min="-1" max="39" name="rts" type="number" class="form-control" id="uart0Rts">
             </div>
             <div class="mb-3">
                 <label for="uart0Baudrate" class="form-label">Baudrate:</label>
@@ -98,16 +98,16 @@
             </div>
             <div class="mb-3">
                 <label for="uart1Rx" class="form-label">RX GPIO:</label>
-                <input type="text" class="form-control" id="uart1Rx">
+                <input min="-1" max="39" name="rx1" type="number" class="form-control" id="uart1Rx">
             </div>
             <div class="mb-3">
                 <label for="uart1Tx" class="form-label">TX GPIO:</label>
-                <input type="text" class="form-control" id="uart1Tx">
+                <input min="-1" max="39" name="tx1" type="number" class="form-control" id="uart1Tx">
             </div>
             <div class="mb-3">
                 <label for="uart1Rts" class="form-label">RTS/DE GPIO:</label>
-                <input type="text" class="form-control" id="uart1Rts">
-            </div>
+                <input min="-1" max="39" name="rts1" type="number" class="form-control" id="uart1Rts">
+            </div>            
             <div class="mb-3">
                 <label for="uart1Baudrate" class="form-label">Baudrate:</label>
                 <select name="baudrate" id="uart1Baudrate" class="form-select">
@@ -139,16 +139,16 @@
             </div>
             <div class="mb-3">
                 <label for="uart2Rx" class="form-label">RX GPIO:</label>
-                <input type="text" class="form-control" id="uart2Rx">
+                <input min="-1" max="39" name="rx2" type="number" class="form-control" id="uart2Rx">
             </div>
             <div class="mb-3">
                 <label for="uart2Tx" class="form-label">TX GPIO:</label>
-                <input type="text" class="form-control" id="uart2Tx">
+                <input min="-1" max="39" name="tx2" type="number" class="form-control" id="uart2Tx">
             </div>
             <div class="mb-3">
                 <label for="uart2Rts" class="form-label">RTS/DE GPIO:</label>
-                <input type="text" class="form-control" id="uart2Rts">
-            </div>
+                <input min="-1" max="39" name="rts2" type="number" class="form-control" id="uart2Rts">
+            </div>            
             <div class="mb-3">
                 <label for="uart2Baudrate" class="form-label">Baudrate:</label>
                 <select name="baudrate" id="uart2Baudrate" class="form-select">
@@ -175,13 +175,32 @@
         <div class="mb-4 border border-primary rounded p-3">
             <h5>RF GPIO Modify</h5>
             <div class="mb-3">
-                <label for="rfBaudrate" class="form-label">Baudrate:</label>
-                <input type="number" class="form-control" id="rfBaudrate">
+                <label for="baudrate" class="form-label">Baudrate:</label>
+                <select name="baudrate" id="baudrate" class="form-select">
+                    <option value="2400">2400</option>
+                    <option value="4800">4800</option>
+                    <option value="9600" selected="">9600</option>
+                    <option value="19200">19200</option>
+                    <option value="28800">28800</option>
+                    <option value="38400">38400</option>
+                    <option value="57600">57600</option>
+                    <option value="76800">76800</option>
+                    <option value="115200">115200</option>
+                    <option value="230400">230400</option>
+                    <option value="460800">460800</option>
+                    <option value="576000">576000</option>
+                    <option value="921600">921600</option>
+                </select>
                 <small class="small text-light">bps</small>
             </div>
             <div class="mb-3">
-                <label for="adcAttenuation" class="form-label">ADC Attenuation:</label>
-                <input type="text" class="form-control" id="adcAttenuation">
+                <label for="atten" class="form-label">ADC Attenuation:</label>
+                <select name="atten" id="atten" class="form-select">
+                    <option value="0" selected="">0dB (100-950mV)</option>
+                    <option value="1">2.5dB (100-1250mV)</option>
+                    <option value="2">6dB (150-1750mV)</option>
+                    <option value="3">11dB (150-2450mV)</option>
+                </select>
             </div>
             <div class="mb-3">
                 <label for="adcOffset" class="form-label">ADC DC OFFSET:</label>
@@ -198,47 +217,39 @@
             </div>
             <div class="mb-3">
                 <label for="pdGpio" class="form-label">PD GPIO:</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="pdActive" id="pdLow" value="LOW">
-                    <label class="form-check-label text-light" for="pdLow">LOW</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="pdActive" id="pdHigh" value="HIGH">
-                    <label class="form-check-label text-light" for="pdHigh">HIGH</label>
-                </div>
+                <td style="text-align: left;">
+                    <input min="-1" max="39" name="pd" type="number">
+                    Active:
+                    <input type="radio" name="pd_active" value="0">LOW
+                    <input type="radio" name="pd_active" value="0">HIGH
+                </td>                
             </div>
             <div class="mb-3">
                 <label for="hlGpio" class="form-label">H/L GPIO:</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="hlActive" id="hlLow" value="LOW">
-                    <label class="form-check-label text-light" for="hlLow">LOW</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="hlActive" id="hlHigh" value="HIGH">
-                    <label class="form-check-label text-light" for="hlHigh">HIGH</label>
-                </div>
+                <td style="text-align: left;">
+                    <input min="-1" max="39" name="hl" type="number">
+                    Active:
+                    <input type="radio" name="hl_active" value="0">LOW
+                    <input type="radio" name="hl_active" value="1" checked="checked">HIGH
+                </td>
             </div>
             <div class="mb-3">
                 <label for="sqlGpio" class="form-label">SQL GPIO:</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="sqlActive" id="sqlLow" value="LOW">
-                    <label class="form-check-label text-light" for="sqlLow">LOW</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="sqlActive" id="sqlHigh" value="HIGH">
-                    <label class="form-check-label text-light" for="sqlHigh">HIGH</label>
-                </div>
+                <td style="text-align: left;">
+                    <input min="-1" max="39" name="sql" type="number">
+                    Active:
+                    <input type="radio" name="sql_active" value="0">LOW
+                    <input type="radio" name="sql_active" value="0">HIGH
+                </td>                
             </div>
             <div class="mb-3">
                 <label for="pttGpio" class="form-label">PTT GPIO:</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="pttActive" id="pttLow" value="LOW">
-                    <label class="form-check-label text-light" for="pttLow">LOW</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="pttActive" id="pttHigh" value="HIGH">
-                    <label class="form-check-label text-light" for="pttHigh">HIGH</label>
-                </div>
+                <td style="text-align: left;">
+                    <input min="-1" max="39" name="ptt" type="number">
+                    Active:
+                    <input type="radio" name="ptt_active" value="0">LOW
+                    <input type="radio" name="ptt_active" value="0">HIGH
+                </td>                
             </div>
             <button type="button" class="btn btn-primary">Apply</button>
         </div>
@@ -252,15 +263,15 @@
             </div>
             <div class="mb-3">
                 <label for="i2c0Sda" class="form-label">SDA GPIO:</label>
-                <input type="text" class="form-control" id="i2c0Sda">
+                <input min="-1" max="39" name="sda" type="number">
             </div>
             <div class="mb-3">
                 <label for="i2c0Scl" class="form-label">SCK GPIO:</label>
-                <input type="text" class="form-control" id="i2c0Scl">
+                <input min="-1" max="39" name="scl" type="number">
             </div>
             <div class="mb-3">
                 <label for="i2c0Freq" class="form-label">Frequency:</label>
-                <input type="number" class="form-control" id="i2c0Freq">
+                <input min="1000" max="800000" name="freq" type="number" value="400000">
                 <small class="small text-light">Hz</small>
             </div>
             <button type="button" class="btn btn-primary">Apply</button>
@@ -275,19 +286,19 @@
             </div>
             <div class="mb-3">
                 <label for="i2c1Sda" class="form-label">SDA GPIO:</label>
-                <input type="text" class="form-control" id="i2c1Sda">
+                <input min="-1" max="39" name="sda1" type="number" class="form-control" id="i2c1Sda">
             </div>
             <div class="mb-3">
                 <label for="i2c1Scl" class="form-label">SCK GPIO:</label>
-                <input type="text" class="form-control" id="i2c1Scl">
+                <input min="-1" max="39" name="scl1" type="number" class="form-control" id="i2c1Scl">
             </div>
             <div class="mb-3">
                 <label for="i2c1Freq" class="form-label">Frequency:</label>
-                <input type="number" class="form-control" id="i2c1Freq">
+                <input min="1000" max="800000" name="freq1" type="number" class="form-control" id="i2c1Freq">
                 <small class="small text-light">Hz</small>
             </div>
             <button type="button" class="btn btn-primary">Apply</button>
-        </div>
+        </div>        
 
         <!-- Counter_0 Modify -->
         <div class="mb-4 border border-primary rounded p-3">
@@ -298,7 +309,7 @@
             </div>
             <div class="mb-3">
                 <label for="counter0Input" class="form-label">INPUT GPIO:</label>
-                <input type="text" class="form-control" id="counter0Input">
+                <input min="-1" max="39" name="gpio" type="number" value="-1" class="form-control" id="counter0Input">
             </div>
             <div class="mb-3">
                 <label class="form-label">Active:</label>
@@ -323,7 +334,7 @@
             </div>
             <div class="mb-3">
                 <label for="counter1Input" class="form-label">INPUT GPIO:</label>
-                <input type="text" class="form-control" id="counter1Input">
+                <input min="-1" max="39" name="gpio" type="number" value="-1" class="form-control" id="counter1Input">
             </div>
             <div class="mb-3">
                 <label class="form-label">Active:</label>
@@ -348,19 +359,25 @@
             </div>
             <div class="mb-3">
                 <label for="gnssPort" class="form-label">PORT:</label>
-                <input type="text" class="form-control" id="gnssPort">
+                <select name="channel" id="channel" class="form-select">
+                    <option value="0">NONE</option>
+                    <option value="1">UART0</option>
+                    <option value="2">UART1</option>
+                    <option value="3">UART2</option>
+                    <option value="4">TCP</option>
+                </select>
             </div>
             <div class="mb-3">
                 <label for="gnssAtCommand" class="form-label">AT Command:</label>
-                <input type="text" class="form-control" id="gnssAtCommand">
+                <input maxlength="30" size="20" id="atc" name="atc" type="text" value="">
             </div>
             <div class="mb-3">
                 <label for="gnssTcpHost" class="form-label">TCP Host:</label>
-                <input type="text" class="form-control" id="gnssTcpHost">
+                <input maxlength="20" size="15" id="Host" name="Host" type="text" value="192.168.0.1">
             </div>
             <div class="mb-3">
                 <label for="gnssTcpPort" class="form-label">TCP Port:</label>
-                <input type="number" class="form-control" id="gnssTcpPort">
+                <input min="1024" max="65535" id="Port" name="Port" type="number" value="8080">
             </div>
             <button type="button" class="btn btn-primary">Apply</button>
         </div>
@@ -374,15 +391,21 @@
             </div>
             <div class="mb-3">
                 <label for="modbusPort" class="form-label">PORT:</label>
-                <input type="text" class="form-control" id="modbusPort">
+                <select name="channel" id="channel" class="form-select">
+                    <option value="0" selected="">NONE</option>
+                    <option value="1">UART0</option>
+                    <option value="2">UART1</option>
+                    <option value="3">UART2</option>
+                    <option value="4">TCP</option>
+                </select>
             </div>
             <div class="mb-3">
                 <label for="modbusAddress" class="form-label">Address:</label>
-                <input type="text" class="form-control" id="modbusAddress">
+                <input min="-1" max="39" name="address" type="number" value="0">
             </div>
             <div class="mb-3">
                 <label for="modbusDe" class="form-label">DE:</label>
-                <input type="text" class="form-control" id="modbusDe">
+                <input min="-1" max="39" name="de" type="number" value="-1">
             </div>
             <button type="button" class="btn btn-primary">Apply</button>
         </div>
@@ -396,11 +419,21 @@
             </div>
             <div class="mb-3">
                 <label for="tncPort" class="form-label">PORT:</label>
-                <input type="text" class="form-control" id="tncPort">
+                <select name="channel" id="channel" class="form-select">
+                    <option value="0" selected="">NONE</option>
+                    <option value="1">UART0</option>
+                    <option value="2">UART1</option>
+                    <option value="3">UART2</option>
+                </select>                
             </div>
             <div class="mb-3">
                 <label for="tncMode" class="form-label">MODE:</label>
-                <input type="text" class="form-control" id="tncMode">
+                <select name="mode" id="mode" class="form-select">
+                    <option value="0">NONE</option>
+                    <option value="1">KISS</option>
+                    <option value="2" selected="">TNC2</option>
+                    <option value="3">YAESU</option>
+                </select>                
             </div>
             <button type="button" class="btn btn-primary">Apply</button>
         </div>
