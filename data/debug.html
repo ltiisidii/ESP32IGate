@@ -181,6 +181,50 @@
                 </div>
             </div>
 
+            <!-- Sección MOD -->
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">MOD Configuration</div>
+                    <div class="card-body">
+                        <h6>GNSS Configuration:</h6>
+                        <p>Enable: <span id="gnssEnable"></span></p>
+                        <p>Port: <span id="gnssPort"></span></p>
+                        <p>AT Command: <span id="gnssAtCommand"></span></p>
+                        <p>TCP Host: <span id="gnssTcpHost"></span></p>
+                        <p>TCP Port: <span id="gnssTcpPort"></span></p>
+
+                        <h6 class="mt-3">MODBUS Configuration:</h6>
+                        <p>Enable: <span id="modbusEnable"></span></p>
+                        <p>Channel: <span id="modbusChannel"></span></p>
+                        <p>Address: <span id="modbusAddress"></span></p>
+                        <p>DE GPIO: <span id="modbusDeGpio"></span></p>
+
+                        <h6 class="mt-3">UART0 Configuration:</h6>
+                        <p>Enable: <span id="uart0Enable"></span></p>
+                        <p>Baudrate: <span id="uart0Baudrate"></span></p>
+                        <p>RX GPIO: <span id="uart0RxGpio"></span></p>
+                        <p>TX GPIO: <span id="uart0TxGpio"></span></p>
+                        <p>RTS GPIO: <span id="uart0RtsGpio"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección RF GPIO Modify -->
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">MOD: RF GPIO Modify</div>
+                    <div class="card-body">
+                        <p>RX GPIO: <span id="rfRxGpio"></span></p>
+                        <p>TX GPIO: <span id="rfTxGpio"></span></p>
+                        <p>PD GPIO: <span id="rfPdGpio"></span></p>
+                        <p>PTT GPIO: <span id="rfPttGpio"></span></p>
+                        <p>Baudrate: <span id="rfBaudrate"></span></p>
+                        <p>ADC Attenuation: <span id="adcAtten"></span></p>
+                        <p>ADC DC Offset: <span id="adcDcOffset"></span></p>
+                    </div>
+                </div>
+            </div>            
+
             <!-- Display Setting Section -->
             <div class="col-12 col-sm-6 col-lg-4">
                 <div class="card">
@@ -275,6 +319,33 @@
             setTextOrFallback("wifiApSsid", data.wireless?.wifiApSsid);
             setTextOrFallback("wifiSta1Enable", data.wireless?.wifiSta1Enable);
             setTextOrFallback("wifiSta1Ssid", data.wireless?.wifiSta1Ssid);
+
+            // Actualizar los valores para MOD
+            setTextOrFallback("gnssEnable", data.mod?.gnssEnable);
+            setTextOrFallback("gnssPort", data.mod?.gnssPort);
+            setTextOrFallback("gnssAtCommand", data.mod?.gnssAtCommand);
+            setTextOrFallback("gnssTcpHost", data.mod?.gnssTcpHost);
+            setTextOrFallback("gnssTcpPort", data.mod?.gnssTcpPort);
+
+            setTextOrFallback("modbusEnable", data.mod?.modbusEnable);
+            setTextOrFallback("modbusChannel", data.mod?.modbusChannel);
+            setTextOrFallback("modbusAddress", data.mod?.modbusAddress);
+            setTextOrFallback("modbusDeGpio", data.mod?.modbusDeGpio);
+
+            setTextOrFallback("uart0Enable", data.mod?.uart0Enable);
+            setTextOrFallback("uart0Baudrate", data.mod?.uart0Baudrate);
+            setTextOrFallback("uart0RxGpio", data.mod?.uart0RxGpio);
+            setTextOrFallback("uart0TxGpio", data.mod?.uart0TxGpio);
+            setTextOrFallback("uart0RtsGpio", data.mod?.uart0RtsGpio);            
+
+            // RF GPIO Modify
+            setTextOrFallback("rfRxGpio", data.radio?.rfRxGpio);
+            setTextOrFallback("rfTxGpio", data.radio?.rfTxGpio);
+            setTextOrFallback("rfPdGpio", data.radio?.rfPdGpio);
+            setTextOrFallback("rfPttGpio", data.radio?.rfPttGpio);
+            setTextOrFallback("rfBaudrate", data.radio?.rfBaudrate);
+            setTextOrFallback("adcAtten", data.radio?.adcAtten);
+            setTextOrFallback("adcDcOffset", data.radio?.adcDcOffset);            
 
             // Actualizar los valores para System
             setTextOrFallback("localDateTime", data.system.localDateTime);

@@ -4605,6 +4605,41 @@ void handleDebugData(AsyncWebServerRequest *request) {
 	json += "\"textComment\":\"" + String(config.tlm0_comment) + "\"";
 	json += "},";
 
+	// Sección MOD
+	json += "\"mod\":{";
+	json += "\"gnssEnable\":\"" + String(config.gnss_enable ? "On" : "Off") + "\",";
+	json += "\"gnssPort\":\"" + String(config.gnss_channel) + "\",";
+	json += "\"gnssAtCommand\":\"" + String(config.gnss_at_command) + "\",";
+	json += "\"gnssTcpHost\":\"" + String(config.gnss_tcp_host) + "\",";
+	json += "\"gnssTcpPort\":\"" + String(config.gnss_tcp_port) + "\",";
+	json += "\"modbusEnable\":\"" + String(config.modbus_enable ? "On" : "Off") + "\",";
+	json += "\"modbusChannel\":\"" + String(config.modbus_channel) + "\",";
+	json += "\"modbusAddress\":\"" + String(config.modbus_address) + "\",";
+	json += "\"modbusDeGpio\":\"" + String(config.modbus_de_gpio) + "\",";
+	json += "\"uart0Enable\":\"" + String(config.uart0_enable ? "On" : "Off") + "\",";
+	json += "\"uart0Baudrate\":\"" + String(config.uart0_baudrate) + "\",";
+	json += "\"uart0RxGpio\":\"" + String(config.uart0_rx_gpio) + "\",";
+	json += "\"uart0TxGpio\":\"" + String(config.uart0_tx_gpio) + "\",";
+	json += "\"uart0RtsGpio\":\"" + String(config.uart0_rts_gpio) + "\",";
+	json += "\"uart1Enable\":\"" + String(config.uart1_enable ? "On" : "Off") + "\",";
+	json += "\"uart1Baudrate\":\"" + String(config.uart1_baudrate) + "\",";
+	json += "\"uart1RxGpio\":\"" + String(config.uart1_rx_gpio) + "\",";
+	json += "\"uart1TxGpio\":\"" + String(config.uart1_tx_gpio) + "\",";
+	json += "\"uart1RtsGpio\":\"" + String(config.uart1_rts_gpio) + "\",";
+	json += "\"uart2Enable\":\"" + String(config.uart2_enable ? "On" : "Off") + "\",";
+	json += "\"uart2Baudrate\":\"" + String(config.uart2_baudrate) + "\",";
+	json += "\"uart2RxGpio\":\"" + String(config.uart2_rx_gpio) + "\",";
+	json += "\"uart2TxGpio\":\"" + String(config.uart2_tx_gpio) + "\",";
+	json += "\"uart2RtsGpio\":\"" + String(config.uart2_rts_gpio) + "\",";
+	json += "\"rfRxGpio\":\"" + String(config.rf_rx_gpio) + "\",";
+	json += "\"rfTxGpio\":\"" + String(config.rf_tx_gpio) + "\",";
+	json += "\"rfPdGpio\":\"" + String(config.rf_pd_gpio) + "\",";
+	json += "\"rfPttGpio\":\"" + String(config.rf_ptt_gpio) + "\",";
+	json += "\"rfBaudrate\":\"" + String(config.rf_baudrate) + "\",";
+	json += "\"adcAtten\":\"" + String(config.adc_atten) + "\",";
+	json += "\"adcDcOffset\":\"" + String(config.adc_dc_offset) + "\"";
+	json += "},";
+
     // Sección System
 	json += "\"system\":{";
 	json += "\"localDateTime\":\"" + String(now()) + "\",";
