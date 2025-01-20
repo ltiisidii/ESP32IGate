@@ -188,9 +188,9 @@
                         <tr><th colspan="2">WiFi</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>MODE:</td><td>AP+STA</td></tr>
-                        <tr><td>SSID:</td><td>IGATE</td></tr>
-                        <tr><td>RSSI:</td><td>-53 dBm</td></tr>
+                        <tr><td>MODE:</td><td id="wifi-mode">-</td></tr>
+                        <tr><td>SSID:</td><td id="wifi-ssid">-</td></tr>
+                        <tr><td>RSSI:</td><td id="wifi-rssi">-</td></tr>
                     </tbody>
                 </table>
                 </div>
@@ -378,6 +378,11 @@
                     document.getElementById('wifi-mode').textContent = wifi.mode || 'N/A';
                     document.getElementById('wifi-ssid').textContent = wifi.ssid || 'N/A';
                     document.getElementById('wifi-rssi').textContent = wifi.rssi || 'N/A';
+
+
+                    if (modeElem) modeElem.textContent = wifi.mode || 'N/A';
+                    if (ssidElem) ssidElem.textContent = wifi.ssid || 'N/A';
+                    if (rssiElem) rssiElem.textContent = wifi.rssi || 'N/A';                    
                 } catch (error) {
                     console.error('Error fetching WiFi info:', error);
                 }
@@ -391,24 +396,25 @@
         <script>
             async function loadLastHeard() {
                 try {
-                    const response = await fetch('/last-heard'); // Endpoint para Last Heard
+                    const response = await fetch('/lastHeard'); // Endpoint para Last Heard
                     if (!response.ok) throw new Error('Failed to fetch last heard data');
-        
-                    const lastHeard = await response.json();
-        
+                    
+                    const data = await response.json(); // Obtén el objeto JSON completo
+                    const lastHeard = data.lastHeard; // Extrae el array `lastHeard`
+                    
                     // Seleccionar el cuerpo de la tabla
                     const tableBody = document.getElementById('last-heard-body');
                     tableBody.innerHTML = ''; // Limpiar contenido previo
-        
+                    
                     // Generar nuevas filas dinámicamente
                     lastHeard.forEach(entry => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${entry.time || 'N/A'}</td>
-                            <td>${entry.icon || 'N/A'}</td>
+                            <td><img src="${entry.icon || 'N/A'}" alt="Icon" style="width:16px;"></td>
                             <td>${entry.callsign || 'N/A'}</td>
                             <td>${entry.via || 'N/A'}</td>
-                            <td>${entry.distance || 'N/A'}</td>
+                            <td>${entry.dx || 'N/A'}</td>
                             <td>${entry.packet || 'N/A'}</td>
                             <td>${entry.audio || 'N/A'}</td>
                         `;
@@ -418,12 +424,34 @@
                     console.error('Error fetching last heard data:', error);
                 }
             }
-        
+
             // Actualizar información cada 5 segundos
             setInterval(loadLastHeard, 5000);
             loadLastHeard(); // Cargar inicialmente
         </script>
+        <script>
+            if (!!window.EventSource) {
+                var source = new EventSource('/eventHeard'); // Conexión SSE con el servidor
         
+                source.addEventListener('lastHeard', function(e) {
+                    // Encuentra el cuerpo de la tabla y actualiza su contenido
+                    var lh = document.getElementById('last-heard-body');
+                    if (lh != null) {
+                        lh.innerHTML = e.data; // Reemplaza el contenido con los datos enviados
+                    }
+                }, false);
+        
+                source.addEventListener('open', function(e) {
+                    console.log("Conectado a SSE /eventHeard");
+                }, false);
+        
+                source.addEventListener('error', function(e) {
+                    if (e.target.readyState !== EventSource.OPEN) {
+                        console.log("Desconectado de SSE /eventHeard");
+                    }
+                }, false);
+            }
+        </script>
 
 </body>
 </html>

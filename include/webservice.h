@@ -27,6 +27,11 @@ typedef struct timeZoneName
 	const char *name;
 }timeZoneName;
 
+typedef struct {
+    String callsign;
+    int count;
+} PacketCounter;
+
 const timeZoneName tzList[40] PROGMEM= {
 	{-12.00, "(GMT -12:00) Eniwetok, Kwajalein"},
 	{-11.00, "(GMT -11:00) Midway Island, Samoa"},

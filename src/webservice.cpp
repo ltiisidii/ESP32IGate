@@ -442,431 +442,108 @@ void handleWiFiInfo(AsyncWebServerRequest *request) {
     request->send(200, "application/json", json);
 }
 
+void handle_lastHeard(AsyncWebServerRequest* request) {
+    // Tamaño máximo de *callsigns* únicos que esperamos procesar
+    const int MAX_CALLSIGNS = 50;
+    String callsigns[MAX_CALLSIGNS];
+    int counts[MAX_CALLSIGNS] = {0}; // Inicializar a 0
+    int callsignCount = 0;
 
-void handle_lastHeard(AsyncWebServerRequest *request)
-{
-	struct pbuf_t aprs;
-	ParseAPRS aprsParse;
-	struct tm tmstruct;
-	String html = "";
-	sort(pkgList, PKGLISTSIZE);
+    // Iterar sobre los paquetes en pkgList
+    for (int i = 0; i < PKGLISTSIZE; i++) {
+        pkgListType pkg = getPkgList(i);
+        if (pkg.time > 0) {
+            String line = String(pkg.raw);
+            int start_val = line.indexOf(">");
+            if (start_val > 3) {
+                String callsign = line.substring(0, start_val);
 
-	html = "<table>\n";
-	html += "<th colspan=\"7\" style=\"background-color: #070ac2;\">LAST HEARD <a href=\"/tnc2\" target=\"_tnc2\" style=\"color: yellow;font-size:8pt\">[RAW]</a></th>\n";
-	html += "<tr>\n";
-	html += "<th style=\"min-width:10ch\"><span><b>Time (";
-	if (config.timeZone >= 0)
-		html += "+";
-	// else
-	//	html += "-";
+                // Buscar si ya existe este callsign en el arreglo
+                int index = -1;
+                for (int j = 0; j < callsignCount; j++) {
+                    if (callsigns[j] == callsign) {
+                        index = j;
+                        break;
+                    }
+                }
 
-	if (config.timeZone == (int)config.timeZone)
-		html += String((int)config.timeZone) + ")</b></span></th>\n";
-	else
-		html += String(config.timeZone, 1) + ")</b></span></th>\n";
-	html += "<th style=\"min-width:16px\">ICON</th>\n";
-	html += "<th style=\"min-width:10ch\">Callsign</th>\n";
-	html += "<th>VIA LAST PATH</th>\n";
-	html += "<th style=\"min-width:5ch\">DX</th>\n";
-	html += "<th style=\"min-width:5ch\">PACKET</th>\n";
-	html += "<th style=\"min-width:5ch\">AUDIO</th>\n";
-	html += "</tr>\n";
+                if (index == -1) {
+                    // Nuevo callsign, agregar al arreglo si hay espacio
+                    if (callsignCount < MAX_CALLSIGNS) {
+                        callsigns[callsignCount] = callsign;
+                        counts[callsignCount] = 1;
+                        callsignCount++;
+                    }
+                } else {
+                    // Incrementar el contador existente
+                    counts[index]++;
+                }
+            }
+        }
+    }
 
-	for (int i = 0; i < PKGLISTSIZE; i++)
-	{
-		if (i >= PKGLISTSIZE)
-			break;
-		pkgListType pkg = getPkgList(i);
-		if (pkg.time > 0)
-		{
-			String line = String(pkg.raw);
-			int packet = pkg.pkg;
-			int start_val = line.indexOf(">", 0); // หาตำแหน่งแรกของ >
-			if (start_val > 3)
-			{
-				String src_call = line.substring(0, start_val);
-				memset(&aprs, 0, sizeof(pbuf_t));
-				aprs.buf_len = 300;
-				aprs.packet_len = line.length();
-				line.toCharArray(&aprs.data[0], aprs.packet_len);
-				int start_info = line.indexOf(":", 0);
-				int end_ssid = line.indexOf(",", 0);
-				int start_dst = line.indexOf(">", 2);
-				int start_dstssid = line.indexOf("-", start_dst);
-				String path = "";
+    // Construir la respuesta JSON
+    String jsonResponse = "{ \"lastHeard\": [";
+    for (int i = 0; i < callsignCount; i++) {
+        jsonResponse += "{";
+        jsonResponse += "\"callsign\":\"" + callsigns[i] + "\",";
+        jsonResponse += "\"count\":" + String(counts[i]);
+        jsonResponse += "}";
+        if (i < callsignCount - 1) {
+            jsonResponse += ",";
+        }
+    }
+    jsonResponse += "] }";
 
-				if ((end_ssid > start_dst) && (end_ssid < start_info))
-				{
-					path = line.substring(end_ssid + 1, start_info);
-				}
-				if (end_ssid < 5)
-					end_ssid = start_info;
-				if ((start_dstssid > start_dst) && (start_dstssid < start_dst + 10))
-				{
-					aprs.dstcall_end_or_ssid = &aprs.data[start_dstssid];
-				}
-				else
-				{
-					aprs.dstcall_end_or_ssid = &aprs.data[end_ssid];
-				}
-				aprs.info_start = &aprs.data[start_info + 1];
-				aprs.dstname = &aprs.data[start_dst + 1];
-				aprs.dstname_len = end_ssid - start_dst;
-				aprs.dstcall_end = &aprs.data[end_ssid];
-				aprs.srccall_end = &aprs.data[start_dst];
-
-				// Serial.println(aprs.info_start);
-				if (aprsParse.parse_aprs(&aprs))
-				{
-					pkg.calsign[10] = 0;
-					// time_t tm = pkg.time;
-					localtime_r(&pkg.time, &tmstruct);
-					char strTime[10];
-					sprintf(strTime, "%02d:%02d:%02d", tmstruct.tm_hour, tmstruct.tm_min, tmstruct.tm_sec);
-					// String str = String(tmstruct.tm_hour, DEC) + ":" + String(tmstruct.tm_min, DEC) + ":" + String(tmstruct.tm_sec, DEC);
-
-					html += "<tr><td>" + String(strTime) + "</td>";
-					String fileImg = "";
-					uint8_t sym = (uint8_t)aprs.symbol[1];
-					if (sym > 31 && sym < 127)
-					{
-						if (aprs.symbol[0] > 64 && aprs.symbol[0] < 91) // table A-Z
-						{
-							html += "<td><b>" + String(aprs.symbol[0]) + "</b></td>";
-						}
-						else
-						{
-							fileImg = String(sym, DEC);
-							if (aprs.symbol[0] == 92)
-							{
-								fileImg += "-2.png";
-							}
-							else if (aprs.symbol[0] == 47)
-							{
-								fileImg += "-1.png";
-							}
-							else
-							{
-								fileImg = "dot.png";
-							}
-							html += "<td><img src=\"http://aprs.dprns.com/symbols/icons/" + fileImg + "\"></td>";
-						}
-					}
-					else
-					{
-						html += "<td><img src=\"http://aprs.dprns.com/symbols/icons/dot.png\"></td>";
-					}
-					html += "<td>" + src_call;
-					if (aprs.srcname_len > 0 && aprs.srcname_len < 10) // Get Item/Object
-					{
-						char itemname[10];
-						memset(&itemname, 0, sizeof(itemname));
-						memcpy(&itemname, aprs.srcname, aprs.srcname_len);
-						html += "(" + String(itemname) + ")";
-					}
-					html += +"</td>";
-					if (path == "")
-					{
-						html += "<td style=\"text-align: left;\">RF: DIRECT</td>";
-					}
-					else
-					{
-						String LPath = path.substring(path.lastIndexOf(',') + 1);
-						// if(path.indexOf("qAR")>=0 || path.indexOf("qAS")>=0 || path.indexOf("qAC")>=0){ //Via from Internet Server
-						if (path.indexOf("qA") >= 0 || path.indexOf("TCPIP") >= 0)
-						{
-							html += "<td style=\"text-align: left;\">INET: " + LPath + "</td>";
-						}
-						else
-						{
-							if (path.indexOf("*") > 0)
-							{
-								html += "<td style=\"text-align: left;\">DIGI: " + path + "</td>";
-							}
-							else
-							{
-								html += "<td style=\"text-align: left;\">RF: " + path + "</td>";
-							}
-						}
-					}
-					// html += "<td>" + path + "</td>";
-					if (aprs.flags & F_HASPOS)
-					{
-						double lat, lon;
-						if (gps.location.isValid())
-						{
-							lat = gps.location.lat();
-							lon = gps.location.lng();
-						}
-						else
-						{
-							lat = config.igate_lat;
-							lon = config.igate_lon;
-						}
-						double dtmp = aprsParse.direction(lon, lat, aprs.lng, aprs.lat);
-						double dist = aprsParse.distance(lon, lat, aprs.lng, aprs.lat);
-						html += "<td>" + String(dist, 1) + "km/" + String(dtmp, 0) + "°</td>";
-					}
-					else
-					{
-						html += "<td>-</td>\n";
-					}
-					html += "<td>" + String(packet) + "</td>\n";
-					if (pkg.audio_level == 0)
-					{
-						html += "<td>-</td></tr>\n";
-					}
-					else
-					{
-						double Vrms = (double)pkg.audio_level / 1000;
-						double audBV = 20.0F * log10(Vrms);
-						if (audBV < -20.0F)
-						{
-							html += "<td style=\"color: #0000f0;\">";
-						}
-						else if (audBV > -5.0F)
-						{
-							html += "<td style=\"color: #f00000;\">";
-						}
-						else
-						{
-							html += "<td style=\"color: #008000;\">";
-						}
-						html += String(audBV, 1) + "dBV</td></tr>\n";
-					}
-				}
-			}
-		}
-	}
-	html += "</table>\n";
-	request->send(200, "text/html", html); // send to someones browser when asked
-	delay(100);
-	html.clear();
+    // Enviar la respuesta
+    request->send(200, "application/json", jsonResponse);
 }
 
-void event_lastHeard()
-{
-	// log_d("Event count: %d",lastheard_events.count());
-	if (lastheard_events.count() == 0)
-		return;
+void event_lastHeard() {
+    const int MAX_CALLSIGNS = 50;
+    PacketCounter packetCounters[MAX_CALLSIGNS] = {};
+    int counterSize = 0;
 
-	struct pbuf_t aprs;
-	ParseAPRS aprsParse;
-	struct tm tmstruct;
+    for (int i = 0; i < PKGLISTSIZE; i++) {
+        pkgListType pkg = getPkgList(i);
+        if (pkg.time > 0) {
+            String line = String(pkg.raw);
+            int start_val = line.indexOf(">");
+            if (start_val > 3) {
+                String callsign = line.substring(0, start_val);
 
-	String html = "";
-	String line = "";
-	sort(pkgList, PKGLISTSIZE);
+                int counterIndex = -1;
+                for (int j = 0; j < counterSize; j++) {
+                    if (packetCounters[j].callsign == callsign) {
+                        counterIndex = j;
+                        break;
+                    }
+                }
 
-	//log_d("Create html last heard");
+                if (counterIndex == -1 && counterSize < MAX_CALLSIGNS) {
+                    packetCounters[counterSize].callsign = callsign;
+                    packetCounters[counterSize].count = 1;
+                    counterSize++;
+                } else if (counterIndex != -1) {
+                    packetCounters[counterIndex].count++;
+                }
+            }
+        }
+    }
 
-	html = "<table>\n";
-	html += "<th colspan=\"7\" style=\"background-color: #070ac2;\">LAST HEARD <a href=\"/tnc2\" target=\"_tnc2\" style=\"color: yellow;font-size:8pt\">[RAW]</a></th>\n";
-	html += "<tr>\n";
-	html += "<th style=\"min-width:10ch\"><span><b>Time (";
-	if (config.timeZone >= 0)
-		html += "+";
-	// else
-	//	html += "-";
+    String jsonResponse = "{ \"lastHeard\": [";
+    for (int i = 0; i < counterSize; i++) {
+        jsonResponse += "{";
+        jsonResponse += "\"callsign\":\"" + packetCounters[i].callsign + "\",";
+        jsonResponse += "\"count\":" + String(packetCounters[i].count);
+        jsonResponse += "}";
+        if (i < counterSize - 1) {
+            jsonResponse += ",";
+        }
+    }
+    jsonResponse += "] }";
 
-	if (config.timeZone == (int)config.timeZone)
-		html += String((int)config.timeZone) + ")</b></span></th>\n";
-	else
-		html += String(config.timeZone, 1) + ")</b></span></th>\n";
-	html += "<th style=\"min-width:16px\">ICON</th>\n";
-	html += "<th style=\"min-width:10ch\">Callsign</th>\n";
-	html += "<th>VIA LAST PATH</th>\n";
-	html += "<th style=\"min-width:5ch\">DX</th>\n";
-	html += "<th style=\"min-width:5ch\">PACKET</th>\n";
-	html += "<th style=\"min-width:5ch\">AUDIO</th>\n";
-	html += "</tr>\n";
-
-	for (int i = 0; i < PKGLISTSIZE; i++)
-	{
-		if (i >= PKGLISTSIZE)
-			break;
-		pkgListType pkg = getPkgList(i);
-		if (pkg.time > 0)
-		{
-			line = String(pkg.raw);
-			//log_d("IDX=%d RAW:%s",i,line.c_str());
-			int packet = pkg.pkg;
-			int start_val = line.indexOf(">", 0); // หาตำแหน่งแรกของ >
-			if (start_val > 3)
-			{
-				String src_call = line.substring(0, start_val);
-				memset(&aprs, 0, sizeof(pbuf_t));
-				aprs.buf_len = 300;
-				aprs.packet_len = line.length();
-				line.toCharArray(&aprs.data[0], aprs.packet_len);
-				int start_info = line.indexOf(":", 0);
-				if(start_info<10) continue;
-				int start_dst = line.lastIndexOf(">", start_info);
-				if(start_dst<5) continue;
-				int end_ssid = line.indexOf(",", 10);
-				if(end_ssid>start_info || end_ssid<10) end_ssid=start_info;
-				
-				int start_dstssid = line.lastIndexOf("-",end_ssid);
-				if(start_dstssid<start_dst) start_dstssid=-1;
-				String path = "";
-
-				if ((end_ssid > start_dst) && (end_ssid < start_info))
-				{
-					path = line.substring(end_ssid + 1, start_info);
-				}
-
-				if (start_dstssid > start_dst)
-				{
-					aprs.dstcall_end_or_ssid = &aprs.data[start_dstssid+1];
-				}
-				else
-				{
-					aprs.dstcall_end_or_ssid = &aprs.data[end_ssid];
-				}
-				aprs.info_start = &aprs.data[start_info + 1];
-				aprs.dstname = &aprs.data[start_dst + 1];
-				aprs.dstname_len = end_ssid - start_dst;
-				aprs.dstcall_end = &aprs.data[end_ssid];
-				aprs.srccall_end = &aprs.data[start_dst];
-
-				// Serial.println(aprs.info_start);
-				if (aprsParse.parse_aprs(&aprs))
-				{
-					pkg.calsign[10] = 0;
-					// time_t tm = pkg.time;
-					localtime_r(&pkg.time, &tmstruct);
-					char strTime[10];
-					sprintf(strTime, "%02d:%02d:%02d", tmstruct.tm_hour, tmstruct.tm_min, tmstruct.tm_sec);
-					// String str = String(tmstruct.tm_hour, DEC) + ":" + String(tmstruct.tm_min, DEC) + ":" + String(tmstruct.tm_sec, DEC);
-
-					html += "<tr><td>" + String(strTime) + "</td>";
-					String fileImg = "";
-					uint8_t sym = (uint8_t)aprs.symbol[1];
-					if (sym > 31 && sym < 127)
-					{
-						if (aprs.symbol[0] > 64 && aprs.symbol[0] < 91) // table A-Z
-						{
-							html += "<td><b>" + String(aprs.symbol[0]) + "</b></td>";
-						}
-						else
-						{
-							fileImg = String(sym, DEC);
-							if (aprs.symbol[0] == 92)
-							{
-								fileImg += "-2.png";
-							}
-							else if (aprs.symbol[0] == 47)
-							{
-								fileImg += "-1.png";
-							}
-							else
-							{
-								fileImg = "dot.png";
-							}
-							html += "<td><img src=\"http://aprs.dprns.com/symbols/icons/" + fileImg + "\"></td>";
-						}
-						fileImg.clear();
-					}
-					else
-					{
-						html += "<td><img src=\"http://aprs.dprns.com/symbols/icons/dot.png\"></td>";
-					}
-					html += "<td>" + src_call;
-					if (aprs.srcname_len > 0 && aprs.srcname_len < 10) // Get Item/Object
-					{
-						char itemname[10];
-						memset(&itemname, 0, 10);
-						memcpy(&itemname, aprs.srcname, aprs.srcname_len);
-						html += "(" + String(itemname) + ")";
-					}
-					html += +"</td>";
-					if (path == "")
-					{
-						html += "<td style=\"text-align: left;\">RF: DIRECT</td>";
-					}
-					else
-					{
-						String LPath = path.substring(path.lastIndexOf(',') + 1);
-						// if(path.indexOf("qAR")>=0 || path.indexOf("qAS")>=0 || path.indexOf("qAC")>=0){ //Via from Internet Server
-						if (path.indexOf("qA") >= 0 || path.indexOf("TCPIP") >= 0)
-						{
-							html += "<td style=\"text-align: left;\">INET: " + LPath + "</td>";
-						}
-						else
-						{
-							if (path.indexOf("*") > 0)
-								html += "<td style=\"text-align: left;\">DIGI: " + path + "</td>";
-							else
-								html += "<td style=\"text-align: left;\">RF: " + path + "</td>";
-						}
-						LPath.clear();
-					}
-					// html += "<td>" + path + "</td>";
-					if (aprs.flags & F_HASPOS)
-					{
-						double lat, lon;
-						if (gps.location.isValid())
-						{
-							lat = gps.location.lat();
-							lon = gps.location.lng();
-						}
-						else
-						{
-							lat = config.igate_lat;
-							lon = config.igate_lon;
-						}
-						double dtmp = aprsParse.direction(lon, lat, aprs.lng, aprs.lat);
-						double dist = aprsParse.distance(lon, lat, aprs.lng, aprs.lat);
-						html += "<td>" + String(dist, 1) + "km/" + String(dtmp, 0) + "°</td>";
-					}
-					else
-					{
-						html += "<td>-</td>\n";
-					}
-					html += "<td>" + String(packet) + "</td>\n";
-					if (pkg.audio_level == 0)
-					{
-						html += "<td>-</td></tr>\n";
-					}
-					else
-					{
-						double Vrms = (double)pkg.audio_level / 1000;
-						double audBV = 20.0F * log10(Vrms);
-						if (audBV < -20.0F)
-						{
-							html += "<td style=\"color: #0000f0;\">";
-						}
-						else if (audBV > -5.0F)
-						{
-							html += "<td style=\"color: #f00000;\">";
-						}
-						else
-						{
-							html += "<td style=\"color: #008000;\">";
-						}
-						html += String(audBV, 1) + "dBV</td></tr>\n";
-					}
-				}
-				path.clear();
-				src_call.clear();
-			}
-			line.clear();
-		}
-	}
-	html += "</table>\n";
-	char *info = (char *)calloc(html.length(), sizeof(char));
-	if (info)
-	{
-		//log_d("Send Event lastHeard");
-		html.toCharArray(info, html.length(), 0);
-		html.clear();
-		lastheard_events.send(info, "lastHeard", millis(), 5000);
-		free(info);
-	}
-	else
-	{
-		log_d("Memory is low!!");
-	}
+    lastheard_events.send(jsonResponse.c_str(), "lastHeard", millis(), 5000);
 }
 
 void handle_radio_get(AsyncWebServerRequest *request) {
@@ -4851,7 +4528,7 @@ void webService()
 	async_server.on("/sysinfo", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_sysinfo(request); });
 	async_server.on("/lastHeard", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_lastHeard(request); });
+					{ handle_lastHeard(request); });			
 	async_server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_css(request); });
 	async_server.on("/jquery-3.7.1.js", HTTP_GET, [](AsyncWebServerRequest *request)
