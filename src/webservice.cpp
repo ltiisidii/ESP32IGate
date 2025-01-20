@@ -872,6 +872,12 @@ void event_lastHeard()
 void handle_radio_get(AsyncWebServerRequest *request) {
     String html = loadHtmlTemplate("/radio.html");
 
+    // Generar opciones del select dinámicamente
+    String rfTypeOptions;
+    rfTypeOptions += "<option value=0 " + String(config.rf_type == 0 ? "selected" : "") + ">NONE</option>";
+    rfTypeOptions += "<option value=1 " + String(config.rf_type == 1 ? "selected" : "") + ">SA868_VHF</option>";
+    rfTypeOptions += "<option value=2 " + String(config.rf_type == 2 ? "selected" : "") + ">SA868_UHF</option>";
+
     // Reemplazar valores dinámicos
     html.replace("%VOLUME%", String(config.volume));
     html.replace("%SQL_LEVEL%", String(config.sql_level));
@@ -879,7 +885,7 @@ void handle_radio_get(AsyncWebServerRequest *request) {
     html.replace("%RX_FREQ%", String(config.freq_rx, 4));
     html.replace("%TX_CTCSS%", String(config.tone_tx));
     html.replace("%RX_CTCSS%", String(config.tone_rx));
-    html.replace("%RF_TYPE%", String(config.rf_type));
+    html.replace("%RF_TYPE_OPTIONS%", rfTypeOptions);
     html.replace("%RADIO_ENABLE%", config.rf_en ? "checked" : "");
     html.replace("%TX_POWER_SELECTED_HIGH%", config.rf_power ? "selected" : "");
     html.replace("%TX_POWER_SELECTED_LOW%", !config.rf_power ? "selected" : "");
