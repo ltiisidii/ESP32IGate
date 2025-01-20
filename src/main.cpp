@@ -633,7 +633,8 @@ void defaultConfig()
     config.tx_timeslot = 2000; // ms
 
     config.wifi_mode = WIFI_AP_STA_FIX;
-    config.wifi_power = 78; // WIFI_POWER_11dBm
+    // config.wifi_power = 78; // WIFI_POWER_11dBm
+    config.wifi_power = 84; // WIFI_POWER_15dBm
     config.wifi_ap_ch = 6;
     config.wifi_sta[0].enable = true;
     sprintf(config.wifi_sta[0].wifi_ssid, "IGATE");

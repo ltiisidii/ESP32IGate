@@ -242,27 +242,45 @@
         // Actualizar fecha y hora local
         document.getElementById("timeUpdate").addEventListener("click", function () {
             const localDateTime = document.getElementById("localDateTime").value;
+            if (!localDateTime) {
+                alert("Por favor, ingresa una fecha y hora válida.");
+                return;
+            }
             fetch("/system", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: `SetTime=${encodeURIComponent(localDateTime)}`
             })
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error en la solicitud: " + response.statusText);
+                }
+                return response.text();
+            })
             .then(data => alert(data))
-            .catch(error => console.error("Error:", error));
+            .catch(error => console.error("Error al actualizar la hora:", error));
         });
     
         // Actualizar NTP Host
         document.getElementById("ntpUpdate").addEventListener("click", function () {
             const ntpHost = document.getElementById("ntpHost").value;
+            if (!ntpHost) {
+                alert("Por favor, ingresa un servidor NTP válido.");
+                return;
+            }
             fetch("/system", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: `SetTimeNtp=${encodeURIComponent(ntpHost)}`
             })
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error en la solicitud: " + response.statusText);
+                }
+                return response.text();
+            })
             .then(data => alert(data))
-            .catch(error => console.error("Error:", error));
+            .catch(error => console.error("Error al actualizar el NTP Host:", error));
         });
     
         // Actualizar zona horaria
@@ -273,9 +291,14 @@
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: `SetTimeZone=${encodeURIComponent(timeZone)}`
             })
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error en la solicitud: " + response.statusText);
+                }
+                return response.text();
+            })
             .then(data => alert(data))
-            .catch(error => console.error("Error:", error));
+            .catch(error => console.error("Error al actualizar la zona horaria:", error));
         });
     
         // Reiniciar el sistema
@@ -286,11 +309,16 @@
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: "REBOOT=true"
                 })
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Error en la solicitud: " + response.statusText);
+                    }
+                    return response.text();
+                })
                 .then(data => alert(data))
-                .catch(error => console.error("Error:", error));
+                .catch(error => console.error("Error al reiniciar el sistema:", error));
             }
         });
-    </script>
+    </script>    
 </body>
 </html>

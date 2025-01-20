@@ -2254,6 +2254,18 @@ void handle_mod(AsyncWebServerRequest *request)
 	}
 }
 
+String getLocalDateTime() {
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+        return "No disponible";
+    }
+    char buffer[20];
+    snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d",
+             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    return String(buffer);
+}
+
 // Manejar solicitud GET para /system
 void handle_system_get(AsyncWebServerRequest *request) {
     if (!request->authenticate(config.http_username, config.http_password)) {
@@ -2263,26 +2275,32 @@ void handle_system_get(AsyncWebServerRequest *request) {
     String html = loadHtmlTemplate("/system.html");
 
     // Reemplazo de valores dinámicos
-    html.replace("%WEB_USER%", String(config.http_username));
-    html.replace("%WEB_PASSWORD%", String(config.http_password));
+    html.replace("%localDateTime%", getLocalDateTime());
+    html.replace("%ntpHost%", String(config.ntp_host));
+    html.replace("%webUser%", String(config.http_username));
+    html.replace("%webPassword%", String(config.http_password));
 
-	for (int i = 1; i <= 4; i++) {
-		char argName[10];
-		snprintf(argName, sizeof(argName), "Path_%d", i);
-		if (request->hasArg(argName)) {
-			strncpy(config.path[i - 1], request->arg(argName).c_str(), sizeof(config.path[i - 1]));
-		}
-	}
+    for (int i = 1; i <= 4; i++) {
+        char placeholder[10];
+        snprintf(placeholder, sizeof(placeholder), "%%path%d%%", i);
+        html.replace(placeholder, String(config.path[i - 1]));
+    }
 
-    html.replace("%OLED_ENABLE%", config.oled_enable ? "checked" : "");
-    html.replace("%TX_DISPLAY%", config.tx_display ? "checked" : "");
-    html.replace("%RX_DISPLAY%", config.rx_display ? "checked" : "");
-    html.replace("%HEAD_UP%", config.h_up ? "checked" : "");
-    html.replace("%POPUP_DELAY%", String(config.dispDelay));
-    html.replace("%RX_CHANNEL_INET%", String(config.dispINET));
-	html.replace("%RX_CHANNEL_RF%", String(config.dispRF));
-    html.replace("%FILTER_DX%", String(config.filterDistant));
-    html.replace("%FILTERS%", String(config.dispFilter));
+    html.replace("%oledEnable%", config.oled_enable ? "checked" : "");
+    html.replace("%txDisplay%", config.tx_display ? "checked" : "");
+    html.replace("%rxDisplay%", config.rx_display ? "checked" : "");
+    html.replace("%headUp%", config.h_up ? "checked" : "");
+    html.replace("%popupDelay%", String(config.dispDelay));
+    html.replace("%rxChannelRF%", config.dispRF ? "checked" : "");
+    html.replace("%rxChannelINET%", config.dispINET ? "checked" : "");
+    html.replace("%filterDx%", String(config.filterDistant));
+    html.replace("%filters%", String(config.dispFilter));
+
+    // Reemplazo dinámico de la zona horaria
+    for (int tz = -12; tz <= 12; ++tz) {
+        String placeholder = "%timeZoneSelected" + String(tz) + "%";
+        html.replace(placeholder, (config.timeZone == tz) ? "selected" : "");
+    }
 
     request->send(200, "text/html", html);
 }
