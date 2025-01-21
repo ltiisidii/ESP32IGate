@@ -17,6 +17,9 @@
 #include "jquery_min_js.h"
 #include "SPIFFS.h"
 
+PacketCounter packetCounters[MAX_CALLSIGNS] = {};
+int counterSize = 0;
+
 AsyncWebServer async_server(80);
 AsyncWebServer async_websocket(81);
 AsyncWebSocket ws("/ws");
@@ -442,9 +445,48 @@ void handleWiFiInfo(AsyncWebServerRequest *request) {
     request->send(200, "application/json", json);
 }
 
+String extractViaPath(const String& raw) {
+    int start = raw.indexOf('>'); // Encuentra el inicio del path
+    if (start != -1) {
+        int end = raw.indexOf(':', start); // Encuentra el final del path
+        if (end != -1) {
+            return raw.substring(start + 1, end); // Extrae el camino entre '>' y ':'
+        }
+    }
+    return "N/A"; // Devuelve un valor predeterminado si no hay path
+}
+
+float extractAudioLevel(const String& raw) {
+    int start = raw.indexOf('[');
+    int end = raw.indexOf(']', start);
+    if (start != -1 && end != -1) {
+        String audioData = raw.substring(start + 1, end);
+        int separator = audioData.indexOf(',');
+        if (separator != -1) {
+            String dBV = audioData.substring(separator + 2);
+            dBV.replace("dBV", "");
+            dBV.trim();
+            return dBV.toFloat();
+        }
+    }
+    // Si no hay corchetes, devuelve un valor predeterminado
+    Serial.println("Brackets '[' and ']' not found in raw data: " + raw);
+    return 0.0;
+}
+
+String extractTime(const String& raw) {
+    int start = 0; // Supón que el tiempo comienza al inicio de la línea
+    int end = raw.indexOf('['); // Encuentra el final del tiempo antes del bloque de audio
+    if (end != -1) {
+        String time = raw.substring(start, end); // Extrae el tiempo
+        time.trim(); // Limpia espacios en blanco
+        return time;
+    }
+    return "N/A"; // Devuelve "N/A" si no se encuentra el tiempo
+}
+
 void handle_lastHeard(AsyncWebServerRequest* request) {
     // Tamaño máximo de *callsigns* únicos que esperamos procesar
-    const int MAX_CALLSIGNS = 50;
     String callsigns[MAX_CALLSIGNS];
     int counts[MAX_CALLSIGNS] = {0}; // Inicializar a 0
     int callsignCount = 0;
@@ -452,13 +494,22 @@ void handle_lastHeard(AsyncWebServerRequest* request) {
     // Iterar sobre los paquetes en pkgList
     for (int i = 0; i < PKGLISTSIZE; i++) {
         pkgListType pkg = getPkgList(i);
+
+        if (String(pkg.raw).length() > 0) { // Solo procesar si el paquete no está vacío
+            Serial.println("Raw packet data: " + String(pkg.raw)); // Depuración
+        } else {
+            continue; // Saltar paquetes vacíos
+        }
+
         if (pkg.time > 0) {
             String line = String(pkg.raw);
             int start_val = line.indexOf(">");
             if (start_val > 3) {
                 String callsign = line.substring(0, start_val);
+                String viaPath = extractViaPath(pkg.raw); // Extraer vía
+                float audioLevel = extractAudioLevel(pkg.raw); // Nivel de audio
+                String timeString = extractTime(pkg.raw); // Tiempo de recepción
 
-                // Buscar si ya existe este callsign en el arreglo
                 int index = -1;
                 for (int j = 0; j < callsignCount; j++) {
                     if (callsigns[j] == callsign) {
@@ -468,29 +519,42 @@ void handle_lastHeard(AsyncWebServerRequest* request) {
                 }
 
                 if (index == -1) {
-                    // Nuevo callsign, agregar al arreglo si hay espacio
                     if (callsignCount < MAX_CALLSIGNS) {
                         callsigns[callsignCount] = callsign;
                         counts[callsignCount] = 1;
+
+                        // Asignar valores adicionales al packetCounter
+                        packetCounters[callsignCount].callsign = callsign;
+                        packetCounters[callsignCount].viaPath = viaPath;
+                        packetCounters[callsignCount].audio = audioLevel;
+                        packetCounters[callsignCount].time = timeString;
+                        packetCounters[callsignCount].raw = pkg.raw; // Asignar raw
                         callsignCount++;
                     }
                 } else {
-                    // Incrementar el contador existente
                     counts[index]++;
+                    packetCounters[index].audio = audioLevel; // Actualiza nivel de audio
+                    packetCounters[index].time = timeString; // Actualiza el tiempo
                 }
             }
         }
     }
 
-    // Construir la respuesta JSON
+    // Construir JSON
     String jsonResponse = "{ \"lastHeard\": [";
     for (int i = 0; i < callsignCount; i++) {
         jsonResponse += "{";
-        jsonResponse += "\"callsign\":\"" + callsigns[i] + "\",";
-        jsonResponse += "\"count\":" + String(counts[i]);
+        jsonResponse += "\"callsign\":\"" + packetCounters[i].callsign + "\",";
+        jsonResponse += "\"count\":" + String(counts[i]) + ",";
+        jsonResponse += "\"viaPath\":\"" + packetCounters[i].viaPath + "\",";
+        jsonResponse += "\"dx\":" + String(packetCounters[i].dx) + ",";
+        jsonResponse += "\"audio\":" + String(packetCounters[i].audio, 2) + ",";
+        jsonResponse += "\"time\":\"" + packetCounters[i].time + "\",";
+        jsonResponse += "\"icon\":" + String(packetCounters[i].icon) + ",";
+        jsonResponse += "\"raw\":\"" + packetCounters[i].raw + "\"";
         jsonResponse += "}";
         if (i < callsignCount - 1) {
-            jsonResponse += ",";
+            jsonResponse += ","; // Agregar coma entre objetos JSON
         }
     }
     jsonResponse += "] }";
@@ -500,10 +564,6 @@ void handle_lastHeard(AsyncWebServerRequest* request) {
 }
 
 void event_lastHeard() {
-    const int MAX_CALLSIGNS = 50;
-    PacketCounter packetCounters[MAX_CALLSIGNS] = {};
-    int counterSize = 0;
-
     for (int i = 0; i < PKGLISTSIZE; i++) {
         pkgListType pkg = getPkgList(i);
         if (pkg.time > 0) {
@@ -511,8 +571,11 @@ void event_lastHeard() {
             int start_val = line.indexOf(">");
             if (start_val > 3) {
                 String callsign = line.substring(0, start_val);
-
+                String viaPath = extractViaPath(pkg.raw); // Extrae el viaPath
+                float audioLevel = extractAudioLevel(pkg.raw); // Extrae el nivel de audio en dBV
                 int counterIndex = -1;
+
+                // Busca si ya existe el callsign
                 for (int j = 0; j < counterSize; j++) {
                     if (packetCounters[j].callsign == callsign) {
                         counterIndex = j;
@@ -520,22 +583,32 @@ void event_lastHeard() {
                     }
                 }
 
+                // Si no existe, agrega uno nuevo
                 if (counterIndex == -1 && counterSize < MAX_CALLSIGNS) {
                     packetCounters[counterSize].callsign = callsign;
+                    packetCounters[counterSize].viaPath = viaPath;
                     packetCounters[counterSize].count = 1;
+                    packetCounters[counterSize].audio = audioLevel; // Asigna el nivel de audio
                     counterSize++;
                 } else if (counterIndex != -1) {
                     packetCounters[counterIndex].count++;
+                    packetCounters[counterIndex].audio = audioLevel; // Actualiza el nivel de audio
                 }
             }
         }
     }
 
+    // Construir y enviar JSON
     String jsonResponse = "{ \"lastHeard\": [";
     for (int i = 0; i < counterSize; i++) {
         jsonResponse += "{";
         jsonResponse += "\"callsign\":\"" + packetCounters[i].callsign + "\",";
-        jsonResponse += "\"count\":" + String(packetCounters[i].count);
+        jsonResponse += "\"count\":" + String(packetCounters[i].count) + ",";
+        jsonResponse += "\"viaPath\":\"" + packetCounters[i].viaPath + "\",";
+        jsonResponse += "\"dx\":" + String(packetCounters[i].dx) + ",";
+        jsonResponse += "\"packet\":" + String(packetCounters[i].packet) + ",";
+        jsonResponse += "\"audio\":" + String(packetCounters[i].audio) + ",";
+        jsonResponse += "\"icon\":\"https://aprs.p00lack.cc/symbols/icons/" + String(packetCounters[i].icon) + "-1.png\"";
         jsonResponse += "}";
         if (i < counterSize - 1) {
             jsonResponse += ",";
@@ -543,7 +616,7 @@ void event_lastHeard() {
     }
     jsonResponse += "] }";
 
-    lastheard_events.send(jsonResponse.c_str(), "lastHeard", millis(), 5000);
+    lastheard_events.send(jsonResponse.c_str(), "lastHeard");
 }
 
 void handle_radio_get(AsyncWebServerRequest *request) {

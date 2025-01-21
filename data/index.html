@@ -212,7 +212,7 @@
                             <th>Callsign</th>
                             <th>VIA LAST PATH</th>
                             <th>DX</th>
-                            <th>PACKET</th>
+                            <th>COUNT</th> <!-- Columna para "count" -->
                             <th>AUDIO</th>
                         </tr>
                     </thead>
@@ -378,11 +378,6 @@
                     document.getElementById('wifi-mode').textContent = wifi.mode || 'N/A';
                     document.getElementById('wifi-ssid').textContent = wifi.ssid || 'N/A';
                     document.getElementById('wifi-rssi').textContent = wifi.rssi || 'N/A';
-
-
-                    if (modeElem) modeElem.textContent = wifi.mode || 'N/A';
-                    if (ssidElem) ssidElem.textContent = wifi.ssid || 'N/A';
-                    if (rssiElem) rssiElem.textContent = wifi.rssi || 'N/A';                    
                 } catch (error) {
                     console.error('Error fetching WiFi info:', error);
                 }
@@ -392,66 +387,62 @@
             setInterval(loadWiFiInfo, 5000);
             loadWiFiInfo(); // Cargar inicialmente
         </script>
-        <!-- JavaScript to Fetch Last Heard Info -->
         <script>
-            async function loadLastHeard() {
-                try {
-                    const response = await fetch('/lastHeard'); // Endpoint para Last Heard
-                    if (!response.ok) throw new Error('Failed to fetch last heard data');
-                    
-                    const data = await response.json(); // Obtén el objeto JSON completo
-                    const lastHeard = data.lastHeard; // Extrae el array `lastHeard`
-                    
-                    // Seleccionar el cuerpo de la tabla
-                    const tableBody = document.getElementById('last-heard-body');
-                    tableBody.innerHTML = ''; // Limpiar contenido previo
-                    
-                    // Generar nuevas filas dinámicamente
-                    lastHeard.forEach(entry => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${entry.time || 'N/A'}</td>
-                            <td><img src="${entry.icon || 'N/A'}" alt="Icon" style="width:16px;"></td>
-                            <td>${entry.callsign || 'N/A'}</td>
-                            <td>${entry.via || 'N/A'}</td>
-                            <td>${entry.dx || 'N/A'}</td>
-                            <td>${entry.packet || 'N/A'}</td>
-                            <td>${entry.audio || 'N/A'}</td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                } catch (error) {
-                    console.error('Error fetching last heard data:', error);
-                }
-            }
+        const ws = new WebSocket(`ws://${location.hostname}:81/ws`);
 
-            // Actualizar información cada 5 segundos
-            setInterval(loadLastHeard, 5000);
-            loadLastHeard(); // Cargar inicialmente
-        </script>
-        <script>
-            if (!!window.EventSource) {
-                var source = new EventSource('/eventHeard'); // Conexión SSE con el servidor
-        
-                source.addEventListener('lastHeard', function(e) {
-                    // Encuentra el cuerpo de la tabla y actualiza su contenido
-                    var lh = document.getElementById('last-heard-body');
-                    if (lh != null) {
-                        lh.innerHTML = e.data; // Reemplaza el contenido con los datos enviados
-                    }
-                }, false);
-        
-                source.addEventListener('open', function(e) {
-                    console.log("Conectado a SSE /eventHeard");
-                }, false);
-        
-                source.addEventListener('error', function(e) {
-                    if (e.target.readyState !== EventSource.OPEN) {
-                        console.log("Desconectado de SSE /eventHeard");
-                    }
-                }, false);
+        ws.onopen = function() {
+            console.log('Connection opened');
+        };
+
+        ws.onclose = function() {
+            console.log('Connection closed');
+        };
+
+        ws.onmessage = function(event) {
+            try {
+                // Parsear el JSON recibido
+                const data = JSON.parse(event.data);
+
+                console.log('Data received:', data); // Mostrar datos en la consola
+
+                // Validar propiedades
+                const isActive = data.Active === "1";
+                const Vrms = parseFloat(data.mVrms) / 1000; // Convertir milivoltios a voltios
+                const dBV = 20.0 * Math.log10(Vrms); // Calcular dBV
+                const decodedRaw = atob(data.RAW); // Decodificar Base64
+                const time = new Date(parseInt(data.timeStamp) * 1000).toLocaleString(); // Formatear tiempo
+
+                // Seleccionar el cuerpo de la tabla
+                const tableBody = document.getElementById('last-heard-body');
+
+                // Generar una nueva fila
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${time || 'N/A'}</td>
+                    <td><img src="https://aprs.p00lack.cc/symbols/icons/default_icon_url.png" alt="Icon" style="width:16px;"></td>
+                    <td>${decodedRaw.split('>')[0] || 'N/A'}</td>
+                    <td>${decodedRaw.split('>')[1]?.split(':')[0] || 'N/A'}</td>
+                    <td>${decodedRaw.split('#')[1]?.split(' ')[0] || 'N/A'}</td>
+                    <td>${isActive ? 1 : 0}</td>
+                    <td>${dBV.toFixed(1) || 'N/A'} dBV</td>
+                `;
+
+                // Agregar la fila a la tabla
+                tableBody.prepend(row);
+
+                // Limitar a 50 filas en la tabla
+                while (tableBody.rows.length > 50) {
+                    tableBody.deleteRow(-1);
+                }
+            } catch (error) {
+                console.error('Error processing WebSocket message:', error);
             }
-        </script>
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket Error:', error);
+        };
+        </script> 
 
 </body>
 </html>

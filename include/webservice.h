@@ -30,7 +30,27 @@ typedef struct timeZoneName
 typedef struct {
     String callsign;
     int count;
+    String viaPath;   // Último path
+    int dx;           // Distancia (DX)
+    int packet;       // Paquete procesado
+    int audio;        // Nivel de audio
+    uint8_t icon;     // Icono APRS
+	String raw; // Nuevo campo para almacenar pkg.raw
+	String time;      // Field to store time
 } PacketCounter;
+
+#ifndef MAX_CALLSIGNS
+#define MAX_CALLSIGNS 50
+#endif
+extern PacketCounter packetCounters[MAX_CALLSIGNS];
+extern int counterSize;
+
+String extractViaPath(const String& raw);
+float extractAudioLevel(const String& raw);
+
+// Prototipos de las funciones auxiliares
+float calculateDX(pkgListType pkg);
+uint8_t resolveIcon(pkgListType pkg);
 
 const timeZoneName tzList[40] PROGMEM= {
 	{-12.00, "(GMT -12:00) Eniwetok, Kwajalein"},
