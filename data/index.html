@@ -387,6 +387,7 @@
             setInterval(loadWiFiInfo, 5000);
             loadWiFiInfo(); // Cargar inicialmente
         </script>
+
         <script>
         const ws = new WebSocket(`ws://${location.hostname}:81/ws`);
 
@@ -412,6 +413,17 @@
                 const decodedRaw = atob(data.RAW); // Decodificar Base64
                 const time = new Date(parseInt(data.timeStamp) * 1000).toLocaleString(); // Formatear tiempo
 
+                // Determinar tabla y símbolo
+                const tableSymbol = decodedRaw[9]; // Carácter entre latitud y longitud
+                const symbolChar = decodedRaw[19]; // Carácter del símbolo
+                const symbolAscii = symbolChar.charCodeAt(0); // Código ASCII del símbolo
+                const tableCode = tableSymbol === '/' ? 1 : tableSymbol === '\\' ? 2 : 0;
+
+                // Generar URL del ícono
+                const iconUrl = tableCode > 0
+                    ? `https://aprs.p00lack.cc/symbols/icons/${symbolAscii}-${tableCode}.png`
+                    : 'https://aprs.p00lack.cc/symbols/icons/default_icon_url.png';
+
                 // Seleccionar el cuerpo de la tabla
                 const tableBody = document.getElementById('last-heard-body');
 
@@ -419,7 +431,7 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${time || 'N/A'}</td>
-                    <td><img src="https://aprs.p00lack.cc/symbols/icons/default_icon_url.png" alt="Icon" style="width:16px;"></td>
+                    <td><img src="${iconUrl}" alt="Icon" style="width:16px;"></td> <!-- Ícono dinámico -->
                     <td>${decodedRaw.split('>')[0] || 'N/A'}</td>
                     <td>${decodedRaw.split('>')[1]?.split(':')[0] || 'N/A'}</td>
                     <td>${decodedRaw.split('#')[1]?.split(' ')[0] || 'N/A'}</td>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <title>ESP32IGATE</title>
+</head>
+<body class="bg-dark text-light">
+
+    <!-- Header -->
+    <div class="container py-3">
+        <h1 class="text-center">
+            <a href="/" class="text-decoration-none text-light">ESP32IGate Project [APRS ALL IN ONE]</a>
+        </h1>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/igate">IGATE</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/digi">Digi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tracker">Tracker</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/wx">WX</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tlm">TLM</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/vpn">VPN</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/mod">Mod</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4" id="contentmain">
+        <h1>Mensajes APRS</h1>
+
+        <!-- Formulario para enviar mensajes -->
+        <form action="/messages" method="POST" class="mb-4">
+            <div class="mb-3">
+                <label for="to" class="form-label">Callsign Destino:</label>
+                <input type="text" id="to" name="to" class="form-control" placeholder="N0CALL o QST" required>
+                <small class="form-text text-muted">Usa 'QST' para mensajes públicos. Evita saturar la red enviando a todos.</small>
+            </div>
+            <div class="mb-3">
+                <label for="message" class="form-label">Mensaje:</label>
+                <textarea id="message" name="message" class="form-control" rows="4" maxlength="67" placeholder="Escribe tu mensaje aquí..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+        </form>
+
+        <!-- Tabla para mostrar mensajes enviados -->
+        <h2>Mensajes Enviados</h2>
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th>Para</th>
+                    <th>Mensaje</th>
+                    <th>Hora</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>N0CALL</td>
+                    <td>Hola desde mi IGate APRS!</td>
+                    <td>2025-01-21 14:30</td>
+                </tr>
+                <tr>
+                    <td>QST</td>
+                    <td>Prueba de mensaje público.</td>
+                    <td>2025-01-21 14:32</td>
+                </tr>
+                <tr>
+                    <td>LU9XYZ</td>
+                    <td>Confirmado, nos vemos en 145.5 MHz.</td>
+                    <td>2025-01-21 14:35</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Tabla para mostrar mensajes recibidos -->
+        <h2>Mensajes Recibidos</h2>
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th>De</th>
+                    <th>Para</th>
+                    <th>Mensaje</th>
+                    <th>Hora</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>LU7ABC</td>
+                    <td>LU9XYZ</td>
+                    <td>Nos encontramos en la próxima reunión.</td>
+                    <td>2025-01-21 14:37</td>
+                </tr>
+                <tr>
+                    <td>LU5DEF</td>
+                    <td>QST</td>
+                    <td>Reporte de clima actualizado disponible.</td>
+                    <td>2025-01-21 14:39</td>
+                </tr>
+                <tr>
+                    <td>N0CALL</td>
+                    <td>LU9XYZ</td>
+                    <td>Gracias por la confirmación!</td>
+                    <td>2025-01-21 14:40</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-center text-light py-3">
+        ESP32IGate Web Configuration - &copy; 2025
+    </footer>
+
+</body>
+</html>
