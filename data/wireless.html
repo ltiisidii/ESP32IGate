@@ -7,6 +7,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <title>ESP32IGATE</title>
 </head>
+<style>
+    .alert {
+        margin: 10px auto;
+        padding: 15px;
+        border: 1px solid #d4edda;
+        border-radius: 5px;
+        background-color: #d4edda;
+        color: #155724;
+        font-size: 16px;
+    }
+</style>
 <body class="bg-dark text-light">
 
     <!-- Header -->
@@ -47,84 +58,100 @@
     <div class="container mt-4" id="contentmain">
         <p class="text-center"> </p>
 
-        <!-- WiFi Access Point Configuration -->
-        <div class="card bg-secondary text-light mb-4">
-            <div class="card-header bg-primary text-center">
-                <h5>WiFi Access Point Configuration</h5>
-            </div>
-            <div class="card-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="apEnable" class="form-label">Enable:</label>
-                        <input type="checkbox" id="apEnable" name="apEnable" class="form-check-input" %AP_ENABLE%>
+        <div class="row">
+            <!-- WiFi Access Point Configuration -->
+            <div class="col-md-6 mb-4">
+                <div class="card bg-secondary text-light h-100">
+                    <div class="card-header bg-primary text-center">
+                        <h5>WiFi Access Point Configuration</h5>
                     </div>
-                    <div class="mb-3">
-                        <label for="apSSID" class="form-label">WiFi AP SSID:</label>
-                        <input type="text" id="apSSID" name="apSSID" class="form-control" value="%AP_SSID%">
+                    <div class="card-body">
+                        <form action="/wireless" method="post">
+                            <input type="hidden" name="commitWiFiAP" value="1">
+        
+                            <div class="mb-3">
+                                <label for="apEnable" class="form-label">Enable:</label>
+                                <input type="checkbox" id="apEnable" name="apEnable" class="form-check-input" %AP_ENABLE%>
+                            </div>
+                            <div class="mb-3">
+                                <label for="apSSID" class="form-label">WiFi AP SSID:</label>
+                                <input type="text" id="apSSID" name="apSSID" class="form-control" value="%AP_SSID%">
+                            </div>
+                            <div class="mb-3">
+                                <label for="apPassword" class="form-label">WiFi AP Password:</label>
+                                <input type="password" id="apPassword" name="apPassword" class="form-control" value="%AP_PASSWORD%">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Apply Changes</button>
+                        </form>
                     </div>
-                    <div class="mb-3">
-                        <label for="apPassword" class="form-label">WiFi AP Password:</label>
-                        <input type="password" id="apPassword" name="apPassword" class="form-control" value="%AP_PASSWORD%">
+                </div>
+            </div>
+        
+            <!-- WiFi Multi Station Configuration -->
+            <div class="col-md-6 mb-4">
+                <div class="card bg-secondary text-light h-100">
+                    <div class="card-header bg-primary text-center">
+                        <h5>WiFi Multi Station Configuration</h5>
                     </div>
-                    <button type="submit" class="btn btn-primary">Apply Changes</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- WiFi Multi Station Configuration -->
-        <div class="card bg-secondary text-light">
-            <div class="card-header bg-primary text-center">
-                <h5>WiFi Multi Station Configuration</h5>
-            </div>
-            <div class="card-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="staEnable" class="form-label">WiFi STA Enable:</label>
-                        <input type="checkbox" id="staEnable" name="staEnable" class="form-check-input" %STA_ENABLE%>
+                    <div class="card-body">
+                        <form action="/wireless" method="post">
+                            <input type="hidden" name="commitWiFiClient" value="1">
+        
+                            <div class="mb-3">
+                                <label for="staEnable" class="form-label">WiFi STA Enable:</label>
+                                <input type="checkbox" id="staEnable" name="wificlient" class="form-check-input" %STA_ENABLE%>
+                            </div>
+        
+                            <!-- Station Tables -->
+                            <table class="table table-dark table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Station</th>
+                                        <th>Enable</th>
+                                        <th>SSID</th>
+                                        <th>Password</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Station #1</td>
+                                        <td><input type="checkbox" id="station1Enable" name="wifiStation0" class="form-check-input" %STA1_ENABLE%></td>
+                                        <td><input type="text" id="station1SSID" name="wifi_ssid0" class="form-control" value="%STA1_SSID%"></td>
+                                        <td><input type="password" id="station1Password" name="wifi_pass0" class="form-control" value="%STA1_PASSWORD%"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Station #2</td>
+                                        <td><input type="checkbox" id="station2Enable" name="wifiStation1" class="form-check-input" %STA2_ENABLE%></td>
+                                        <td><input type="text" id="station2SSID" name="wifi_ssid1" class="form-control" value="%STA2_SSID%"></td>
+                                        <td><input type="password" id="station2Password" name="wifi_pass1" class="form-control" value="%STA2_PASSWORD%"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Station #3</td>
+                                        <td><input type="checkbox" id="station3Enable" name="wifiStation2" class="form-check-input" %STA3_ENABLE%></td>
+                                        <td><input type="text" id="station3SSID" name="wifi_ssid2" class="form-control" value="%STA3_SSID%"></td>
+                                        <td><input type="password" id="station3Password" name="wifi_pass2" class="form-control" value="%STA3_PASSWORD%"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Station #4</td>
+                                        <td><input type="checkbox" id="station4Enable" name="wifiStation3" class="form-check-input" %STA4_ENABLE%></td>
+                                        <td><input type="text" id="station4SSID" name="wifi_ssid3" class="form-control" value="%STA4_SSID%"></td>
+                                        <td><input type="password" id="station4Password" name="wifi_pass3" class="form-control" value="%STA4_PASSWORD%"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Station #5</td>
+                                        <td><input type="checkbox" id="station5Enable" name="wifiStation4" class="form-check-input" %STA5_ENABLE%></td>
+                                        <td><input type="text" id="station5SSID" name="wifi_ssid4" class="form-control" value="%STA5_SSID%"></td>
+                                        <td><input type="password" id="station5Password" name="wifi_pass4" class="form-control" value="%STA5_PASSWORD%"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+        
+                            <button type="submit" class="btn btn-primary">Apply Changes</button>
+                        </form>
                     </div>
-
-                    <!-- Station Tables -->
-                    <table class="table table-dark table-bordered">
-                        <thead>
-                            <tr>
-                                <td>Station #1</td>
-                                <td><input type="checkbox" id="station1Enable" name="station1Enable" class="form-check-input" %STA1_ENABLE%></td>
-                                <td><input type="text" id="station1SSID" name="station1SSID" class="form-control" value="%STA1_SSID%"></td>
-                                <td><input type="password" id="station1Password" name="station1Password" class="form-control" value="%STA1_PASSWORD%"></td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Station #2</td>
-                                <td><input type="checkbox" id="station2Enable" name="station2Enable" class="form-check-input" %STA1_ENABLE%></td>
-                                <td><input type="text" id="station2SSID" name="station2SSID" class="form-control" value="%STA2_SSID%"></td>
-                                <td><input type="password" id="station1Password" name="station2Password" class="form-control" value="%STA2_PASSWORD%"></td>
-                            </tr>
-                            <tr>
-                                <td>Station #3</td>
-                                <td><input type="checkbox" id="station3Enable" name="station3Enable" class="form-check-input" %STA1_ENABLE%></td>
-                                <td><input type="text" id="station3SSID" name="station3SSID" class="form-control" value="%STA3_SSID%"></td>
-                                <td><input type="password" id="station3Password" name="station3Password" class="form-control" value="%STA3_PASSWORD%"></td>
-                            </tr>
-                            <tr>
-                                <td>Station #4</td>
-                                <td><input type="checkbox" id="station4Enable" name="station4Enable" class="form-check-input" %STA1_ENABLE%></td>
-                                <td><input type="text" id="station4SSID" name="station4SSID" class="form-control" value="%STA4_SSID%"></td>
-                                <td><input type="password" id="station4Password" name="station4Password" class="form-control" value="%STA4_PASSWORD%"></td>
-                            </tr>
-                            <tr>
-                                <td>Station #5</td>
-                                <td><input type="checkbox" id="station5Enable" name="station5Enable" class="form-check-input" %STA1_ENABLE%></td>
-                                <td><input type="text" id="station5SSID" name="station5SSID" class="form-control" value="%STA5_SSID%"></td>
-                                <td><input type="password" id="station5Password" name="station5Password" class="form-control" value="%STA5_PASSWORD%"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <button type="submit" class="btn btn-primary">Apply Changes</button>
-                </form>
+                </div>
             </div>
-        </div>
+        </div>       
 
     </div>
 
@@ -133,5 +160,22 @@
         ESP32IGate Web Configuration - &copy; 2025
     </footer>
 
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('saved')) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'alert alert-success text-center';
+            messageDiv.textContent = 'Changes saved successfully!';
+            document.body.insertBefore(messageDiv, document.body.firstChild);
+    
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+    
+            const url = new URL(window.location.href);
+            url.searchParams.delete('saved');
+            window.history.replaceState({}, document.title, url.toString());
+        }
+    </script>
 </body>
 </html>

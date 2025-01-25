@@ -4024,17 +4024,17 @@ void handleWirelessGet(AsyncWebServerRequest *request) {
     file.close();
 
 	// Reemplazar el marcador para WiFi STA Enable principal
-    html.replace("%STA_ENABLE%", (config.wifi_mode & WIFI_STA_FIX) ? "checked" : "");
+	html.replace("%STA_ENABLE%", (config.wifi_mode & WIFI_STA_FIX) ? "checked" : "");
 
     html.replace("%AP_ENABLE%", (config.wifi_mode & WIFI_AP_FIX) ? "checked" : "");
     html.replace("%AP_SSID%", String(config.wifi_ap_ssid));
     html.replace("%AP_PASSWORD%", String(config.wifi_ap_pass));
 
-    for (int i = 0; i < 5; i++) {
-        html.replace("%STA" + String(i + 1) + "_ENABLE%", config.wifi_sta[i].enable ? "checked" : "");
-        html.replace("%STA" + String(i + 1) + "_SSID%", String(config.wifi_sta[i].wifi_ssid));
-        html.replace("%STA" + String(i + 1) + "_PASSWORD%", String(config.wifi_sta[i].wifi_pass));
-    }
+	for (int i = 0; i < 5; i++) {
+		html.replace("%STA" + String(i + 1) + "_ENABLE%", config.wifi_sta[i].enable ? "checked" : "");
+		html.replace("%STA" + String(i + 1) + "_SSID%", String(config.wifi_sta[i].wifi_ssid));
+		html.replace("%STA" + String(i + 1) + "_PASSWORD%", String(config.wifi_sta[i].wifi_pass));
+	}
 
     request->send(200, "text/html", html);
 }
@@ -4059,37 +4059,29 @@ void handleWirelessPost(AsyncWebServerRequest *request) {
 
     if (request->hasArg("commitWiFiClient")) {
         config.wifi_mode &= ~WIFI_STA_FIX;
-        if (request->hasArg("wificlient") && request->arg("wificlient") == "OK") {
+        if (request->hasArg("wificlient") && request->arg("wificlient") == "on") { // Corregido para esperar "on"
             config.wifi_mode |= WIFI_STA_FIX;
         }
 
-        for (int i = 0; i < 5; i++) {
-            config.wifi_sta[i].enable = false;
-        }
+		for (int i = 0; i < 5; i++) {
+			String enableKey = "wifiStation" + String(i);
+			config.wifi_sta[i].enable = request->hasArg(enableKey.c_str()) && request->arg(enableKey.c_str()) == "on";
 
-        for (uint8_t i = 0; i < request->args(); i++) {
-            for (int n = 0; n < 5; n++) {
-                String enableKey = "wifiStation" + String(n);
-                if (request->argName(i) == enableKey && request->arg(i) == "OK") {
-                    config.wifi_sta[n].enable = true;
-                }
-                String ssidKey = "wifi_ssid" + String(n);
-                if (request->argName(i) == ssidKey) {
-                    strncpy(config.wifi_sta[n].wifi_ssid, request->arg(i).c_str(), sizeof(config.wifi_sta[n].wifi_ssid));
-                }
-                String passKey = "wifi_pass" + String(n);
-                if (request->argName(i) == passKey) {
-                    strncpy(config.wifi_sta[n].wifi_pass, request->arg(i).c_str(), sizeof(config.wifi_sta[n].wifi_pass));
-                }
-            }
-            if (request->argName(i) == "wifi_pwr" && isValidNumber(request->arg(i))) {
-                config.wifi_power = (int8_t)request->arg(i).toInt();
-            }
-        }
+			String ssidKey = "wifi_ssid" + String(i);
+			if (request->hasArg(ssidKey.c_str())) {
+				strncpy(config.wifi_sta[i].wifi_ssid, request->arg(ssidKey.c_str()).c_str(), sizeof(config.wifi_sta[i].wifi_ssid));
+			}
+
+			String passKey = "wifi_pass" + String(i);
+			if (request->hasArg(passKey.c_str())) {
+				strncpy(config.wifi_sta[i].wifi_pass, request->arg(passKey.c_str()).c_str(), sizeof(config.wifi_sta[i].wifi_pass));
+			}
+		}
+
     }
 
     saveEEPROM();
-    request->redirect("/wireless");
+    request->redirect("/wireless?saved=true");
 }
 
 extern bool afskSync;
