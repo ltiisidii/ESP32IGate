@@ -8,6 +8,7 @@
 */
 
 #include <Arduino.h>
+#include "driver/pcnt.h"
 #include <esp_task_wdt.h>
 #include "main.h"
 #include <LibAPRSesp.h>
@@ -22,8 +23,6 @@
 #include "cppQueue.h"
 #include "digirepeater.h"
 #include "igate.h"
-#include "wireguardif.h"
-#include "wireguard.h"
 #include "driver/pcnt.h"
 
 #include <TinyGPS++.h>
@@ -33,7 +32,6 @@
 #include <Fonts/FreeSerifItalic9pt7b.h>
 #include <Fonts/Seven_Segment24pt7b.h>
 
-#include "wireguard_vpn.h"
 #include <WiFiUdp.h>
 
 #include <WiFiClientSecure.h>
@@ -236,23 +234,33 @@ typedef struct
  */
 static void pcnt_intr_handler(void *arg)
 {
-    unsigned long currentMillis = millis(); // Time at instant ISR was called
-    uint32_t intr_status = PCNT.int_st.val;
-    int i = 0;
+    unsigned long currentMillis = millis(); // Tiempo actual
+    uint32_t intr_status;
+    int i;
     pcnt_evt_t evt;
-    portBASE_TYPE HPTaskAwoken = pdFALSE;
+    BaseType_t HPTaskAwoken = pdFALSE;
 
-    for (i = 0; i < PCNT_UNIT_MAX; i++)
+    // Obtener el estado de las interrupciones
+    pcnt_get_event_status(PCNT_UNIT_0, &intr_status);
+
+    for (i = 0; i < PCNT_UNIT_MAX; i++) // Iterar sobre todas las unidades PCNT
     {
         if (intr_status & (BIT(i)))
         {
             evt.unit = i;
-            /* Save the PCNT event type that caused an interrupt
-               to pass it to the main program */
-            evt.status = PCNT.status_unit[i].val;
+
+            // Obtener el estado del evento
+            pcnt_get_event_status((pcnt_unit_t)i, &evt.status);
+
             evt.timeStamp = currentMillis;
-            PCNT.int_clr.val = BIT(i);
+
+            // Limpiar la interrupción para esta unidad
+            pcnt_intr_disable((pcnt_unit_t)i);
+            pcnt_intr_enable((pcnt_unit_t)i);
+
+            // Enviar el evento a la cola para el manejo en la tarea principal
             xQueueSendFromISR(pcnt_evt_queue, &evt, &HPTaskAwoken);
+
             if (HPTaskAwoken == pdTRUE)
             {
                 portYIELD_FROM_ISR();
@@ -855,16 +863,6 @@ void defaultConfig()
     sprintf(config.path[1], "WIDE1-1,WIDE2-1");
     sprintf(config.path[2], "TRACK3-3");
     sprintf(config.path[3], "RS0ISS");
-
-    // VPN Wireguard
-    config.vpn = false;
-    config.wg_port = 51820;
-    sprintf(config.wg_peer_address, "192.168.1.2");
-    sprintf(config.wg_local_address, "192.168.1.2");
-    sprintf(config.wg_netmask_address, "255.255.255.0");
-    sprintf(config.wg_gw_address, "192.168.1.1");
-    sprintf(config.wg_public_key, "");
-    sprintf(config.wg_private_key, "");
 
     sprintf(config.http_username, "admin");
     sprintf(config.http_password, "admin");
@@ -1962,7 +1960,7 @@ void setup()
 
     // Inicializar SPIFFS
     if (!SPIFFS.begin(true)) {
-        Serial.println("Failed to initialize SPIFF");
+        Serial.println("Failed to initialize SPIFFS");
         return;
     }
     Serial.println("SPIFFS initialized successfully");   
@@ -3178,7 +3176,7 @@ bool getBits(int ch)
             val = 1;
         break;
     case 6: // VPN Status
-        val = wireguard_active();
+        val = 0; // Elimina la referencia a wireguard_active()
         break;
     case 7: // 4G LTE
         val = 0;
@@ -4581,14 +4579,6 @@ void taskNetwork(void *pvParameters)
                     systemUptime = time(NULL);
                 }
                 pingTimeout = millis() + 2000;
-                if (config.vpn)
-                {
-                    if (!wireguard_active())
-                    {
-                        log_d("Setup Wiregurad VPN!");
-                        wireguard_setup();
-                    }
-                }
             }
 
             if (config.igate_en)
@@ -4712,23 +4702,6 @@ void taskNetwork(void *pvParameters)
                     WiFi.disconnect();
                     wifiMulti.run(5000);
                     wifiTTL = 0;
-                }
-                if (config.vpn)
-                {
-                    IPAddress vpnIP;
-                    vpnIP.fromString(String(config.wg_gw_address));
-                    log_d("Ping VPN to %s", vpnIP.toString().c_str());
-                    if (ping_start(vpnIP, 2, 0, 0, 10) == true)
-                    {
-                        log_d("VPN Ping Success!!");
-                    }
-                    else
-                    {
-                        log_d("VPN Ping Fail!");
-                        wireguard_remove();
-                        delay(3000);
-                        wireguard_setup();
-                    }
                 }
             }
         }

@@ -1,0 +1,13 @@
+<div class="mb-4 border border-primary rounded p-3">
+    <h5>RF GPIO Modify</h5>
+    <div class="mb-3">
+        <label for="rf_baudrate" class="form-label">Baudrate:</label>
+        <select name="rf_baudrate" id="rf_baudrate" class="form-select">%RF_BAUDRATE%</select>
+        <small class="small text-light">bps</small>
+    </div>
+    <div class="mb-3">
+        <label for="rf_adc_dc_offset" class="form-label">ADC DC OFFSET:</label>
+        <input min="100" max="2500" name="rf_adc_dc_offset" type="number" value="%RF_DC_OFFSET%" />
+        <small class="small text-light">(Actual: %RF_DC_OFFSET% mV)</small>
+    </div>
+</div>

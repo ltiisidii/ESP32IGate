@@ -1,0 +1,26 @@
+<div class="mb-4 border border-primary rounded p-3">
+    <h5>MODBUS Modify</h5>
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="modbus_enable" %MODBUS_ENABLED% />
+        <label class="form-check-label" for="modbus_enable">Enable</label>
+    </div>
+    <div class="mb-3">
+        <label for="modbus_channel" class="form-label">PORT:</label>
+        <select name="modbus_channel" id="modbus_channel" class="form-select">
+            <option value="0" %MODBUS_CHANNEL_SELECTED_0%>NONE</option>
+            <option value="1" %MODBUS_CHANNEL_SELECTED_1%>UART0</option>
+            <option value="2" %MODBUS_CHANNEL_SELECTED_2%>UART1</option>
+            <option value="3" %MODBUS_CHANNEL_SELECTED_3%>UART2</option>
+            <option value="4" %MODBUS_CHANNEL_SELECTED_4%>TCP</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="modbus_address" class="form-label">Address:</label>
+        <input min="-1" max="39" name="modbus_address" id="modbus_address" type="number" value="%MODBUS_ADDRESS%" />
+    </div>
+    <div class="mb-3">
+        <label for="modbus_de_gpio" class="form-label">DE:</label>
+        <input min="-1" max="39" name="modbus_de_gpio" id="modbus_de_gpio" type="number" value="%MODBUS_DE_GPIO%" />
+    </div>
+    <button type="button" class="btn btn-primary" onclick="submitMODBUS()">Apply</button>
+</div>

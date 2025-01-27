@@ -1,0 +1,22 @@
+<div class="mb-4 border border-primary rounded p-3">
+    <h5>UART0 (USB) Modify</h5>
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="uart0_enable" />
+        <label class="form-check-label" for="uart0_enable">Enable</label>
+    </div>
+    <div class="mb-3"><label for="uart0Rx" class="form-label">RX GPIO:</label>
+        <input min="-1" max="39" name="uart0_rx_gpio" type="number" class="form-control" id="uart0Rx" value="%UART0_RX_GPIO%" />
+    </div>
+    <div class="mb-3"><label for="uart0Tx" class="form-label">TX GPIO:</label>
+        <input min="-1" max="39" name="uart0_tx_gpio" type="number" class="form-control" id="uart0Tx" value="%UART0_TX_GPIO%" />
+    </div>
+    <div class="mb-3"><label for="uart0Rts" class="form-label">RTS/DE GPIO:</label>
+        <input min="-1" max="39" name="uart0_rts_gpio" type="number" class="form-control" id="uart0Rts" value="%UART0_RTS_GPIO%" />
+    </div>
+    <div class="mb-3">
+        <label for="uart0Baudrate" class="form-label">Baudrate:</label>
+        <select name="baudrate" id="uart0_baudrate" class="form-select">%UART0_BAUDRATE%</select>
+        <small class="small text-light">bps</small>
+    </div>
+    <button type="button" class="btn btn-primary">Apply</button>
+</div>

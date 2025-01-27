@@ -1,0 +1,41 @@
+<div class="mb-4 border border-primary rounded p-3">
+    <h5>I2C_0 (OLED) Modify</h5>
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="i2c0_enable" %I2C0_ENABLED% />
+        <label class="form-check-label" for="i2c0_enable">Enable</label>
+    </div>
+    <div class="mb-3">
+        <label for="i2c0_sda_gpio" class="form-label">SDA GPIO:</label>
+        <input min="-1" max="39" name="i2c0_sda_gpio" type="number" class="form-control" id="i2c0_sda_gpio" value="%I2C0_SDA_GPIO%" />
+    </div>
+    <div class="mb-3">
+        <label for="i2c0_sck_gpio" class="form-label">SCK GPIO:</label>
+        <input min="-1" max="39" name="i2c0_sck_gpio" type="number" class="form-control" id="i2c0_sck_gpio" value="%I2C0_SCK_GPIO%" />
+    </div>
+    <div class="mb-3">
+        <label for="i2c0_freq" class="form-label">Frequency:</label>
+        <input min="1000" max="800000" name="i2c0_freq" type="number" class="form-control" id="i2c0_freq" value="%I2C0_FREQ%" />
+        <small class="small text-light">Hz</small>
+    </div>
+</div>
+
+<div class="mb-4 border border-primary rounded p-3">
+    <h5>I2C_1 Modify</h5>
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="i2c1_enable" %I2C1_ENABLED% />
+        <label class="form-check-label" for="i2c1_enable">Enable</label>
+    </div>
+    <div class="mb-3">
+        <label for="i2c1_sda_gpio" class="form-label">SDA GPIO:</label>
+        <input min="-1" max="39" name="i2c1_sda_gpio" type="number" class="form-control" id="i2c1_sda_gpio" value="%I2C1_SDA_GPIO%" />
+    </div>
+    <div class="mb-3">
+        <label for="i2c1_sck_gpio" class="form-label">SCK GPIO:</label>
+        <input min="-1" max="39" name="i2c1_sck_gpio" type="number" class="form-control" id="i2c1_sck_gpio" value="%I2C1_SCK_GPIO%" />
+    </div>
+    <div class="mb-3">
+        <label for="i2c1_freq" class="form-label">Frequency:</label>
+        <input min="1000" max="800000" name="i2c1_freq" type="number" class="form-control" id="i2c1_freq" value="%I2C1_FREQ%" />
+        <small class="small text-light">Hz</small>
+    </div>
+</div>

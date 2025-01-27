@@ -289,17 +289,6 @@ typedef struct Config_Struct
 	uint16_t tx_timeslot;
 	char ntp_host[20];
 
-	// VPN wiregurad
-	bool vpn;
-	bool modem;
-	uint16_t wg_port;
-	char wg_peer_address[16];
-	char wg_local_address[16];
-	char wg_netmask_address[16];
-	char wg_gw_address[16];
-	char wg_public_key[45];
-	char wg_private_key[45];
-
 	char http_username[32];
 	char http_password[64];
 

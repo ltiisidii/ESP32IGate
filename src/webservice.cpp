@@ -11,11 +11,9 @@
 #include "AFSK.h"
 #include "webservice.h"
 #include "base64.hpp"
-#include "wireguard_vpn.h"
 #include <LibAPRSesp.h>
 #include <parse_aprs.h>
 #include "jquery_min_js.h"
-#include "SPIFFS.h"
 
 PacketCounter packetCounters[MAX_CALLSIGNS] = {};
 int counterSize = 0;
@@ -29,23 +27,64 @@ AsyncWebSocket ws_gnss("/ws_gnss");
 AsyncEventSource lastheard_events("/eventHeard");
 
 String loadHtmlTemplate(const char* path) {
-    if (!SPIFFS.begin(true)) {
-        Serial.println("Failed to mount SPIFFS");
+    // Verifica que SPIFFS ya está montado
+    if (!SPIFFS.begin(false)) { // No forces el formateo
+        Serial.println("[ERROR] SPIFFS no montado. Verifica el montaje en setup().");
         return "";
     }
 
+    // Intenta abrir el archivo
     File file = SPIFFS.open(path, "r");
-    if (!file || file.isDirectory()) {
-        Serial.println("Failed to open file");
+    if (!file) {
+        Serial.printf("[ERROR] No se pudo abrir el archivo: %s\n", path);
         return "";
     }
 
-    String html;
-    while (file.available()) {
-        html += file.readString();
+    // Verifica que no sea un directorio
+    if (file.isDirectory()) {
+        Serial.printf("[ERROR] La ruta es un directorio: %s\n", path);
+        file.close();
+        return "";
     }
+
+    // Lee todo el contenido del archivo
+    String html = file.readString();
     file.close();
+
+    // Verifica que el contenido no esté vacío
+    if (html.isEmpty()) {
+        Serial.printf("[ERROR] Archivo vacío: %s\n", path);
+        return "";
+    }
+
+    Serial.printf("[INFO] Archivo %s cargado correctamente (%d bytes)\n", path, html.length());
     return html;
+}
+
+void handleBootstrapCSS(AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/bootstrap.min.css.gz")) {
+        AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/bootstrap.min.css.gz", "text/css");
+        response->addHeader("Content-Encoding", "gzip");
+        response->addHeader("Cache-Control", "max-age=604800"); // 1 semana
+        response->addHeader("Access-Control-Allow-Origin", "*");
+        response->addHeader("Last-Modified", "Wed, 27 Jan 2025 10:00:00 GMT"); // Fecha simulada
+        request->send(response);
+    } else {
+        request->send(404, "text/plain", "Archivo bootstrap.min.css.gz no encontrado");
+    }
+}
+
+void handleBootstrapJS(AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/bootstrap.bundle.min.js.gz")) {
+        AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/bootstrap.bundle.min.js.gz", "application/javascript");
+        response->addHeader("Content-Encoding", "gzip");
+        response->addHeader("Cache-Control", "max-age=604800"); // 1 semana
+        response->addHeader("Access-Control-Allow-Origin", "*");
+        response->addHeader("Last-Modified", "Wed, 27 Jan 2025 10:00:00 GMT"); // Fecha simulada
+        request->send(response);
+    } else {
+        request->send(404, "text/plain", "Archivo bootstrap.bundle.min.js.gz no encontrado");
+    }
 }
 
 String webString;
@@ -55,6 +94,21 @@ bool defaultSetting = false;
 void serviceHandle()
 {
 	// server.handleClient();
+}
+
+String generateBaudrateOptions(int currentBaudrate) {
+    String options = "";
+    int baudrates[] = {2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
+
+    for (int i = 0; i < sizeof(baudrates) / sizeof(baudrates[0]); i++) {
+        options += "<option value=\"" + String(baudrates[i]) + "\"";
+        if (baudrates[i] == currentBaudrate) {
+            options += " selected";
+        }
+        options += ">" + String(baudrates[i]) + "</option>";
+    }
+
+    return options;
 }
 
 void notFound(AsyncWebServerRequest *request)
@@ -196,10 +250,10 @@ void handle_sidebar(AsyncWebServerRequest *request)
 		html += "<th style=\"background:#0b0; color:#030; width:50%;border-radius: 10px;border: 2px solid white;\">APRS-IS</th>\n";
 	else
 		html += "<th style=\"background:#606060; color:#b0b0b0;border-radius: 10px;border: 2px solid white;\" aria-disabled=\"true\">APRS-IS</th>\n";
-	if (wireguard_active() == true)
-		html += "<th style=\"background:#0b0; color:#030; width:50%;border-radius: 10px;border: 2px solid white;\">VPN</th>\n";
-	else
-		html += "<th style=\"background:#606060; color:#b0b0b0;border-radius: 10px;border: 2px solid white;\" aria-disabled=\"true\">VPN</th>\n";
+	// if (wireguard_active() == true)
+	// 	html += "<th style=\"background:#0b0; color:#030; width:50%;border-radius: 10px;border: 2px solid white;\">VPN</th>\n";
+	// else
+	// 	html += "<th style=\"background:#606060; color:#b0b0b0;border-radius: 10px;border: 2px solid white;\" aria-disabled=\"true\">VPN</th>\n";
 	html += "</tr>\n";
 	html += "<tr>\n";
 	html += "<th style=\"background:#606060; color:#b0b0b0;border-radius: 10px;border: 2px solid white;\" aria-disabled=\"true\">4G LTE</th>\n";
@@ -392,7 +446,7 @@ void handleModesEnabled(AsyncWebServerRequest *request)
 void handleNetworkStatus(AsyncWebServerRequest *request) {
     String json = "{";
     json += "\"aprs_is\":" + String(aprsClient.connected() ? "true" : "false") + ",";
-    json += "\"vpn\":" + String(wireguard_active() ? "true" : "false") + ",";
+    // json += "\"vpn\":" + String(wireguard_active() ? "true" : "false") + ",";
     json += "\"lte_4g\":false,"; // Usa valores booleanos directamente
     json += "\"mqtt\":false";    // Usa valores booleanos directamente
     json += "}";
@@ -692,1322 +746,285 @@ void handle_radio_post(AsyncWebServerRequest *request) {
     request->redirect("/radio"); // Redirigir a la página
 }
 
-void handle_vpn(AsyncWebServerRequest *request) {
+void handle_mod_get(AsyncWebServerRequest *request) {
     if (!request->authenticate(config.http_username, config.http_password)) {
         return request->requestAuthentication();
     }
 
-    if (request->method() == HTTP_POST) {
-        if (request->hasArg("vpnEnable")) {
-            config.vpn = (request->arg("vpnEnable") == "OK");
-        }
-        if (request->hasArg("wg_peer_address")) {
-            strcpy(config.wg_peer_address, request->arg("wg_peer_address").c_str());
-        }
-        if (request->hasArg("wg_port")) {
-            config.wg_port = request->arg("wg_port").toInt();
-        }
-        if (request->hasArg("wg_local_address")) {
-            strcpy(config.wg_local_address, request->arg("wg_local_address").c_str());
-        }
-        if (request->hasArg("wg_netmask_address")) {
-            strcpy(config.wg_netmask_address, request->arg("wg_netmask_address").c_str());
-        }
-        if (request->hasArg("wg_gw_address")) {
-            strcpy(config.wg_gw_address, request->arg("wg_gw_address").c_str());
-        }
-        if (request->hasArg("wg_public_key")) {
-            strcpy(config.wg_public_key, request->arg("wg_public_key").c_str());
-        }
-        if (request->hasArg("wg_private_key")) {
-            strcpy(config.wg_private_key, request->arg("wg_private_key").c_str());
-        }
-
-        saveEEPROM(); // Guardar los cambios
-        request->send(200, "text/html", "Configuración VPN guardada exitosamente.");
-        return;
-    }
-
-    // Cargar el HTML desde SPIFFS
-    String html = loadHtmlTemplate("/vpn.html");
+    // Cargar el archivo desde SPIFFS
+    String html = loadHtmlTemplate("/mod.html");
     if (html.isEmpty()) {
-        request->send(500, "text/plain", "Error al cargar el archivo HTML.");
-        return;
+        Serial.println("[ERROR] Archivo mod.html vacío o no encontrado");
+        request->send(404, "text/plain", "Archivo mod.html vacío o no encontrado - Tengo problemas para cargar el archivo");
+        return;  // Detener ejecución si no se carga el archivo
     }
 
-    // Reemplazar los marcadores con los valores actuales
-    html.replace("%VPN_ENABLE%", config.vpn ? "checked" : "");
-    html.replace("%WG_PEER_ADDRESS%", String(config.wg_peer_address));
-    html.replace("%WG_PORT%", String(config.wg_port));
-    html.replace("%WG_LOCAL_ADDRESS%", String(config.wg_local_address));
-    html.replace("%WG_NETMASK%", String(config.wg_netmask_address));
-    html.replace("%WG_GW%", String(config.wg_gw_address));
-    html.replace("%WG_PUBLIC_KEY%", String(config.wg_public_key));
-    html.replace("%WG_PRIVATE_KEY%", String(config.wg_private_key));
+	// Cargar fragmentos y ensamblar
+    html.replace("%HEADER%", loadHtmlTemplate("/mod_header.html"));
+    html.replace("%NAVBAR%", loadHtmlTemplate("/mod_navbar.html"));
+    html.replace("%MOD_UART%", loadHtmlTemplate("/mod_uart.html"));
+    html.replace("%MOD_RF%", loadHtmlTemplate("/mod_rf.html"));
+    html.replace("%MOD_GNSS%", loadHtmlTemplate("/mod_gnss.html"));
+    html.replace("%MOD_MODBUS%", loadHtmlTemplate("/mod_modbus.html"));
+    html.replace("%MOD_COUNTER%", loadHtmlTemplate("/mod_counter.html"));
+	html.replace("%MOD_I2C%", loadHtmlTemplate("/mod_i2c.html"));
+    html.replace("%FOOTER%", loadHtmlTemplate("/mod_footer.html"));
+    html.replace("%SCRIPTS%", loadHtmlTemplate("/mod_scripts.html"));
 
-    // Enviar el HTML modificado al cliente
+	// Log para confirmar que el archivo fue cargado
+    Serial.println("[INFO] Generating /mod with dynamic placeholders");
+	Serial.printf("[INFO] Longitud del archivo HTML cargado: %d bytes\n", html.length());
+
+    // Reemplazar valores dinámicos
+    html.replace("%UART0_ENABLED%", config.uart0_enable ? "checked" : "");
+    html.replace("%UART0_RX_GPIO%", String(config.uart0_rx_gpio));
+    html.replace("%UART0_TX_GPIO%", String(config.uart0_tx_gpio));
+    html.replace("%UART0_RTS_GPIO%", String(config.uart0_rts_gpio));
+    html.replace("%UART0_BAUDRATE%", generateBaudrateOptions(config.uart0_baudrate));
+
+    html.replace("%UART1_ENABLED%", config.uart1_enable ? "checked" : "");
+    html.replace("%UART1_RX_GPIO%", String(config.uart1_rx_gpio));
+    html.replace("%UART1_TX_GPIO%", String(config.uart1_tx_gpio));
+    html.replace("%UART1_RTS_GPIO%", String(config.uart1_rts_gpio));
+    html.replace("%UART1_BAUDRATE%", generateBaudrateOptions(config.uart1_baudrate));
+
+    html.replace("%UART2_ENABLED%", config.uart2_enable ? "checked" : "");
+    html.replace("%UART2_RX_GPIO%", String(config.uart2_rx_gpio));
+    html.replace("%UART2_TX_GPIO%", String(config.uart2_tx_gpio));
+    html.replace("%UART2_RTS_GPIO%", String(config.uart2_rts_gpio));
+    html.replace("%UART2_BAUDRATE%", generateBaudrateOptions(config.uart2_baudrate));
+
+    // RF Config
+    html.replace("%RF_BAUDRATE%", generateBaudrateOptions(config.rf_baudrate));
+    html.replace("%RF_RX_GPIO%", String(config.rf_rx_gpio));
+    html.replace("%RF_TX_GPIO%", String(config.rf_tx_gpio));
+    html.replace("%RF_PD_GPIO%", String(config.rf_pd_gpio));
+    html.replace("%RF_PWR_GPIO%", String(config.rf_pwr_gpio));
+    html.replace("%RF_PTT_GPIO%", String(config.rf_ptt_gpio));
+    html.replace("%RF_SQL_GPIO%", String(config.rf_sql_gpio));
+    html.replace("%RF_ATTEN%", String(config.adc_atten));
+    html.replace("%RF_DC_OFFSET%", String(config.adc_dc_offset));
+
+	// Agregar reemplazo para RF PD Active (LOW y HIGH)
+    html.replace("%RF_PD_ACTIVE_LOW%", config.rf_pd_active == 0 ? "checked" : "");
+    html.replace("%RF_PD_ACTIVE_HIGH%", config.rf_pd_active == 1 ? "checked" : "");
+
+	// Agregar reemplazos dinámicos para RF SQL Active (LOW y HIGH)
+	html.replace("%RF_SQL_ACTIVE_LOW%", config.rf_sql_active == 0 ? "checked" : "");
+	html.replace("%RF_SQL_ACTIVE_HIGH%", config.rf_sql_active == 1 ? "checked" : "");
+
+	// Agregar reemplazos dinámicos para RF PTT Active (LOW y HIGH)
+	html.replace("%RF_PTT_ACTIVE_LOW%", config.rf_ptt_active == 0 ? "checked" : "");
+	html.replace("%RF_PTT_ACTIVE_HIGH%", config.rf_ptt_active == 1 ? "checked" : "");
+
+	// Agregar reemplazos dinámicos para RF Power active (LOW y HIGH)
+	html.replace("%RF_PWR_ACTIVE_LOW%", config.rf_pwr_active == 0 ? "checked" : "");
+	html.replace("%RF_PWR_ACTIVE_HIGH%", config.rf_pwr_active == 1 ? "checked" : "");
+
+    // GNSS Config
+    html.replace("%GNSS_ENABLED%", config.gnss_enable ? "checked" : "");
+    html.replace("%GNSS_CHANNEL%", String(config.gnss_channel));
+    html.replace("%GNSS_AT_COMMAND%", String(config.gnss_at_command));
+    html.replace("%GNSS_TCP_HOST%", String(config.gnss_tcp_host));
+    html.replace("%GNSS_TCP_PORT%", String(config.gnss_tcp_port));
+
+    // I2C Config
+    html.replace("%I2C0_ENABLED%", config.i2c_enable ? "checked" : "");
+    html.replace("%I2C0_SDA_GPIO%", String(config.i2c_sda_pin));
+    html.replace("%I2C0_SCK_GPIO%", String(config.i2c_sck_pin));
+    html.replace("%I2C0_FREQ%", String(config.i2c_freq));
+
+    html.replace("%I2C1_ENABLED%", config.i2c1_enable ? "checked" : "");
+    html.replace("%I2C1_SDA_GPIO%", String(config.i2c1_sda_pin));
+    html.replace("%I2C1_SCK_GPIO%", String(config.i2c1_sck_pin));
+    html.replace("%I2C1_FREQ%", String(config.i2c1_freq));
+
+    // Counter Configs
+    html.replace("%COUNTER0_ENABLED%", config.counter0_enable ? "checked" : "");
+    html.replace("%COUNTER0_GPIO%", String(config.counter0_gpio));
+    html.replace("%COUNTER0_ACTIVE%", config.counter0_active ? "checked" : "");
+
+    html.replace("%COUNTER1_ENABLED%", config.counter1_enable ? "checked" : "");
+    html.replace("%COUNTER1_GPIO%", String(config.counter1_gpio));
+    html.replace("%COUNTER1_ACTIVE%", config.counter1_active ? "checked" : "");
+
     request->send(200, "text/html", html);
 }
 
-void handle_mod(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-	if (request->hasArg("commitGNSS"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					// if (isValidNumber(request->arg(i)))
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "atc")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.gnss_at_command, request->arg(i).c_str());
-				}
-				else
-				{
-					memset(config.gnss_at_command, 0, sizeof(config.gnss_at_command));
-				}
-			}
-
-			if (request->argName(i) == "Host")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.gnss_tcp_host, request->arg(i).c_str());
-				}
-			}
-
-			if (request->argName(i) == "Port")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.gnss_tcp_port = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "channel")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.gnss_channel = request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.gnss_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitUART0"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "baudrate")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart0_baudrate = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "rx")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart0_rx_gpio = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "tx")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart0_tx_gpio = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "rts")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart0_rts_gpio = request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.uart0_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitUART1"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "baudrate")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart1_baudrate = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "rx")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart1_rx_gpio = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "tx")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart1_tx_gpio = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "rts")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart1_rts_gpio = request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.uart1_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitUART2"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "baudrate")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart2_baudrate = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "rx")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart2_rx_gpio = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "tx")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart2_tx_gpio = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "rts")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.uart2_rts_gpio = request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.uart2_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitMODBUS"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					// if (isValidNumber(request->arg(i)))
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "channel")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.modbus_channel = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "address")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.modbus_address = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "de")
-			{
-				if (request->arg(i) != "")
-				{
-					config.modbus_de_gpio = request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.modbus_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitTNC"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					// if (isValidNumber(request->arg(i)))
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "channel")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.ext_tnc_channel = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "mode")
-			{
-				if (isValidNumber(request->arg(i)))
-				{
-					config.ext_tnc_mode = request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.ext_tnc_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitONEWIRE"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					// if (isValidNumber(request->arg(i)))
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "data")
-			{
-				if (request->arg(i) != "")
-				{
-					config.onewire_gpio = request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.onewire_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitRF"))
-	{
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "sql_active")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_sql_active = (bool)request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "pd_active")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_pd_active = (bool)request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "pwr_active")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_pwr_active = (bool)request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "ptt_active")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_ptt_active = (bool)request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "baudrate")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_baudrate = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "rx")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_rx_gpio = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "tx")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_tx_gpio = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "pd")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_pd_gpio = request->arg(i).toInt();
-				}
-			}
-
-			if (request->argName(i) == "pwr")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_pwr_gpio = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "ptt")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_ptt_gpio = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "sql")
-			{
-				if (request->arg(i) != "")
-				{
-					config.rf_sql_gpio = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "atten")
-			{
-				if (request->arg(i) != "")
-				{
-					config.adc_atten = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "offset")
-			{
-				if (request->arg(i) != "")
-				{
-					config.adc_dc_offset = request->arg(i).toInt();
-				}
-			}
-		}
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitI2C0"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "sda")
-			{
-				if (request->arg(i) != "")
-				{
-					config.i2c_sda_pin = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "sck")
-			{
-				if (request->arg(i) != "")
-				{
-					config.i2c_sck_pin = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "freq")
-			{
-				if (request->arg(i) != "")
-				{
-					config.i2c_freq = request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.i2c_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitI2C1"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "sda")
-			{
-				if (request->arg(i) != "")
-				{
-					config.i2c1_sda_pin = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "sck")
-			{
-				if (request->arg(i) != "")
-				{
-					config.i2c1_sck_pin = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "freq")
-			{
-				if (request->arg(i) != "")
-				{
-					config.i2c1_freq = request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.i2c1_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitCOUNTER0"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "gpio")
-			{
-				if (request->arg(i) != "")
-				{
-					config.counter0_gpio = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "active")
-			{
-				if (request->arg(i) != "")
-				{
-					config.counter0_active = (bool)request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.counter0_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else if (request->hasArg("commitCOUNTER1"))
-	{
-		bool En = false;
-		for (uint8_t i = 0; i < request->args(); i++)
-		{
-			// Serial.print("SERVER ARGS ");
-			// Serial.print(request->argName(i));
-			// Serial.print("=");
-			// Serial.println(request->arg(i));
-
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-
-			if (request->argName(i) == "gpio")
-			{
-				if (request->arg(i) != "")
-				{
-					config.counter1_gpio = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "active")
-			{
-				if (request->arg(i) != "")
-				{
-					config.counter1_active = (bool)request->arg(i).toInt();
-				}
-			}
-		}
-
-		config.counter0_enable = En;
-		saveEEPROM();
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else
-	{
-
-		String html = "<script type=\"text/javascript\">\n";
-		html += "$('form').submit(function (e) {\n";
-		html += "e.preventDefault();\n";
-		html += "var data = new FormData(e.currentTarget);\n";
-		html += "if(e.currentTarget.id===\"formUART0\") document.getElementById(\"submitURAT0\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formUART1\") document.getElementById(\"submitURAT1\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formUART1\") document.getElementById(\"submitURAT1\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formGNSS\") document.getElementById(\"submitGNSS\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formMODBUS\") document.getElementById(\"submitMODBUS\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formTNC\") document.getElementById(\"submitTNC\").disabled=true;\n";
-		// html += "if(e.currentTarget.id===\"formONEWIRE\") document.getElementById(\"submitONEWIRE\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formRF\") document.getElementById(\"submitRF\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formI2C0\") document.getElementById(\"submitI2C0\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formI2C1\") document.getElementById(\"submitI2C1\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formCOUNT0\") document.getElementById(\"submitCOUNT0\").disabled=true;\n";
-		html += "if(e.currentTarget.id===\"formCOUNT1\") document.getElementById(\"submitCOUNT1\").disabled=true;\n";
-		html += "$.ajax({\n";
-		html += "url: '/mod',\n";
-		html += "type: 'POST',\n";
-		html += "data: data,\n";
-		html += "contentType: false,\n";
-		html += "processData: false,\n";
-		html += "success: function (data) {\n";
-		html += "alert(\"Submited Successfully\\nRequire hardware RESET!\");\n";
-		html += "},\n";
-		html += "error: function (data) {\n";
-		html += "alert(\"An error occurred.\");\n";
-		html += "}\n";
-		html += "});\n";
-		html += "});\n";
-		html += "</script>\n";
-
-		html += "<table style=\"text-align:unset;border-width:0px;background:unset\"><tr style=\"background:unset;vertical-align:top\"><td width=\"32%\" style=\"border:unset;\">";
-		// html += "<h2>System Setting</h2>\n";
-		/**************UART0(USB) Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromUART0\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>UART0(USB) Modify</b></span></th>\n";
-		html += "<tr>";
-
-		String enFlage = "";
-		if (config.uart0_enable)
-			enFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + enFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RX GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"rx\" type=\"number\" value=\"" + String(config.uart0_rx_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>TX GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"tx\" type=\"number\" value=\"" + String(config.uart0_tx_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RTS/DE GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\"  name=\"rts\" type=\"number\" value=\"" + String(config.uart0_rts_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Baudrate:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"baudrate\" id=\"baudrate\">\n";
-		for (int i = 0; i < 13; i++)
-		{
-			if (config.uart0_baudrate == baudrate[i])
-				html += "<option value=\"" + String(baudrate[i]) + "\" selected>" + String(baudrate[i]) + " </option>\n";
-			else
-				html += "<option value=\"" + String(baudrate[i]) + "\" >" + String(baudrate[i]) + " </option>\n";
-		}
-		html += "</select> bps\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitUART0\" name=\"commitUART0\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitUART0\"/>\n";
-		html += "</td></tr></table>\n";
-
-		html += "</form><br />\n";
-		html += "</td><td width=\"32%\" style=\"border:unset;\">";
-
-		/**************UART1 Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromUART1\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>UART1 Modify</b></span></th>\n";
-		html += "<tr>";
-
-		enFlage = "";
-		if (config.uart1_enable)
-			enFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + enFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RX GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"rx\" type=\"number\" value=\"" + String(config.uart1_rx_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>TX GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"tx\" type=\"number\" value=\"" + String(config.uart1_tx_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RTS/DE GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\"  name=\"rts\" type=\"number\" value=\"" + String(config.uart1_rts_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Baudrate:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"baudrate\" id=\"baudrate\">\n";
-		for (int i = 0; i < 13; i++)
-		{
-			if (config.uart1_baudrate == baudrate[i])
-				html += "<option value=\"" + String(baudrate[i]) + "\" selected>" + String(baudrate[i]) + " </option>\n";
-			else
-				html += "<option value=\"" + String(baudrate[i]) + "\" >" + String(baudrate[i]) + " </option>\n";
-		}
-		html += "</select> bps\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitUART1\" name=\"commitUART1\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitUART1\"/>\n";
-		html += "</td></tr></table>\n";
-
-		html += "</form><br />\n";
-		html += "</td><td width=\"32%\" style=\"border:unset;\">";
-
-		/**************UART2 Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromUART2\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>UART2 Modify</b></span></th>\n";
-		html += "<tr>";
-
-		enFlage = "";
-		if (config.uart2_enable)
-			enFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + enFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RX GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"rx\" type=\"number\" value=\"" + String(config.uart2_rx_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>TX GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"tx\" type=\"number\" value=\"" + String(config.uart2_tx_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RTS/DE GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\"  name=\"rts\" type=\"number\" value=\"" + String(config.uart2_rts_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Baudrate:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"baudrate\" id=\"baudrate\">\n";
-		for (int i = 0; i < 13; i++)
-		{
-			if (config.uart2_baudrate == baudrate[i])
-				html += "<option value=\"" + String(baudrate[i]) + "\" selected>" + String(baudrate[i]) + " </option>\n";
-			else
-				html += "<option value=\"" + String(baudrate[i]) + "\" >" + String(baudrate[i]) + " </option>\n";
-		}
-		html += "</select> bps\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitUART2\" name=\"commitUART2\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitUART2\"/>\n";
-		html += "</td></tr></table>\n";
-
-		html += "</form><br />\n";
-		html += "</td></tr></table>\n";
-
-		// html += "</td><td width=\"32%\" style=\"border:unset;\">";
-
-		/**************1-Wire Modify******************/
-		// html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromONEWIRE\" method=\"post\">\n";
-		// html += "<table>\n";
-		// html += "<th colspan=\"2\"><span><b>1-Wire Bus Modify</b></span></th>\n";
-		// html += "<tr>";
-
-		// syncFlage = "";
-		// if (config.onewire_enable)
-		// 	syncFlage = "checked";
-		// html += "<td align=\"right\"><b>Enable</b></td>\n";
-		// html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + syncFlage + "><span class=\"slider round\"></span></label></td>\n";
-		// html += "</tr>\n";
-
-		// html += "<tr>\n";
-		// html += "<td align=\"right\"><b>GPIO:</b></td>\n";
-		// html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"data\" type=\"number\" value=\"" + String(config.onewire_gpio) + "\" /></td>\n";
-		// html += "</tr>\n";
-
-		// html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		// html += "<input class=\"btn btn-primary\" id=\"submitONEWIRE\" name=\"commitONEWIRE\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		// html += "<input type=\"hidden\" name=\"commitONEWIRE\"/>\n";
-		// html += "</td></tr></table>\n";
-		// html += "</form><br />\n";
-
-		// html += "</td></tr></table>\n";
-
-		html += "<table style=\"text-align:unset;border-width:0px;background:unset\"><tr style=\"background:unset;vertical-align:top\"><td width=\"50%\" style=\"border:unset;vertical-align:top\">";
-		/**************RF GPIO******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromRF\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>RF GPIO Modify</b></span></th>\n";
-		html += "<tr>";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Baudrate:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"baudrate\" id=\"baudrate\">\n";
-		for (int i = 0; i < 13; i++)
-		{
-			if (config.rf_baudrate == baudrate[i])
-				html += "<option value=\"" + String(baudrate[i]) + "\" selected>" + String(baudrate[i]) + " </option>\n";
-			else
-				html += "<option value=\"" + String(baudrate[i]) + "\" >" + String(baudrate[i]) + " </option>\n";
-		}
-		html += "</select> bps\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>ADC Attenuation:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"atten\" id=\"atten\">\n";
-		for (int i = 0; i < 4; i++)
-		{
-			if (config.adc_atten == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(ADC_ATTEN[i]) + " </option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(ADC_ATTEN[i]) + " </option>\n";
-		}
-		html += "</select>\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>ADC DC OFFSET:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"100\" max=\"2500\" name=\"offset\" type=\"number\" value=\"" + String(config.adc_dc_offset) + "\" /> mV     (Current: " + String(offset) + " mV)</td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>RX GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"rx\" type=\"number\" value=\"" + String(config.rf_rx_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>TX GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"tx\" type=\"number\" value=\"" + String(config.rf_tx_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		String LowFlag = "", HighFlag = "";
-		LowFlag = "";
-		HighFlag = "";
-		if (config.rf_pd_active)
-			HighFlag = "checked=\"checked\"";
-		else
-			LowFlag = "checked=\"checked\"";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PD GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\"  name=\"pd\" type=\"number\" value=\"" + String(config.rf_pd_gpio) + "\" /> Active:<input type=\"radio\" name=\"pd_active\" value=\"0\" " + LowFlag + "/>LOW <input type=\"radio\" name=\"pd_active\" value=\"1\" " + HighFlag + "/>HIGH </td>\n";
-		html += "</tr>\n";
-
-		LowFlag = "";
-		HighFlag = "";
-		if (config.rf_pwr_active)
-			HighFlag = "checked=\"checked\"";
-		else
-			LowFlag = "checked=\"checked\"";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>H/L GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\"  name=\"pwr\" type=\"number\" value=\"" + String(config.rf_pwr_gpio) + "\" /> Active:<input type=\"radio\" name=\"pwr_active\" value=\"0\" " + LowFlag + "/>LOW <input type=\"radio\" name=\"pwr_active\" value=\"1\" " + HighFlag + "/>HIGH </td>\n";
-		html += "</tr>\n";
-
-		LowFlag = "";
-		HighFlag = "";
-		if (config.rf_sql_active)
-			HighFlag = "checked=\"checked\"";
-		else
-			LowFlag = "checked=\"checked\"";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>SQL GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\"  name=\"sql\" type=\"number\" value=\"" + String(config.rf_sql_gpio) + "\" /> Active:<input type=\"radio\" name=\"sql_active\" value=\"0\" " + LowFlag + "/>LOW <input type=\"radio\" name=\"sql_active\" value=\"1\" " + HighFlag + "/>HIGH </td>\n";
-		html += "</tr>\n";
-
-		LowFlag = "";
-		HighFlag = "";
-		if (config.rf_ptt_active)
-			HighFlag = "checked=\"checked\"";
-		else
-			LowFlag = "checked=\"checked\"";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PTT GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\"  name=\"ptt\" type=\"number\" value=\"" + String(config.rf_ptt_gpio) + "\" /> Active:<input type=\"radio\" name=\"ptt_active\" value=\"0\" " + LowFlag + "/>LOW <input type=\"radio\" name=\"ptt_active\" value=\"1\" " + HighFlag + "/>HIGH </td>\n";
-		html += "</tr>\n";
-
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitRF\" name=\"commitRF\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitRF\"/>\n";
-		html += "</td></tr></table>\n";
-		html += "</form>\n";
-
-		html += "</td><td width=\"23%\" style=\"border:unset;\">";
-
-		/**************I2C_0 Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromI2C0\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>I2C_0(OLED) Modify</b></span></th>\n";
-		html += "<tr>";
-
-		String syncFlage = "";
-		if (config.i2c_enable)
-			syncFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + syncFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>SDA GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"sda\" type=\"number\" value=\"" + String(config.i2c_sda_pin) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>SCK GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"sck\" type=\"number\" value=\"" + String(config.i2c_sck_pin) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Frequency:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"1000\" max=\"800000\" name=\"freq\" type=\"number\" value=\"" + String(config.i2c_freq) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitI2C0\" name=\"commitI2C0\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitI2C0\"/>\n";
-		html += "</td></tr></table>\n";
-		html += "</form>\n";
-
-		/**************Counter_0 Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromCOUNTER0\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>Counter_0 Modify</b></span></th>\n";
-		html += "<tr>";
-
-		syncFlage = "";
-		if (config.counter0_enable)
-			syncFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + syncFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>INPUT GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"gpio\" type=\"number\" value=\"" + String(config.counter0_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		LowFlag = "";
-		HighFlag = "";
-		if (config.counter0_active)
-			HighFlag = "checked=\"checked\"";
-		else
-			LowFlag = "checked=\"checked\"";
-		html += "<tr>\n";
-		html += "<td align=\"right\">Active</td>\n";
-		html += "<td style=\"text-align: left;\"><input type=\"radio\" name=\"active\" value=\"0\" " + LowFlag + "/>LOW <input type=\"radio\" name=\"active\" value=\"1\" " + HighFlag + "/>HIGH </td>\n";
-		html += "</tr>\n";
-
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitCOUNTER0\" name=\"commitCOUNTER0\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitCOUNTER0\"/>\n";
-		html += "</td></tr></table>\n";
-		html += "</form>\n";
-
-		html += "</td><td width=\"23%\" style=\"border:unset;\">";
-		/**************I2C_1 Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromI2C1\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>I2C_1 Modify</b></span></th>\n";
-		html += "<tr>";
-
-		syncFlage = "";
-		if (config.i2c1_enable)
-			syncFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + syncFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>SDA GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"sda\" type=\"number\" value=\"" + String(config.i2c1_sda_pin) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>SCK GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"sck\" type=\"number\" value=\"" + String(config.i2c1_sck_pin) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Frequency:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"1000\" max=\"800000\" name=\"freq\" type=\"number\" value=\"" + String(config.i2c1_freq) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitI2C1\" name=\"commitI2C1\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitI2C1\"/>\n";
-		html += "</td></tr></table>\n";
-		html += "</form>\n";
-
-		/**************Counter_1 Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromCOUNTER1\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>Counter_1 Modify</b></span></th>\n";
-		html += "<tr>";
-
-		syncFlage = "";
-		if (config.counter1_enable)
-			syncFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + syncFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>INPUT GPIO:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"gpio\" type=\"number\" value=\"" + String(config.counter1_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		LowFlag = "";
-		HighFlag = "";
-		if (config.counter1_active)
-			HighFlag = "checked=\"checked\"";
-		else
-			LowFlag = "checked=\"checked\"";
-		html += "<tr>\n";
-		html += "<td align=\"right\">Active</td>\n";
-		html += "<td style=\"text-align: left;\"><input type=\"radio\" name=\"active\" value=\"0\" " + LowFlag + "/>LOW <input type=\"radio\" name=\"active\" value=\"1\" " + HighFlag + "/>HIGH </td>\n";
-		html += "</tr>\n";
-
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitCOUNTER1\" name=\"commitCOUNTER1\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitCOUNTER1\"/>\n";
-		html += "</td></tr></table>\n";
-		html += "</form>\n";
-
-		html += "</td></tr></table>\n";
-
-		//******************
-		html += "<table style=\"text-align:unset;border-width:0px;background:unset\"><tr style=\"background:unset;vertical-align:top\"><td width=\"50%\" style=\"border:unset;vertical-align:top\">";
-		/**************GNSS Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromGNSS\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>GNSS Modify</b></span></th>\n";
-		html += "<tr>";
-
-		enFlage = "";
-		if (config.gnss_enable)
-			enFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + enFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PORT:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"channel\" id=\"channel\">\n";
-		for (int i = 0; i < 5; i++)
-		{
-			if (config.gnss_channel == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(GNSS_PORT[i]) + " </option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(GNSS_PORT[i]) + " </option>\n";
-		}
-		html += "</select>\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-
-		html += "<td align=\"right\"><b>AT Command:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"30\" size=\"20\" id=\"atc\" name=\"atc\" type=\"text\" value=\"" + String(config.gnss_at_command) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<td align=\"right\"><b>TCP Host:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"20\" size=\"15\" id=\"Host\" name=\"Host\" type=\"text\" value=\"" + String(config.gnss_tcp_host) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>TCP Port:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"1024\" max=\"65535\"  id=\"Port\" name=\"Port\" type=\"number\" value=\"" + String(config.gnss_tcp_port) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitGNSS\" name=\"commitGNSS\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitGNSS\"/>\n";
-		html += "</td></tr></table>\n";
-
-		html += "</form><br />\n";
-
-		html += "</td><td width=\"23%\" style=\"border:unset;\">";
-
-		/**************MODBUS Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromMODBUS\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>MODBUS Modify</b></span></th>\n";
-		html += "<tr>";
-
-		enFlage = "";
-		if (config.modbus_enable)
-			enFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + enFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PORT:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"channel\" id=\"channel\">\n";
-		for (int i = 0; i < 5; i++)
-		{
-			if (config.modbus_channel == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(GNSS_PORT[i]) + " </option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(GNSS_PORT[i]) + " </option>\n";
-		}
-		html += "</select>\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Address:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"address\" type=\"number\" value=\"" + String(config.modbus_address) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>DE:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input min=\"-1\" max=\"39\" name=\"de\" type=\"number\" value=\"" + String(config.modbus_de_gpio) + "\" /></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitMODBUS\" name=\"commitMODBUS\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitMODBUS\"/>\n";
-		html += "</td></tr></table>\n";
-		html += "</form>\n";
-
-		html += "</td><td width=\"23%\" style=\"border:unset;\">";
-
-		/**************External TNC Modify******************/
-		html += "<form accept-charset=\"UTF-8\" action=\"#\" class=\"form-horizontal\" id=\"fromTNC\" method=\"post\">\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>External TNC Modify</b></span></th>\n";
-		html += "<tr>";
-
-		enFlage = "";
-		if (config.ext_tnc_enable)
-			enFlage = "checked";
-		html += "<td align=\"right\"><b>Enable</b></td>\n";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + enFlage + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PORT:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"channel\" id=\"channel\">\n";
-		for (int i = 0; i < 4; i++)
-		{
-			if (config.ext_tnc_channel == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(TNC_PORT[i]) + " </option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(TNC_PORT[i]) + " </option>\n";
-		}
-		html += "</select>\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>MODE:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"mode\" id=\"mode\">\n";
-		for (int i = 0; i < 4; i++)
-		{
-			if (config.ext_tnc_mode == i)
-				html += "<option value=\"" + String(i) + "\" selected>" + String(TNC_MODE[i]) + " </option>\n";
-			else
-				html += "<option value=\"" + String(i) + "\" >" + String(TNC_MODE[i]) + " </option>\n";
-		}
-		html += "</select>\n";
-		html += "</td>\n";
-		html += "</tr>\n";
-
-		html += "<tr><td colspan=\"2\" align=\"right\">\n";
-		html += "<input class=\"btn btn-primary\" id=\"submitTNC\" name=\"commitTNC\" type=\"submit\" value=\"Apply\" maxlength=\"80\"/>\n";
-		html += "<input type=\"hidden\" name=\"commitTNC\"/>\n";
-		html += "</td></tr></table>\n";
-		html += "</form>\n";
-
-		html += "</td></tr></table>\n";
-
-		request->send(200, "text/html", html); // send to someones browser when asked
-	}
+void handle_mod_post(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    // UART0
+    config.uart0_enable = request->hasArg("uart0_enable");
+    if (request->hasArg("uart0_rx_gpio")) {
+        config.uart0_rx_gpio = request->arg("uart0_rx_gpio").toInt();
+    }
+    if (request->hasArg("uart0_tx_gpio")) {
+        config.uart0_tx_gpio = request->arg("uart0_tx_gpio").toInt();
+    }
+    if (request->hasArg("uart0_rts_gpio")) {
+        config.uart0_rts_gpio = request->arg("uart0_rts_gpio").toInt();
+    }
+    if (request->hasArg("uart0_baudrate")) {
+        config.uart0_baudrate = request->arg("uart0_baudrate").toInt();
+    }
+
+    // UART1
+    config.uart1_enable = request->hasArg("uart1_enable");
+    if (request->hasArg("uart1_rx_gpio")) {
+        config.uart1_rx_gpio = request->arg("uart1_rx_gpio").toInt();
+    }
+    if (request->hasArg("uart1_tx_gpio")) {
+        config.uart1_tx_gpio = request->arg("uart1_tx_gpio").toInt();
+    }
+    if (request->hasArg("uart1_rts_gpio")) {
+        config.uart1_rts_gpio = request->arg("uart1_rts_gpio").toInt();
+    }
+    if (request->hasArg("uart1_baudrate")) {
+        config.uart1_baudrate = request->arg("uart1_baudrate").toInt();
+    }
+
+    // UART2
+    config.uart2_enable = request->hasArg("uart2_enable");
+    if (request->hasArg("uart2_rx_gpio")) {
+        config.uart2_rx_gpio = request->arg("uart2_rx_gpio").toInt();
+    }
+    if (request->hasArg("uart2_tx_gpio")) {
+        config.uart2_tx_gpio = request->arg("uart2_tx_gpio").toInt();
+    }
+    if (request->hasArg("uart2_rts_gpio")) {
+        config.uart2_rts_gpio = request->arg("uart2_rts_gpio").toInt();
+    }
+    if (request->hasArg("uart2_baudrate")) {
+        config.uart2_baudrate = request->arg("uart2_baudrate").toInt();
+    }
+
+    // RF
+    if (request->hasArg("rf_baudrate")) {
+        config.rf_baudrate = request->arg("rf_baudrate").toInt();
+    }
+    if (request->hasArg("rf_rx_gpio")) {
+        config.rf_rx_gpio = request->arg("rf_rx_gpio").toInt();
+    }
+    if (request->hasArg("rf_tx_gpio")) {
+        config.rf_tx_gpio = request->arg("rf_tx_gpio").toInt();
+    }
+    if (request->hasArg("rf_pd_gpio")) {
+        config.rf_pd_gpio = request->arg("rf_pd_gpio").toInt();
+    }
+    if (request->hasArg("rf_pwr_gpio")) {
+        config.rf_pwr_gpio = request->arg("rf_pwr_gpio").toInt();
+    }
+    if (request->hasArg("rf_ptt_gpio")) {
+        config.rf_ptt_gpio = request->arg("rf_ptt_gpio").toInt();
+    }
+    if (request->hasArg("rf_sql_gpio")) {
+        config.rf_sql_gpio = request->arg("rf_sql_gpio").toInt();
+    }
+    if (request->hasArg("rf_adc_atten")) {
+        config.adc_atten = request->arg("rf_adc_atten").toInt();
+    }
+    if (request->hasArg("rf_adc_dc_offset")) {
+        config.adc_dc_offset = request->arg("rf_adc_dc_offset").toInt();
+    }
+    if (request->hasArg("rf_pd_active")) {
+        config.rf_pd_active = request->arg("rf_pd_active").toInt();
+    }
+    if (request->hasArg("rf_pwr_active")) {
+        config.rf_pwr_active = request->arg("rf_pwr_active").toInt();
+    }
+    if (request->hasArg("rf_ptt_active")) {
+        config.rf_ptt_active = request->arg("rf_ptt_active").toInt();
+    }
+    if (request->hasArg("rf_sql_active")) {
+        config.rf_sql_active = request->arg("rf_sql_active").toInt();
+    }
+
+    // GNSS
+    config.gnss_enable = request->hasArg("gnss_enable");
+    if (request->hasArg("gnss_channel")) {
+        config.gnss_channel = request->arg("gnss_channel").toInt();
+    }
+    if (request->hasArg("gnss_at_command")) {
+        strcpy(config.gnss_at_command, request->arg("gnss_at_command").c_str());
+    }
+    if (request->hasArg("gnss_tcp_host")) {
+        strcpy(config.gnss_tcp_host, request->arg("gnss_tcp_host").c_str());
+    }
+    if (request->hasArg("gnss_tcp_port")) {
+        config.gnss_tcp_port = request->arg("gnss_tcp_port").toInt();
+    }
+
+    // MODBUS
+    config.modbus_enable = request->hasArg("modbus_enable");
+    if (request->hasArg("modbus_channel")) {
+        config.modbus_channel = request->arg("modbus_channel").toInt();
+    }
+    if (request->hasArg("modbus_address")) {
+        config.modbus_address = request->arg("modbus_address").toInt();
+    }
+    if (request->hasArg("modbus_de_gpio")) {
+        config.modbus_de_gpio = request->arg("modbus_de_gpio").toInt();
+    }
+
+    // TNC
+    config.ext_tnc_enable = request->hasArg("tnc_enable");
+    if (request->hasArg("tnc_channel")) {
+        config.ext_tnc_channel = request->arg("tnc_channel").toInt();
+    }
+    if (request->hasArg("tnc_mode")) {
+        config.ext_tnc_mode = request->arg("tnc_mode").toInt();
+    }
+
+    // I2C_0
+    config.i2c_enable = request->hasArg("i2c0_enable");
+    if (request->hasArg("i2c0_sda_gpio")) {
+        config.i2c_sda_pin = request->arg("i2c0_sda_gpio").toInt();
+    }
+    if (request->hasArg("i2c0_sck_gpio")) {
+        config.i2c_sck_pin = request->arg("i2c0_sck_gpio").toInt();
+    }
+    if (request->hasArg("i2c0_freq")) {
+        config.i2c_freq = request->arg("i2c0_freq").toInt();
+    }
+
+    // I2C_1
+    config.i2c1_enable = request->hasArg("i2c1_enable");
+    if (request->hasArg("i2c1_sda_gpio")) {
+        config.i2c1_sda_pin = request->arg("i2c1_sda_gpio").toInt();
+    }
+    if (request->hasArg("i2c1_sck_gpio")) {
+        config.i2c1_sck_pin = request->arg("i2c1_sck_gpio").toInt();
+    }
+    if (request->hasArg("i2c1_freq")) {
+        config.i2c1_freq = request->arg("i2c1_freq").toInt();
+    }
+
+    // Counter_0
+    config.counter0_enable = request->hasArg("counter0_enable");
+    if (request->hasArg("counter0_gpio")) {
+        config.counter0_gpio = request->arg("counter0_gpio").toInt();
+    }
+    if (request->hasArg("counter0_active")) {
+        config.counter0_active = request->arg("counter0_active") == "1";
+    }
+
+    // Counter_1
+    config.counter1_enable = request->hasArg("counter1_enable");
+    if (request->hasArg("counter1_gpio")) {
+        config.counter1_gpio = request->arg("counter1_gpio").toInt();
+    }
+    if (request->hasArg("counter1_active")) {
+        config.counter1_active = request->arg("counter1_active") == "1";
+    }
+
+    // Guardar los cambios en EEPROM
+    saveEEPROM();
+
+    // Redirigir de nuevo a /mod
+    request->redirect("/mod");
 }
 
 String getLocalDateTime() {
@@ -4535,11 +3552,14 @@ void webService()
 	ws.onEvent(onWsEvent);
 
 	// web client handlers
+	async_server.on("/bootstrap.min.css", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleBootstrapCSS(request);});
+	async_server.on("/bootstrap.bundle.min.js", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleBootstrapJS(request);});
 	async_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ setMainPage(request); });
-	async_server.on("/list-files", HTTP_GET, [](AsyncWebServerRequest *request) {
-    handle_list_files(request);
-	});				
+	async_server.on("/list-files", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_list_files(request);});				
 	async_server.on("/symbol", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_symbol(request); });
 	async_server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -4548,12 +3568,10 @@ void webService()
 					{ handle_radio_get(request);});
 	async_server.on("/radio", HTTP_POST, [](AsyncWebServerRequest *request) 
 					{ handle_radio_post(request);});		
-	async_server.on("/vpn", HTTP_GET, [](AsyncWebServerRequest *request) 
-					{ handle_vpn(request);});
-	async_server.on("/vpn", HTTP_POST, [](AsyncWebServerRequest *request) 
-					{ handle_vpn(request);});
-	async_server.on("/mod", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_mod(request); });
+	async_server.on("/mod", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_mod_get(request);});
+	async_server.on("/mod", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_mod_post(request);});
 	async_server.on("/default", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_default(); });
 	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) 
@@ -4603,9 +3621,7 @@ void webService()
 	async_server.on("/network-status", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handleNetworkStatus(request); });	
 	async_server.on("/statistics", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleStatistics(request); });
-	async_server.on("/radio-info", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleRadioInfo(request); });			
+					{ handleStatistics(request); });		
 	async_server.on("/aprs-server", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handleAPRSServer(request); });
 	async_server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)

@@ -1,0 +1,30 @@
+<div class="mb-4 border border-primary rounded p-3">
+    <h5>GNSS Modify</h5>
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="gnss_enable" %GNSS_ENABLED% />
+        <label class="form-check-label" for="gnss_enable">Enable</label>
+    </div>
+    <div class="mb-3">
+        <label for="gnss_channel" class="form-label">PORT:</label>
+        <select name="gnss_channel" id="gnss_channel" class="form-select">
+            <option value="0" %GNSS_CHANNEL_SELECTED_0%>NONE</option>
+            <option value="1" %GNSS_CHANNEL_SELECTED_1%>UART0</option>
+            <option value="2" %GNSS_CHANNEL_SELECTED_2%>UART1</option>
+            <option value="3" %GNSS_CHANNEL_SELECTED_3%>UART2</option>
+            <option value="4" %GNSS_CHANNEL_SELECTED_4%>TCP</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="gnss_at_command" class="form-label">AT Command:</label>
+        <input maxlength="30" size="20" id="gnss_at_command" name="gnss_at_command" value="%GNSS_AT_COMMAND%" />
+    </div>
+    <div class="mb-3">
+        <label for="gnss_tcp_host" class="form-label">TCP Host:</label>
+        <input maxlength="20" size="15" id="gnss_tcp_host" name="gnss_tcp_host" value="%GNSS_TCP_HOST%" />
+    </div>
+    <div class="mb-3">
+        <label for="gnss_tcp_port" class="form-label">TCP Port:</label>
+        <input min="1024" max="65535" id="gnss_tcp_port" name="gnss_tcp_port" type="number" value="%GNSS_TCP_PORT%" />
+    </div>
+    <button type="button" class="btn btn-primary" onclick="submitGNSS()">Apply</button>
+</div>

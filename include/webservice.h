@@ -20,6 +20,8 @@
 #include <time.h>
 #include <TimeLib.h>
 #include <TinyGPSPlus.h>
+#include <LittleFS.h>
+#include "FS.h"
 
 typedef struct timeZoneName
 {
