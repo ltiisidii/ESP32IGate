@@ -1,22 +1,116 @@
-<div class="mb-4 border border-primary rounded p-3">
-    <h5>UART0 (USB) Modify</h5>
-    <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="uart0_enable" />
-        <label class="form-check-label" for="uart0_enable">Enable</label>
-    </div>
-    <div class="mb-3"><label for="uart0Rx" class="form-label">RX GPIO:</label>
-        <input min="-1" max="39" name="uart0_rx_gpio" type="number" class="form-control" id="uart0Rx" value="%UART0_RX_GPIO%" />
-    </div>
-    <div class="mb-3"><label for="uart0Tx" class="form-label">TX GPIO:</label>
-        <input min="-1" max="39" name="uart0_tx_gpio" type="number" class="form-control" id="uart0Tx" value="%UART0_TX_GPIO%" />
-    </div>
-    <div class="mb-3"><label for="uart0Rts" class="form-label">RTS/DE GPIO:</label>
-        <input min="-1" max="39" name="uart0_rts_gpio" type="number" class="form-control" id="uart0Rts" value="%UART0_RTS_GPIO%" />
-    </div>
-    <div class="mb-3">
-        <label for="uart0Baudrate" class="form-label">Baudrate:</label>
-        <select name="baudrate" id="uart0_baudrate" class="form-select">%UART0_BAUDRATE%</select>
-        <small class="small text-light">bps</small>
-    </div>
-    <button type="button" class="btn btn-primary">Apply</button>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="stylesheet" href="/bootstrap.min.css">
+        <title>ESP32IGATE - Modifications - UART</title>
+    </head>
+    <body class="bg-dark text-light">
+        <div class="container py-3">
+            <h1 class="text-center"><a href="/" class="text-decoration-none text-light">ESP32IGate Project [APRS ALL IN ONE]</a></h1>
+        </div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/igate">IGATE</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/digi">Digi</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/tracker">Tracker</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/wx">WX</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/tlm">TLM</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                        
+                        <!-- Submenú para Mod -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle active" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Mod
+                            </a>
+                    <ul class="dropdown-menu" aria-labelledby="modDropdown">
+                                <li><a class="dropdown-item" href="/mod/uart">UART</a></li>
+                                <li><a class="dropdown-item" href="/mod/rf">RF GPIO</a></li>
+                                <li><a class="dropdown-item" href="/mod/i2c">I2C</a></li>
+                                <li><a class="dropdown-item" href="/mod/counter">Counters</a></li>
+                                <li><a class="dropdown-item" href="/mod/gnss">GNSS</a></li>
+                                <li><a class="dropdown-item" href="/mod/modbus">MODBUS</a></li>
+                            </ul>
+                        </li>
+        
+                        <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="container mt-4 mb-5" id="contentmain">
+
+            <div class="card bg-dark text-light">
+                <div class="mb-4 border border-primary rounded p-3">
+                    <h5>UART0 (USB) Modify</h5>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="uart0_enable" %UART0_ENABLED% />
+                        <label class="form-check-label" for="uart0_enable">Enable</label>
+                    </div>
+                    <div class="mb-3"><label for="uart0Rx" class="form-label">RX GPIO:</label>
+                        <input min="-1" max="39" name="uart0_rx_gpio" type="number" class="form-control" id="uart0Rx" value="%UART0_RX_GPIO%" />
+                    </div>
+                    <div class="mb-3"><label for="uart0Tx" class="form-label">TX GPIO:</label>
+                        <input min="-1" max="39" name="uart0_tx_gpio" type="number" class="form-control" id="uart0Tx" value="%UART0_TX_GPIO%" />
+                    </div>
+                    <div class="mb-3"><label for="uart0Rts" class="form-label">RTS/DE GPIO:</label>
+                        <input min="-1" max="39" name="uart0_rts_gpio" type="number" class="form-control" id="uart0Rts" value="%UART0_RTS_GPIO%" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="uart0Baudrate" class="form-label">Baudrate:</label>
+                        <select name="baudrate" id="uart0_baudrate" class="form-select">%UART0_BAUDRATE%</select>
+                        <small class="small text-light">bps</small>
+                    </div>
+                    <button type="button" class="btn btn-primary">Apply</button>
+                </div>
+                <div class="mb-4 border border-primary rounded p-3">
+                    <h5>UART1 (USB) Modify</h5>
+                    <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="uart1_enable" /><label class="form-check-label" for="uart1_enable">Enable</label></div>
+                    <div class="mb-3"><label for="uart1Rx" class="form-label">RX GPIO:</label><input min="-1" max="39" name="uart1_rx_gpio" type="number" class="form-control" id="uart1Rx" value="%UART1_RX_GPIO%" /></div>
+                    <div class="mb-3"><label for="uart1Tx" class="form-label">TX GPIO:</label><input min="-1" max="39" name="uart1_tx_gpio" type="number" class="form-control" id="uart1Tx" value="%UART1_TX_GPIO%" /></div>
+                    <div class="mb-3"><label for="uart1Rts" class="form-label">RTS/DE GPIO:</label><input min="-1" max="39" name="uart1_rts_gpio" type="number" class="form-control" id="uart1Rts" value="%UART1_RTS_GPIO%" /></div>
+                    <div class="mb-3">
+                        <label for="uart1_baudrate" class="form-label">Baudrate:</label>
+                        <select name="baudrate" id="uart1_baudrate" class="form-select">
+                            %UART1_BAUDRATE%
+                        </select>
+                        <small class="small text-light">bps</small>
+                    </div>
+                    <button type="button" class="btn btn-primary">Apply</button>
+                </div>
+                <div class="mb-4 border border-primary rounded p-3">
+                    <h5>UART2 (USB) Modify</h5>
+                    <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="uart2_enable" /><label class="form-check-label" for="uart2_enable">Enable</label></div>
+                    <div class="mb-3"><label for="uart2_rx_gpio" class="form-label">RX GPIO:</label><input min="-1" max="39" name="uart2_rx_gpio" type="number" class="form-control" id="uart2_rx_gpio" value="%UART2_RX_GPIO%" /></div>
+                    <div class="mb-3"><label for="uart2_tx_gpio" class="form-label">TX GPIO:</label><input min="-1" max="39" name="uart2_tx_gpio" type="number" class="form-control" id="uart2_tx_gpio" value="%UART2_TX_GPIO%" /></div>
+                    <div class="mb-3"><label for="uart2_rts_gpio" class="form-label">RTS/DE GPIO:</label><input min="-1" max="39" name="uart2_rts_gpio" type="number" class="form-control" id="uart2_rts_gpio" value="%UART2_RTS_GPIO%" /></div>
+                    <div class="mb-3">
+                        <label for="uart2_baudrate" class="form-label">Baudrate:</label>
+                        <select name="uart2_baudrate" id="uart2_baudrate" class="form-select">
+                            %UART2_BAUDRATE%
+                        </select>
+                        <small class="small text-light">bps</small>
+                    </div>
+                    <button type="button" class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </div>
+        <footer class="bg-primary text-center text-light py-3">
+            ESP32IGate - &copy; 2025
+        </footer>
+        <!-- Bootstrap Bundle -->
+        <script src="/bootstrap.bundle.min.js"></script>
+        <!-- Additional Scripts -->
+    </body>
+</html>

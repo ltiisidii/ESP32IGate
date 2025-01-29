@@ -30,11 +30,26 @@
                     <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
                     <li class="nav-item"><a class="nav-link" href="/igate">IGATE</a></li>
                     <li class="nav-item"><a class="nav-link" href="/digi">Digi</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/tracker">Tracker</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/tracker">Tracker</a></li>
                     <li class="nav-item"><a class="nav-link" href="/wx">WX</a></li>
                     <li class="nav-item"><a class="nav-link" href="/tlm">TLM</a></li>
                     <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/mod">Mod</a></li>
+                    
+                    <!-- Submenú para Mod -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Mod
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="modDropdown">
+                            <li><a class="dropdown-item" href="#" onclick="loadModule('/uart')">UART</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="loadModule('/rf')">RF GPIO</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="loadModule('/i2c')">I2C</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="loadModule('/counter')">Counters</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="loadModule('/gnss')">GNSS</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="loadModule('/modbus')">MODBUS</a></li>
+                        </ul>
+                    </li>
+                
                     <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
                     <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
                 </ul>
