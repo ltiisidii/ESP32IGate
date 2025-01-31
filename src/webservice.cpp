@@ -36,13 +36,13 @@ String loadHtmlTemplate(const char* path) {
     // Intenta abrir el archivo
     File file = SPIFFS.open(path, "r");
     if (!file) {
-        Serial.printf("[ERROR] No se pudo abrir el archivo: %s\n", path);
+        // Serial.printf("[ERROR] No se pudo abrir el archivo: %s\n", path);
         return "";
     }
 
     // Verifica que no sea un directorio
     if (file.isDirectory()) {
-        Serial.printf("[ERROR] La ruta es un directorio: %s\n", path);
+        // Serial.printf("[ERROR] La ruta es un directorio: %s\n", path);
         file.close();
         return "";
     }
@@ -53,38 +53,12 @@ String loadHtmlTemplate(const char* path) {
 
     // Verifica que el contenido no esté vacío
     if (html.isEmpty()) {
-        Serial.printf("[ERROR] Archivo vacío: %s\n", path);
+        // Serial.printf("[ERROR] Archivo vacío: %s\n", path);
         return "";
     }
 
-    Serial.printf("[INFO] Archivo %s cargado correctamente (%d bytes)\n", path, html.length());
+    // Serial.printf("[INFO] Archivo %s cargado correctamente (%d bytes)\n", path, html.length());
     return html;
-}
-
-void handleBootstrapCSS(AsyncWebServerRequest *request) {
-    if (SPIFFS.exists("/bootstrap.min.css.gz")) {
-        AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/bootstrap.min.css.gz", "text/css");
-        response->addHeader("Content-Encoding", "gzip");
-        response->addHeader("Cache-Control", "max-age=604800"); // 1 semana
-        response->addHeader("Access-Control-Allow-Origin", "*");
-        response->addHeader("Last-Modified", "Wed, 27 Jan 2025 10:00:00 GMT"); // Fecha simulada
-        request->send(response);
-    } else {
-        request->send(404, "text/plain", "Archivo bootstrap.min.css.gz no encontrado");
-    }
-}
-
-void handleBootstrapJS(AsyncWebServerRequest *request) {
-    if (SPIFFS.exists("/bootstrap.bundle.min.js.gz")) {
-        AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/bootstrap.bundle.min.js.gz", "application/javascript");
-        response->addHeader("Content-Encoding", "gzip");
-        response->addHeader("Cache-Control", "max-age=604800"); // 1 semana
-        response->addHeader("Access-Control-Allow-Origin", "*");
-        response->addHeader("Last-Modified", "Wed, 27 Jan 2025 10:00:00 GMT"); // Fecha simulada
-        request->send(response);
-    } else {
-        request->send(404, "text/plain", "Archivo bootstrap.bundle.min.js.gz no encontrado");
-    }
 }
 
 String webString;
@@ -524,7 +498,7 @@ float extractAudioLevel(const String& raw) {
         }
     }
     // Si no hay corchetes, devuelve un valor predeterminado
-    Serial.println("Brackets '[' and ']' not found in raw data: " + raw);
+    // Serial.println("Brackets '[' and ']' not found in raw data: " + raw);
     return 0.0;
 }
 
@@ -1224,7 +1198,7 @@ void handle_igate_get(AsyncWebServerRequest *request) {
     html.replace("%IGATE_LON%", String(config.igate_lon, 5));
     html.replace("%IGATE_ALT%", String(config.igate_alt, 2));
 
-    Serial.println("HTML cargado y procesado correctamente.");
+    // Serial.println("HTML cargado y procesado correctamente.");
     request->send(200, "text/html", html);
 }
 
@@ -3552,10 +3526,6 @@ void webService()
 	ws.onEvent(onWsEvent);
 
 	// web client handlers
-	async_server.on("/bootstrap.min.css", HTTP_GET, [](AsyncWebServerRequest *request) 
-					{ handleBootstrapCSS(request);});
-	async_server.on("/bootstrap.bundle.min.js", HTTP_GET, [](AsyncWebServerRequest *request) 
-					{ handleBootstrapJS(request);});
 	async_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ setMainPage(request); });
 	async_server.on("/list-files", HTTP_GET, [](AsyncWebServerRequest *request) 
@@ -3577,7 +3547,6 @@ void webService()
 		String html = loadHtmlTemplate("/mod_uart.html");
 
 		if (html.isEmpty()) {
-			Serial.println("[ERROR] Archivo /mod_uart.html no encontrado");
 			request->send(404, "text/plain", "Archivo /mod_uart.html no encontrado");
 			return;
 		}
@@ -3640,6 +3609,72 @@ void webService()
 		// Enviar respuesta al cliente
 		request->send(200, "text/html", html);
 	});
+	async_server.on("/mod/rf", HTTP_POST, [](AsyncWebServerRequest *request) {
+		// Variables para almacenar los valores recibidos
+		int rf_baudrate, rf_rx_gpio, rf_tx_gpio, rf_pd_gpio, rf_pwr_gpio, rf_ptt_gpio, rf_sql_gpio;
+		int rf_pd_active, rf_pwr_active, rf_sql_active, rf_ptt_active;
+		int rf_atten, rf_dc_offset;
+
+		// Leer los parámetros del request
+		if (request->hasParam("rf_baudrate", true)) {
+			rf_baudrate = request->getParam("rf_baudrate", true)->value().toInt();
+		}
+		if (request->hasParam("rf_rx_gpio", true)) {
+			rf_rx_gpio = request->getParam("rf_rx_gpio", true)->value().toInt();
+		}
+		if (request->hasParam("rf_tx_gpio", true)) {
+			rf_tx_gpio = request->getParam("rf_tx_gpio", true)->value().toInt();
+		}
+		if (request->hasParam("rf_pd_gpio", true)) {
+			rf_pd_gpio = request->getParam("rf_pd_gpio", true)->value().toInt();
+		}
+		if (request->hasParam("rf_pwr_gpio", true)) {
+			rf_pwr_gpio = request->getParam("rf_pwr_gpio", true)->value().toInt();
+		}
+		if (request->hasParam("rf_ptt_gpio", true)) {
+			rf_ptt_gpio = request->getParam("rf_ptt_gpio", true)->value().toInt();
+		}
+		if (request->hasParam("rf_sql_gpio", true)) {
+			rf_sql_gpio = request->getParam("rf_sql_gpio", true)->value().toInt();
+		}
+		if (request->hasParam("rf_pd_active", true)) {
+			rf_pd_active = request->getParam("rf_pd_active", true)->value().toInt();
+		}
+		if (request->hasParam("rf_pwr_active", true)) {
+			rf_pwr_active = request->getParam("rf_pwr_active", true)->value().toInt();
+		}
+		if (request->hasParam("rf_sql_active", true)) {
+			rf_sql_active = request->getParam("rf_sql_active", true)->value().toInt();
+		}
+		if (request->hasParam("rf_ptt_active", true)) {
+			rf_ptt_active = request->getParam("rf_ptt_active", true)->value().toInt();
+		}
+		if (request->hasParam("rf_adc_atten", true)) {
+			rf_atten = request->getParam("rf_adc_atten", true)->value().toInt();
+		}
+		if (request->hasParam("rf_adc_dc_offset", true)) {
+			rf_dc_offset = request->getParam("rf_adc_dc_offset", true)->value().toInt();
+		}
+
+		// Guardar valores en la configuración
+		config.rf_baudrate = rf_baudrate;
+		config.rf_rx_gpio = rf_rx_gpio;
+		config.rf_tx_gpio = rf_tx_gpio;
+		config.rf_pd_gpio = rf_pd_gpio;
+		config.rf_pwr_gpio = rf_pwr_gpio;
+		config.rf_ptt_gpio = rf_ptt_gpio;
+		config.rf_sql_gpio = rf_sql_gpio;
+		config.rf_pd_active = rf_pd_active;
+		config.rf_pwr_active = rf_pwr_active;
+		config.rf_sql_active = rf_sql_active;
+		config.rf_ptt_active = rf_ptt_active;
+		config.adc_atten = rf_atten;
+		config.adc_dc_offset = rf_dc_offset;
+
+		// Confirmar que se actualizaron los valores
+		request->send(200, "application/json", "{\"status\":\"success\"}");
+	});
+
 	async_server.on("/mod/gnss", HTTP_GET, [](AsyncWebServerRequest *request) {
 		String html = loadHtmlTemplate("/mod_gnss.html");
 
@@ -3659,6 +3694,42 @@ void webService()
 
 		request->send(200, "text/html", html);
 	});
+	async_server.on("/mod/gnss", HTTP_POST, [](AsyncWebServerRequest *request) {
+		// Variables para almacenar los valores recibidos
+		bool gnss_enabled;
+		int gnss_channel, gnss_tcp_port;
+		String gnss_at_command, gnss_tcp_host;
+
+		// Leer los parámetros del request
+		if (request->hasParam("gnss_enable", true)) {
+			gnss_enabled = request->getParam("gnss_enable", true)->value() == "on";
+		}
+		if (request->hasParam("gnss_channel", true)) {
+			gnss_channel = request->getParam("gnss_channel", true)->value().toInt();
+		}
+		if (request->hasParam("gnss_at_command", true)) {
+			gnss_at_command = request->getParam("gnss_at_command", true)->value();
+			strncpy(config.gnss_at_command, gnss_at_command.c_str(), sizeof(config.gnss_at_command) - 1);
+			config.gnss_at_command[sizeof(config.gnss_at_command) - 1] = '\0'; // Asegurar terminador nulo
+		}
+		if (request->hasParam("gnss_tcp_host", true)) {
+			gnss_tcp_host = request->getParam("gnss_tcp_host", true)->value();
+			strncpy(config.gnss_tcp_host, gnss_tcp_host.c_str(), sizeof(config.gnss_tcp_host) - 1);
+			config.gnss_tcp_host[sizeof(config.gnss_tcp_host) - 1] = '\0'; // Asegurar terminador nulo
+		}
+		if (request->hasParam("gnss_tcp_port", true)) {
+			gnss_tcp_port = request->getParam("gnss_tcp_port", true)->value().toInt();
+		}
+
+		// Guardar valores en la configuración
+		config.gnss_enable = gnss_enabled;
+		config.gnss_channel = gnss_channel;
+		config.gnss_tcp_port = gnss_tcp_port;
+
+		// Confirmar que se actualizaron los valores
+		request->send(200, "application/json", "{\"status\":\"success\"}");
+	});
+
 	async_server.on("/mod/modbus", HTTP_GET, [](AsyncWebServerRequest *request) {
 		String html = loadHtmlTemplate("/mod_modbus.html");
 
@@ -3693,6 +3764,51 @@ void webService()
 
 		request->send(200, "text/html", html);
 	});
+
+	async_server.on("/mod/modbus", HTTP_POST, [](AsyncWebServerRequest *request) {
+    // Variables para almacenar los valores recibidos
+    bool modbus_enabled, tnc_enabled;
+    int modbus_address, modbus_de_gpio, modbus_channel;
+    int tnc_channel, tnc_mode;
+
+    // Leer los parámetros del request
+    if (request->hasParam("modbus_enable", true)) {
+        modbus_enabled = request->getParam("modbus_enable", true)->value() == "on";
+    }
+    if (request->hasParam("modbus_address", true)) {
+        modbus_address = request->getParam("modbus_address", true)->value().toInt();
+    }
+    if (request->hasParam("modbus_de_gpio", true)) {
+        modbus_de_gpio = request->getParam("modbus_de_gpio", true)->value().toInt();
+    }
+    if (request->hasParam("modbus_channel", true)) {
+        modbus_channel = request->getParam("modbus_channel", true)->value().toInt();
+    }
+
+    if (request->hasParam("tnc_enable", true)) {
+        tnc_enabled = request->getParam("tnc_enable", true)->value() == "on";
+    }
+    if (request->hasParam("tnc_channel", true)) {
+        tnc_channel = request->getParam("tnc_channel", true)->value().toInt();
+    }
+    if (request->hasParam("tnc_mode", true)) {
+        tnc_mode = request->getParam("tnc_mode", true)->value().toInt();
+    }
+
+    // Guardar valores en la configuración
+    config.modbus_enable = modbus_enabled;
+    config.modbus_address = modbus_address;
+    config.modbus_de_gpio = modbus_de_gpio;
+    config.modbus_channel = modbus_channel;
+
+    config.ext_tnc_enable = tnc_enabled;
+    config.ext_tnc_channel = tnc_channel;
+    config.ext_tnc_mode = tnc_mode;
+
+    // Confirmar que se actualizaron los valores
+    request->send(200, "application/json", "{\"status\":\"success\"}");
+	});
+
 	async_server.on("/mod/counter", HTTP_GET, [](AsyncWebServerRequest *request) {
 		String html = loadHtmlTemplate("/mod_counter.html");
 
@@ -3710,6 +3826,48 @@ void webService()
 
 		request->send(200, "text/html", html);
 	});
+	async_server.on("/mod/counter", HTTP_POST, [](AsyncWebServerRequest *request) {
+    // Variables para almacenar los valores recibidos
+    bool counter0_enabled, counter1_enabled;
+    int counter0_gpio, counter1_gpio;
+    int counter0_active, counter1_active;
+
+    // Leer los parámetros del request
+    if (request->hasParam("counter0_enable", true)) {
+        counter0_enabled = request->getParam("counter0_enable", true)->value() == "on";
+    }
+    if (request->hasParam("counter0_gpio", true)) {
+        counter0_gpio = request->getParam("counter0_gpio", true)->value().toInt();
+    }
+    if (request->hasParam("counter0_active", true)) {
+        String activeValue = request->getParam("counter0_active", true)->value();
+        counter0_active = (activeValue == "HIGH") ? 1 : 0;
+    }
+
+    if (request->hasParam("counter1_enable", true)) {
+        counter1_enabled = request->getParam("counter1_enable", true)->value() == "on";
+    }
+    if (request->hasParam("counter1_gpio", true)) {
+        counter1_gpio = request->getParam("counter1_gpio", true)->value().toInt();
+    }
+    if (request->hasParam("counter1_active", true)) {
+        String activeValue = request->getParam("counter1_active", true)->value();
+        counter1_active = (activeValue == "HIGH") ? 1 : 0;
+    }
+
+    // Guardar valores en la configuración
+    config.counter0_enable = counter0_enabled;
+    config.counter0_gpio = counter0_gpio;
+    config.counter0_active = counter0_active;
+
+    config.counter1_enable = counter1_enabled;
+    config.counter1_gpio = counter1_gpio;
+    config.counter1_active = counter1_active;
+
+    // Confirmar que se actualizaron los valores
+    request->send(200, "application/json", "{\"status\":\"success\"}");
+	});
+
 	async_server.on("/mod/i2c", HTTP_GET, [](AsyncWebServerRequest *request) {
     // Cargar el archivo HTML para I2C
 		String html = loadHtmlTemplate("/mod_i2c.html");
@@ -3728,7 +3886,56 @@ void webService()
 
 		// Enviar el HTML ensamblado al cliente
 		request->send(200, "text/html", html);
-	});				
+	});
+
+	async_server.on("/mod/i2c", HTTP_POST, [](AsyncWebServerRequest *request) {
+    // Variables para almacenar los valores recibidos
+    bool i2c0_enabled, i2c1_enabled;
+    int i2c0_sda, i2c0_sck, i2c0_freq;
+    int i2c1_sda, i2c1_sck, i2c1_freq;
+
+    // Leer los parámetros del request
+    if (request->hasParam("i2c0_enable", true)) {
+        i2c0_enabled = request->getParam("i2c0_enable", true)->value() == "on";
+    }
+    if (request->hasParam("i2c0_sda_gpio", true)) {
+        i2c0_sda = request->getParam("i2c0_sda_gpio", true)->value().toInt();
+    }
+    if (request->hasParam("i2c0_sck_gpio", true)) {
+        i2c0_sck = request->getParam("i2c0_sck_gpio", true)->value().toInt();
+    }
+    if (request->hasParam("i2c0_freq", true)) {
+        i2c0_freq = request->getParam("i2c0_freq", true)->value().toInt();
+    }
+
+    if (request->hasParam("i2c1_enable", true)) {
+        i2c1_enabled = request->getParam("i2c1_enable", true)->value() == "on";
+    }
+    if (request->hasParam("i2c1_sda_gpio", true)) {
+        i2c1_sda = request->getParam("i2c1_sda_gpio", true)->value().toInt();
+    }
+    if (request->hasParam("i2c1_sck_gpio", true)) {
+        i2c1_sck = request->getParam("i2c1_sck_gpio", true)->value().toInt();
+    }
+    if (request->hasParam("i2c1_freq", true)) {
+        i2c1_freq = request->getParam("i2c1_freq", true)->value().toInt();
+    }
+
+    // Guardar valores en la configuración
+    config.i2c_enable = i2c0_enabled;
+    config.i2c_sda_pin = i2c0_sda;
+    config.i2c_sck_pin = i2c0_sck;
+    config.i2c_freq = i2c0_freq;
+
+    config.i2c1_enable = i2c1_enabled;
+    config.i2c1_sda_pin = i2c1_sda;
+    config.i2c1_sck_pin = i2c1_sck;
+    config.i2c1_freq = i2c1_freq;
+
+    // Confirmar que se actualizaron los valores
+    request->send(200, "application/json", "{\"status\":\"success\"}");
+	});		
+
 	async_server.on("/default", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_default(); });
 	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) 

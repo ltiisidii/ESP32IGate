@@ -3,85 +3,158 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="stylesheet" href="/bootstrap.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <title>ESP32IGATE - Modifications - RF</title>
     </head>
     <body class="bg-dark text-light">
         <div class="container py-3">
             <h1 class="text-center"><a href="/" class="text-decoration-none text-light">ESP32IGate Project [APRS ALL IN ONE]</a></h1>
         </div>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-            <div class="container">
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/igate">IGATE</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/digi">Digi</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/tracker">Tracker</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/wx">WX</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/tlm">TLM</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
-                        
-                        <!-- Submenú para Mod -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle active" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Mod
-                            </a>
-                    <ul class="dropdown-menu" aria-labelledby="modDropdown">
-                                <li><a class="dropdown-item" href="/mod/uart">UART</a></li>
-                                <li><a class="dropdown-item" href="/mod/rf">RF GPIO</a></li>
-                                <li><a class="dropdown-item" href="/mod/i2c">I2C</a></li>
-                                <li><a class="dropdown-item" href="/mod/counter">Counters</a></li>
-                                <li><a class="dropdown-item" href="/mod/gnss">GNSS</a></li>
-                                <li><a class="dropdown-item" href="/mod/modbus">MODBUS</a></li>
-                            </ul>
-                        </li>
-        
-                        <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
+                <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
+                <!-- Submenú para Igate -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        IGATE
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/igate">General</a></li>
+                        <li><a class="dropdown-item" href="/igate/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/igate/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/igate/filter">Filter</a></li>
                     </ul>
-                </div>
+                </li>                
+                <!-- Submenú para Digi -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Digi
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/digi">General</a></li>
+                        <li><a class="dropdown-item" href="/digi/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/digi/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/digi/filter">Filter</a></li>
+                    </ul>
+                </li>          
+                <!-- Submenú para Tracker -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Tracker
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/tracker">General</a></li>
+                        <li><a class="dropdown-item" href="/tracker/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/tracker/smartbeacon">Smart Beacon</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para WX -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        WX
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/wx">General</a></li>
+                        <li><a class="dropdown-item" href="/wx/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/wx/smartbeacon">PHG</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para TLM -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        TLM
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/tlm">General</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channela">Channel A</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channelb">Channel B</a></li>
+                    </ul>
+                </li>     
+                <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                
+                <!-- Submenú para Mod -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Mod
+                    </a>
+            <ul class="dropdown-menu" aria-labelledby="modDropdown">
+                        <li><a class="dropdown-item" href="/mod/uart">UART</a></li>
+                        <li><a class="dropdown-item" href="/mod/rf">RF GPIO</a></li>
+                        <li><a class="dropdown-item" href="/mod/i2c">I2C</a></li>
+                        <li><a class="dropdown-item active" href="/mod/counter">Counters</a></li>
+                        <li><a class="dropdown-item" href="/mod/gnss">GNSS</a></li>
+                        <li><a class="dropdown-item" href="/mod/modbus">MODBUS</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+            </ul>
             </div>
-        </nav>
+        </div>
+    </nav>
+    <!-- Content -->
         <div class="container mt-4 mb-5" id="contentmain">
             <div class="card bg-dark text-light">         
-       
-                <div class="mb-4 border border-primary rounded p-3">
-                        <h5>Counter_0 Modify</h5>
-                        <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="counter0_enable" %COUNTER0_ENABLED% /><label class="form-check-label" for="counter0_enable">Enable</label></div>
-                        <div class="mb-3"><label for="counter0_gpio" class="form-label">INPUT GPIO:</label><input min="-1" max="39" name="counter0_gpio" type="number" class="form-control" id="counter0_gpio" value="%COUNTER0_GPIO%" /></div>
-                        <div class="mb-3">
-                            <label class="form-label">Active:</label>
-                            <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="counter0_active" id="counter0Low" value="LOW" %COUNTER0_ACTIVE_LOW% /><label class="form-check-label" for="counter0Low">LOW</label></div>
-                            <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="counter0_active" id="counter0High" value="HIGH" %COUNTER0_ACTIVE_HIGH% /><label class="form-check-label" for="counter0High">HIGH</label></div>
-                        </div>
-                        <button type="button" class="btn btn-primary">Apply</button>
-                    </div>
+                <form id="counterForm" action="/mod/counter" method="post">
                     <div class="mb-4 border border-primary rounded p-3">
-                        <h5>Counter_1 Modify</h5>
-                        <div class="form-check form-switch mb-3"><input min="-1" max="39" name="counter1_gpio" type="number" class="form-control" id="counter1_gpio" value="%COUNTER1_GPIO%" />Enable</label></div>
-                        <div class="mb-3"><label for="counter1_gpio" class="form-label">INPUT GPIO:</label><input min="-1" max="39" name="counter1_gpio" type="number" value="-1" class="form-control" id="counter1_gpio" /></div>
-                        <div class="mb-3">
-                            <label class="form-label">Active:</label>
-                            <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="counter1_active" id="counter1Low" value="LOW" %COUNTER1_ACTIVE_LOW% /><label class="form-check-label" for="counter1Low">LOW</label></div>
-                            <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="counter1_active" id="counter1High" value="HIGH" %COUNTER1_ACTIVE_HIGH% /><label class="form-check-label" for="counter1High">HIGH</label></div>
+                            <h5>Counter_0 Modify</h5>
+                            <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="counter0_enable" %COUNTER0_ENABLED% /><label class="form-check-label" for="counter0_enable">Enable</label></div>
+                            <div class="mb-3"><label for="counter0_gpio" class="form-label">INPUT GPIO:</label><input min="-1" max="39" name="counter0_gpio" type="number" class="form-control" id="counter0_gpio" value="%COUNTER0_GPIO%" /></div>
+                            <div class="mb-3">
+                                <label class="form-label">Active:</label>
+                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="counter0_active" id="counter0Low" value="LOW" %COUNTER0_ACTIVE_LOW% /><label class="form-check-label" for="counter0Low">LOW</label></div>
+                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="counter0_active" id="counter0High" value="HIGH" %COUNTER0_ACTIVE_HIGH% /><label class="form-check-label" for="counter0High">HIGH</label></div>
+                            </div>
+                            <button type="button" class="btn btn-primary">Apply</button>
                         </div>
-                        <button type="button" class="btn btn-primary">Apply</button>
+                        <div class="mb-4 border border-primary rounded p-3">
+                            <h5>Counter_1 Modify</h5>
+                            <div class="form-check form-switch mb-3"><input min="-1" max="39" name="counter1_gpio" type="number" class="form-control" id="counter1_gpio" value="%COUNTER1_GPIO%" />Enable</label></div>
+                            <div class="mb-3"><label for="counter1_gpio" class="form-label">INPUT GPIO:</label><input min="-1" max="39" name="counter1_gpio" type="number" value="-1" class="form-control" id="counter1_gpio" /></div>
+                            <div class="mb-3">
+                                <label class="form-label">Active:</label>
+                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="counter1_active" id="counter1Low" value="LOW" %COUNTER1_ACTIVE_LOW% /><label class="form-check-label" for="counter1Low">LOW</label></div>
+                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="counter1_active" id="counter1High" value="HIGH" %COUNTER1_ACTIVE_HIGH% /><label class="form-check-label" for="counter1High">HIGH</label></div>
+                            </div>
+                            <button type="button" class="btn btn-primary">Apply</button>
+                        </div>
                     </div>
-                </div>
+                </form>    
             </div>
         </div>
         <footer class="bg-primary text-center text-light py-3">
             ESP32IGate - &copy; 2025
         </footer>
         <!-- Bootstrap Bundle -->
-        <script src="/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <!-- Additional Scripts -->
+        <script>
+            document.getElementById("counterForm").addEventListener("submit", function(event) {
+                event.preventDefault(); // Evita que la página se recargue
+            
+                let formData = new FormData(this);
+                fetch("/mod/counter", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json()) // Convierte la respuesta en JSON
+                .then(data => {
+                    if (data.status === "success") {
+                        alert("changes saved"); // Muestra un mensaje en pantalla
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            });
+        </script>
     </body>
 </html>

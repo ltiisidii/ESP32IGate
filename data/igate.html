@@ -5,48 +5,105 @@
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>ESP32IGATE - IGATE</title>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css>
-<script src=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js></script>
+
 </head>
 <body class="text-light bg-dark">
 <div class="container py-3">
 <h1 class=text-center><a href=/ class="text-light text-decoration-none">ESP32IGate Project [APRS ALL IN ONE]</a></h1>
 </div>
-<nav class="navbar bg-primary navbar-dark navbar-expand-lg">
-<div class=container><button class=navbar-toggler type=button aria-controls=navbarNav aria-expanded=false aria-label="Toggle navigation" data-bs-target=#navbarNav data-bs-toggle=collapse><span class=navbar-toggler-icon></span></button>
-<div class="collapse justify-content-center navbar-collapse" id=navbarNav>
-<ul class="navbar-nav">
-    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
-    <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
-    <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
-    <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
-    <li class="nav-item"><a class="nav-link" href="/igate">IGATE</a></li>
-    <li class="nav-item"><a class="nav-link" href="/digi">Digi</a></li>
-    <li class="nav-item"><a class="nav-link" href="/tracker">Tracker</a></li>
-    <li class="nav-item"><a class="nav-link" href="/wx">WX</a></li>
-    <li class="nav-item"><a class="nav-link" href="/tlm">TLM</a></li>
-    <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
-    
-    <!-- Submenú para Mod -->
-    <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle active" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Mod
-        </a>
-        <ul class="dropdown-menu" aria-labelledby="modDropdown">
-            <li><a class="dropdown-item" href="#" onclick="loadModule('/uart')">UART</a></li>
-            <li><a class="dropdown-item" href="#" onclick="loadModule('/rf')">RF GPIO</a></li>
-            <li><a class="dropdown-item" href="#" onclick="loadModule('/i2c')">I2C</a></li>
-            <li><a class="dropdown-item" href="#" onclick="loadModule('/counter')">Counters</a></li>
-            <li><a class="dropdown-item" href="#" onclick="loadModule('/gnss')">GNSS</a></li>
-            <li><a class="dropdown-item" href="#" onclick="loadModule('/modbus')">MODBUS</a></li>
-        </ul>
-    </li>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
+                <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
+                <!-- Submenú para Igate -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        IGATE
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/igate">General</a></li>
+                        <li><a class="dropdown-item" href="/igate/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/igate/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/igate/filter">Filter</a></li>
+                    </ul>
+                </li>                
+                <!-- Submenú para Digi -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Digi
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/digi">General</a></li>
+                        <li><a class="dropdown-item" href="/digi/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/digi/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/digi/filter">Filter</a></li>
+                    </ul>
+                </li>          
+                <!-- Submenú para Tracker -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Tracker
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/tracker">General</a></li>
+                        <li><a class="dropdown-item" href="/tracker/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/tracker/smartbeacon">Smart Beacon</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para WX -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        WX
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/wx">General</a></li>
+                        <li><a class="dropdown-item" href="/wx/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/wx/smartbeacon">PHG</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para TLM -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        TLM
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/tlm">General</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channela">Channel A</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channelb">Channel B</a></li>
+                    </ul>
+                </li>     
+                <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                
+                <!-- Submenú para Mod -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Mod
+                    </a>
+            <ul class="dropdown-menu" aria-labelledby="modDropdown">
+                        <li><a class="dropdown-item" href="/mod/uart">UART</a></li>
+                        <li><a class="dropdown-item" href="/mod/rf">RF GPIO</a></li>
+                        <li><a class="dropdown-item" href="/mod/i2c">I2C</a></li>
+                        <li><a class="dropdown-item" href="/mod/counter">Counters</a></li>
+                        <li><a class="dropdown-item" href="/mod/gnss">GNSS</a></li>
+                        <li><a class="dropdown-item" href="/mod/modbus">MODBUS</a></li>
+                    </ul>
+                </li>
 
-    <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
-    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
-</ul>
-</div>
-</div>
-</nav>
+                <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+            </ul>
+            </div>
+        </div>
+    </nav>
+
 <div class="container mt-4" id=contentmain>
 <form action=# id=formIgate method=POST enctype=multipart/form-data>
 <div class="card mb-4">
@@ -215,5 +272,6 @@
 </form>
 </div>
 <footer class="text-light bg-primary mt-5 py-3 text-center">ESP32IGate Web Configuration - © 2025</footer>
+<script src=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js></script>
 <script>async function loadConfig(){const e=await fetch("/igate/settings",{method:"GET"}),t=await e.json();document.getElementById("igateEnable").checked=t.igateEnable,document.getElementById("callsign").value=t.callsign||"",document.getElementById("mySSID").value=t.mySSID||"",document.getElementById("server").value=t.server||"",document.getElementById("port").value=t.port||"",document.getElementById("serverFilter").value=t.serverFilter||"",document.getElementById("textComment").value=t.textComment||"",document.getElementById("latitude").value=t.latitude||"",document.getElementById("longitude").value=t.longitude||"",document.getElementById("altitude").value=t.altitude||"",document.getElementById("txPower").value=t.txPower||"",document.getElementById("antennaGain").value=t.antennaGain||"",document.getElementById("height").value=t.height||"",document.getElementById("rf2inetMessage").checked=t.rf2inetMessage,document.getElementById("rf2inetTelemetry").checked=t.rf2inetTelemetry,document.getElementById("inet2rfMessage").checked=t.inet2rfMessage,document.getElementById("inet2rfTelemetry").checked=t.inet2rfTelemetry}async function saveConfig(){const e=document.getElementById("igateForm"),t=new FormData(e),n={};t.forEach(((e,t)=>{n[t]=e})),await fetch("/igate/settings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(n)}),alert("Configuration saved!")}window.onload=loadConfig</script>
 <script>function openWindowSymbol(){window.open("/symbol",null,"height=400,width=400,status=no,toolbar=no,menubar=no,titlebar=no,location=no")}function setValue(t,e){document.getElementById("igateSymbol").value=String.fromCharCode(t),document.getElementById("igateTable").value=1===e?"/":"\\",document.getElementById("igateImgSymbol").src=`http: //aprs.dprns.com/symbols/icons/${t}-${e}.png`}function calculatePHG(){const t=parseFloat(document.getElementById("power").value)||0,e=parseFloat(document.getElementById("haat").value)||0,n=parseFloat(document.getElementById("phgGain").value)||0,o=document.getElementById("phgDirection").value||"Omni";const a="PHG"+function(t){return t<1?"0":t<4?"1":t<9?"2":t<16?"3":t<25?"4":t<36?"5":t<49?"6":t<64?"7":t<81?"8":"9"}(t)+function(t){return t<10?"0":String.fromCharCode(48+Math.round(Math.log2(t/10)))}(e)+function(t){return Math.min(Math.max(Math.round(t),0),9).toString()}(n)+function(t){return"Omni"===t?"O":t[0].toUpperCase()}(o);document.getElementById("phgText").value=a,console.log("PHG Calculado:",a)}</script></body></html>
