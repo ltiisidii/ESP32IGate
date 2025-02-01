@@ -90,12 +90,6 @@ void notFound(AsyncWebServerRequest *request)
 	request->send(404, "text/plain", "Not found");
 }
 
-void handle_logout(AsyncWebServerRequest *request)
-{
-	webString = "Log out";
-	request->send(200, "text/html", webString);
-}
-
 void setMainPage(AsyncWebServerRequest *request) {
     if (!request->authenticate(config.http_username, config.http_password)) {
         return request->requestAuthentication();
@@ -1393,114 +1387,6 @@ void handle_system_post(AsyncWebServerRequest *request) {
     // Responder con éxito
     request->send(200, "text/html", "Configuración guardada.");
 }
-
-/* void handle_igate_get(AsyncWebServerRequest *request) {
-	// if (!request->authenticate(config.http_username, config.http_password)) {
-	//     return request->requestAuthentication();
-	// }
-    // Cargar y enviar el HTML
-    String html = loadHtmlTemplate("/igate.html");
-
-    if (html.isEmpty()) {
-        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
-        return;
-    }
-
-    // Reemplazar valores dinámicos
-    html.replace("%IGATE_ENABLE%", config.igate_en ? "checked" : "");
-    html.replace("%MY_CALL%", String(config.aprs_mycall));
-    html.replace("%MY_SSID%", String(config.aprs_ssid));
-    html.replace("%IGATE_TABLE%", String(config.igate_symbol[0]));
-    html.replace("%IGATE_SYMBOL%", String(config.igate_symbol[1]));
-	html.replace("%IGATE_OBJECT%", (config.igate_object && config.igate_object[0] != '\0') ? String(config.igate_object) : "");
-    html.replace("%APRS_HOST%", String(config.aprs_host));
-    html.replace("%APRS_PORT%", String(config.aprs_port));
-    html.replace("%APRS_FILTER%", String(config.aprs_filter));
-    html.replace("%IGATE_COMMENT%", String(config.igate_comment));
-    html.replace("%RF2INET%", config.rf2inet ? "checked" : "");
-    html.replace("%INET2RF%", config.inet2rf ? "checked" : "");
-    html.replace("%IGATE_BCN%", config.igate_bcn ? "checked" : "");
-    html.replace("%IGATE_LAT%", String(config.igate_lat, 5));
-    html.replace("%IGATE_LON%", String(config.igate_lon, 5));
-    html.replace("%IGATE_ALT%", String(config.igate_alt, 2));
-
-    // Serial.println("HTML cargado y procesado correctamente.");
-    request->send(200, "text/html", html);
-}
-
-void handle_igate_post(AsyncWebServerRequest *request) {
-// if (!request->authenticate(config.http_username, config.http_password)) {
-//     return request->requestAuthentication();
-// }
-
-    if (request->hasArg("igateEnable")) {
-        config.igate_en = request->arg("igateEnable") == "OK";
-    }
-
-    if (request->hasArg("myCall")) {
-        String myCall = request->arg("myCall");
-        myCall.trim();
-        myCall.toUpperCase();
-        strncpy(config.aprs_mycall, myCall.c_str(), sizeof(config.aprs_mycall));
-    }
-
-    if (request->hasArg("mySSID")) {
-        config.aprs_ssid = request->arg("mySSID").toInt();
-        if (config.aprs_ssid > 15) config.aprs_ssid = 13;
-    }
-
-    if (request->hasArg("igateTable")) {
-        config.igate_symbol[0] = request->arg("igateTable")[0];
-    }
-
-    if (request->hasArg("igateSymbol")) {
-        config.igate_symbol[1] = request->arg("igateSymbol")[0];
-    }
-
-    if (request->hasArg("aprsHost")) {
-        strncpy(config.aprs_host, request->arg("aprsHost").c_str(), sizeof(config.aprs_host));
-    }
-
-    if (request->hasArg("aprsPort")) {
-        config.aprs_port = request->arg("aprsPort").toInt();
-    }
-
-    if (request->hasArg("aprsFilter")) {
-        strncpy(config.aprs_filter, request->arg("aprsFilter").c_str(), sizeof(config.aprs_filter));
-    }
-
-    if (request->hasArg("igateComment")) {
-        strncpy(config.igate_comment, request->arg("igateComment").c_str(), sizeof(config.igate_comment));
-    }
-
-    if (request->hasArg("rf2inetEnable")) {
-        config.rf2inet = true;
-    } else {
-        config.rf2inet = false;
-    }
-
-    if (request->hasArg("inet2rfEnable")) {
-        config.inet2rf = true;
-    } else {
-        config.inet2rf = false;
-    }
-
-    if (request->hasArg("igateLat")) {
-        config.igate_lat = request->arg("igateLat").toFloat();
-    }
-
-    if (request->hasArg("igateLon")) {
-        config.igate_lon = request->arg("igateLon").toFloat();
-    }
-
-    if (request->hasArg("igateAlt")) {
-        config.igate_alt = request->arg("igateAlt").toFloat();
-    }
-
-    saveEEPROM(); // Guardar los cambios
-    request->redirect("/igate");
-} */
-
 // --- Funciones para la configuración GENERAL ---
 void handleIgateGeneralGet(AsyncWebServerRequest *request) {
     String html = loadHtmlTemplate("/igate_general.html");
@@ -3887,8 +3773,6 @@ void webService()
 					{ handle_list_files(request);});								// for debug
 	async_server.on("/symbol", HTTP_GET, [](AsyncWebServerRequest *request)
 					{ handle_symbol(request); });									// for APRS Symbols
-	async_server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_logout(request); });									// not in use
 	async_server.on("/radio", HTTP_GET, [](AsyncWebServerRequest *request) 	
 					{ handle_radio_get(request);});									// RADIO GET	
 	async_server.on("/radio", HTTP_POST, [](AsyncWebServerRequest *request) 
@@ -3919,14 +3803,9 @@ void webService()
 					{ handle_i2c_post(request);});									// MOD I2C POST
 	async_server.on("/default", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_default(); });											// DEFAULT	
-/* 	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) 
-					{ handle_igate_get(request);});									// IGATE GET
-	async_server.on("/igate", HTTP_POST, [](AsyncWebServerRequest *request) 
-					{ handle_igate_post(request);});								// IGATE POST */
-// Rutas para la configuración GENERAL
-	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) 
+	async_server.on("/igate/general", HTTP_GET, [](AsyncWebServerRequest *request) 
 					{ handleIgateGeneralGet(request);});
-	async_server.on("/igate", HTTP_POST, [](AsyncWebServerRequest *request) 
+	async_server.on("/igate/general", HTTP_POST, [](AsyncWebServerRequest *request) 
 					{ handleIgateGeneralPost(request);});
 	// Rutas para la configuración POSITION
 	async_server.on("/igate/position", HTTP_GET, [](AsyncWebServerRequest *request) 

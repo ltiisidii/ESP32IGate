@@ -1,69 +1,232 @@
-<!doctypehtml><html lang=en><meta charset=UTF-8><meta content="width=device-width,initial-scale=1"name=viewport><link href=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css rel=stylesheet><script src=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js></script><script src=https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js></script><script src=https://code.highcharts.com/highcharts.js></script><script src=https://code.highcharts.com/highcharts-more.js></script><title>ESP32IGATE - TNC - Last Heard</title><style>#vumeter{width:300px;height:200px;margin:20px auto}#raw_txt{width:100%;height:400px;margin-top:20px}</style><script>$(document).ready(function() {
-    var chart = {
-        type: 'gauge',
-        plotBorderWidth: 1,
-        plotBackgroundColor: {
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <title>ESP32IGATE - TNC - Last Heard</title>
+    <style>
+      #vumeter {
+        width: 300px;
+        height: 200px;
+        margin: 20px auto;
+      }
+      #raw_txt {
+        width: 100%;
+        height: 400px;
+        margin-top: 20px;
+      }
+    </style>
+    <script>
+      $(document).ready(function() {
+        var chart = {
+          type: 'gauge',
+          plotBorderWidth: 1,
+          plotBackgroundColor: {
             linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-            stops: [[0, '#FFFFC6'], [0.3, '#FFFFFF'], [1, '#FFF4C6']]
-        },
-        plotBackgroundImage: null,
-        height: 200
-    };
-    var credits = { enabled: false };
-    var title = { text: 'RX VU Meter' };
-    var pane = [{
-        startAngle: -45,
-        endAngle: 45,
-        background: null,
-        center: ['50%', '145%'],
-        size: 300
-    }];
-    var yAxis = [{
-        min: -40,
-        max: 1,
-        minorTickPosition: 'outside',
-        tickPosition: 'outside',
-        labels: { rotation: 'auto', distance: 20 },
-        plotBands: [
+            stops: [
+              [0, '#FFFFC6'],
+              [0.3, '#FFFFFF'],
+              [1, '#FFF4C6']
+            ]
+          },
+          plotBackgroundImage: null,
+          height: 200
+        };
+        var credits = { enabled: false };
+        var title = { text: 'RX VU Meter' };
+        var pane = [{
+          startAngle: -45,
+          endAngle: 45,
+          background: null,
+          center: ['50%', '145%'],
+          size: 300
+        }];
+        var yAxis = [{
+          min: -40,
+          max: 1,
+          minorTickPosition: 'outside',
+          tickPosition: 'outside',
+          labels: { rotation: 'auto', distance: 20 },
+          plotBands: [
             { from: -10, to: 1, color: '#C02316', innerRadius: '100%', outerRadius: '105%' },
             { from: -20, to: -10, color: '#00C000', innerRadius: '100%', outerRadius: '105%' },
             { from: -30, to: -20, color: '#AFFF0F', innerRadius: '100%', outerRadius: '105%' },
             { from: -40, to: -30, color: '#C0A316', innerRadius: '100%', outerRadius: '105%' }
-        ],
-        pane: 0,
-        title: { text: '<span style="font-size:12px">dBV</span>', y: -40 }
-    }];
-    var plotOptions = { gauge: { dataLabels: { enabled: false }, dial: { radius: '100%' } } };
-    var series = [{ data: [-40], yAxis: 0 }];
-    var json = { chart, credits, title, pane, yAxis, plotOptions, series };
+          ],
+          pane: 0,
+          title: { text: '<span style="font-size:12px">dBV</span>', y: -40 }
+        }];
+        var plotOptions = { gauge: { dataLabels: { enabled: false }, dial: { radius: '100%' } } };
+        var series = [{ data: [-40], yAxis: 0 }];
+        var json = {
+          chart: chart,
+          credits: credits,
+          title: title,
+          pane: pane,
+          yAxis: yAxis,
+          plotOptions: plotOptions,
+          series: series
+        };
 
-    var chartFunction = function(chart) {
-        var Vrms = 0, dBV = -40, active = 0, raw = "", timeStamp;
-        if (chart.series) {
+        var chartFunction = function(chart) {
+          var Vrms = 0,
+            dBV = -40,
+            active = 0,
+            raw = "",
+            timeStamp;
+          if (chart.series) {
             var left = chart.series[0].points[0];
             var host = 'ws://' + location.hostname + ':81/ws';
             const ws = new WebSocket(host);
-            ws.onopen = function() { console.log('Connection opened'); };
-            ws.onclose = function() { console.log('Connection closed'); };
-            ws.onmessage = function(event) {
-                const jsonR = JSON.parse(event.data);
-                active = parseInt(jsonR.Active);
-                Vrms = parseFloat(jsonR.mVrms) / 1000;
-                dBV = 20.0 * Math.log10(Vrms);
-                if (dBV < -40) dBV = -40;
-                raw = jsonR.RAW;
-                timeStamp = Number(jsonR.timeStamp);
-                if (active == 1) {
-                    left.update(dBV, false);
-                    chart.redraw();
-                    var date = new Date(timeStamp * 1000);
-                    var head = date + "[" + Vrms.toFixed(3) + "Vrms, " + dBV.toFixed(1) + "dBV]\n";
-                    var textArea = document.getElementById("raw_txt");
-                    textArea.value += head + atob(raw) + "\n";
-                    textArea.scrollTop = textArea.scrollHeight;
-                }
+            ws.onopen = function() {
+              console.log('Connection opened');
             };
-        }
-    };
-    $('#vumeter').highcharts(json, chartFunction);
-});</script><body class="text-light bg-dark"><div class="container py-3"><h1 class=text-center><a class="text-light text-decoration-none"href=/ >ESP32IGate Project [APRS ALL IN ONE]</a></h1></div><nav class="bg-primary navbar navbar-dark navbar-expand-lg"><div class=container><button aria-controls=navbarNav aria-expanded=false aria-label="Toggle navigation"class=navbar-toggler data-bs-target=#navbarNav data-bs-toggle=collapse type=button><span class=navbar-toggler-icon></span></button><div class="collapse justify-content-center navbar-collapse"id=navbarNav><ul class=navbar-nav><li class=nav-item><a class=nav-link href=/ >Dashboard</a><li class=nav-item><a class=nav-link href=/radio>Radio</a><li class=nav-item><a class=nav-link href=/tnc2>TNC</a><li class=nav-item><a class=nav-link href=/gnss>GNSS</a><li class=nav-item><a class=nav-link href=/igate>IGATE</a><li class=nav-item><a class=nav-link href=/digi>Digi</a><li class=nav-item><a class=nav-link href=/tracker>Tracker</a><li class=nav-item><a class=nav-link href=/wx>WX</a><li class=nav-item><a class=nav-link href=/tlm>TLM</a><li class=nav-item><a class=nav-link href=/vpn>VPN</a><li class=nav-item><a class=nav-link href=/wireless>Wireless</a><li class=nav-item><a class=nav-link href=/mod>Mod</a><li class=nav-item><a class=nav-link href=/system>System</a><li class=nav-item><a class=nav-link href=/about>About</a></ul></div></div></nav><div class="container mt-4"><div id=vumeter></div><div><label class=form-label for=raw_txt>Terminal</label> <textarea class=form-control id=raw_txt name=raw_txt rows=20></textarea></div></div><footer class="text-light bg-primary mt-4 py-3 text-center">ESP32IGate Web Configuration - © 2025</footer>
+            ws.onclose = function() {
+              console.log('Connection closed');
+            };
+            ws.onmessage = function(event) {
+              const jsonR = JSON.parse(event.data);
+              active = parseInt(jsonR.Active);
+              Vrms = parseFloat(jsonR.mVrms) / 1000;
+              dBV = 20.0 * Math.log10(Vrms);
+              if (dBV < -40) dBV = -40;
+              raw = jsonR.RAW;
+              timeStamp = Number(jsonR.timeStamp);
+              if (active == 1) {
+                left.update(dBV, false);
+                chart.redraw();
+                var date = new Date(timeStamp * 1000);
+                var head =
+                  date +
+                  "[" +
+                  Vrms.toFixed(3) +
+                  "Vrms, " +
+                  dBV.toFixed(1) +
+                  "dBV]\n";
+                var textArea = document.getElementById("raw_txt");
+                textArea.value += head + atob(raw) + "\n";
+                textArea.scrollTop = textArea.scrollHeight;
+              }
+            };
+          }
+        };
+
+        $('#vumeter').highcharts(json, chartFunction);
+      });
+    </script>
+  </head>
+  <body class="text-light bg-dark">
+    <div class="container py-3">
+      <h1 class="text-center">
+        <a class="text-light text-decoration-none" href="/">ESP32IGate Project [APRS ALL IN ONE]</a>
+      </h1>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/tnc2">TNC</a></li>
+                <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
+                <!-- Submenú para Igate -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        IGATE
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/igate/general">General</a></li>
+                        <li><a class="dropdown-item" href="/igate/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/igate/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/igate/filter">Filter</a></li>
+                    </ul>
+                </li>                
+                <!-- Submenú para Digi -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="digiDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Digi
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="digiDropdown">
+                        <li><a class="dropdown-item" href="/digi/general">General</a></li>
+                        <li><a class="dropdown-item" href="/digi/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/digi/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/digi/filter">Filter</a></li>
+                    </ul>
+                </li>          
+                <!-- Submenú para Tracker -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="trackerDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Tracker
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="trackerDropdown">
+                        <li><a class="dropdown-item" href="/tracker/general">General</a></li>
+                        <li><a class="dropdown-item" href="/tracker/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/tracker/smartbeacon">Smart Beacon</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para WX -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="wxDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        WX
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="wxDropdown">
+                        <li><a class="dropdown-item" href="/wx/general">General</a></li>
+                        <li><a class="dropdown-item" href="/wx/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/wx/smartbeacon">PHG</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para TLM -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="tlmDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        TLM
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="tlmDropdown">
+                        <li><a class="dropdown-item" href="/tlm/general">General</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channela">Channel A</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channelb">Channel B</a></li>
+                    </ul>
+                </li>     
+                <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                
+                <!-- Submenú para Mod -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Mod
+                    </a>
+            <ul class="dropdown-menu" aria-labelledby="modDropdown">
+                        <li><a class="dropdown-item" href="/mod/uart">UART</a></li>
+                        <li><a class="dropdown-item" href="/mod/rf">RF GPIO</a></li>
+                        <li><a class="dropdown-item" href="/mod/i2c">I2C</a></li>
+                        <li><a class="dropdown-item" href="/mod/counter">Counters</a></li>
+                        <li><a class="dropdown-item" href="/mod/gnss">GNSS</a></li>
+                        <li><a class="dropdown-item" href="/mod/modbus">MODBUS</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+            </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+      <div id="vumeter"></div>
+      <div>
+        <label class="form-label" for="raw_txt">Terminal</label>
+        <textarea class="form-control" id="raw_txt" name="raw_txt" rows="20"></textarea>
+      </div>
+    </div>
+    <footer class="text-light bg-primary mt-4 py-3 text-center">
+      ESP32IGate Web Configuration - © 2025
+    </footer>
+  </body>
+</html>
