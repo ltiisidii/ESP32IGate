@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <title>ESP32IGATE - Digi</title>
+</head>
+<body class="bg-dark text-light">
+
+    <!-- Header -->
+    <div class="container py-3">
+        <h1 class="text-center">
+            <a href="/" class="text-decoration-none text-light">ESP32IGate Project [APRS ALL IN ONE]</a>
+        </h1>
+    </div>
+
+     <!-- Navigation -->
+     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
+                <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
+                <!-- Submenú para Igate -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        IGATE
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/igate/general">General</a></li>
+                        <li><a class="dropdown-item" href="/igate/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/igate/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/igate/filter">Filter</a></li>
+                    </ul>
+                </li>                
+                <!-- Submenú para Digi -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" id="digiDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Digi
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="digiDropdown">
+                        <li><a class="dropdown-item" href="/digi/general">General</a></li>
+                        <li><a class="dropdown-item" href="/digi/position">Position</a></li>
+                        <li><a class="dropdown-item active" href="/digi/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/digi/filter">Filter</a></li>
+                    </ul>
+                </li>          
+                <!-- Submenú para Tracker -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="trackerDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Tracker
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="trackerDropdown">
+                        <li><a class="dropdown-item" href="/tracker/general">General</a></li>
+                        <li><a class="dropdown-item" href="/tracker/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/tracker/smartbeacon">Smart Beacon</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para WX -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="wxDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        WX
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="wxDropdown">
+                        <li><a class="dropdown-item" href="/wx/general">General</a></li>
+                        <li><a class="dropdown-item" href="/wx/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/wx/smartbeacon">PHG</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para TLM -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="tlmDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        TLM
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="tlmDropdown">
+                        <li><a class="dropdown-item" href="/tlm/general">General</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channela">Channel A</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channelb">Channel B</a></li>
+                    </ul>
+                </li>     
+                <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                
+                <!-- Submenú para Mod -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Mod
+                    </a>
+            <ul class="dropdown-menu" aria-labelledby="modDropdown">
+                        <li><a class="dropdown-item" href="/mod/uart">UART</a></li>
+                        <li><a class="dropdown-item" href="/mod/rf">RF GPIO</a></li>
+                        <li><a class="dropdown-item" href="/mod/i2c">I2C</a></li>
+                        <li><a class="dropdown-item" href="/mod/counter">Counters</a></li>
+                        <li><a class="dropdown-item" href="/mod/gnss">GNSS</a></li>
+                        <li><a class="dropdown-item" href="/mod/modbus">MODBUS</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4" id="contentmain">
+        <!-- Digi Configuration -->
+        <h2 class="text-center mb-4">Digi Configuration</h2>
+        <table class="table table-dark table-striped">
+            <tbody>
+                <tr>
+                    <th>Enable</th>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Station Callsign</th>
+                    <td>
+                        <input type="text" class="form-control" id="stationCallsign">
+                    </td>
+                </tr>
+                <tr>
+                    <th>Station SSID</th>
+                    <td>
+                        <select class="form-select" id="stationSsid">
+                            <!-- Options del 1 al 15 -->
+                            <script>
+                                for (let i = 1; i <= 15; i++) {
+                                    document.write(`<option>${i}</option>`);
+                                }
+                            </script>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Station Symbol</th>
+                    <td>
+                        Table: <input type="text" class="form-control d-inline-block w-25" id="stationSymbolTable">
+                        Symbol: <input type="text" class="form-control d-inline-block w-25" id="stationSymbol">
+                        <span class="small text-light">*Click icon for select symbol</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>PATH</th>
+                    <td>
+                        <select class="form-select" id="path">
+                            <option>OFF</option>
+                            <option>WIDE1-1</option>
+                            <option>TRACE1-1</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Text Comment</th>
+                    <td>
+                        <input type="text" class="form-control" id="textComment">
+                    </td>
+                </tr>
+                <tr>
+                    <th>Repeat Delay</th>
+                    <td>
+                        <input type="number" class="form-control" id="repeatDelay" value="0" min="0" step="100"> mSec.
+                        <span class="small text-light">*0 is auto, other random delay time</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Time Stamp</th>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="timeStamp">
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Position -->
+        <h3 class="text-center mt-5 mb-4">Position</h3>
+        <table class="table table-dark table-striped">
+            <tbody>
+                <tr>
+                    <th>Beacon</th>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="beacon">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Interval</th>
+                    <td>
+                        <input type="text" class="form-control" id="interval"> Sec.
+                    </td>
+                </tr>
+                <tr>
+                    <th>Location</th>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="location" id="fix" checked>
+                            <label class="form-check-label" for="fix">Fix</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="location" id="gps">
+                            <label class="form-check-label" for="gps">GPS</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Latitude</th>
+                    <td>
+                        <input type="text" class="form-control" id="latitude"> degrees
+                    </td>
+                </tr>
+                <tr>
+                    <th>Longitude</th>
+                    <td>
+                        <input type="text" class="form-control" id="longitude"> degrees
+                    </td>
+                </tr>
+                <tr>
+                    <th>Altitude</th>
+                    <td>
+                        <input type="text" class="form-control" id="altitude"> meter
+                        <span class="small text-light">*Value 0 is not send height</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- PHG -->
+        <h3 class="text-center mt-5 mb-4">PHG (Power-Height-Gain)</h3>
+        <table class="table table-dark table-striped">
+            <tbody>
+                <tr>
+                    <th>Radio TX Power</th>
+                    <td>
+                        <select class="form-select" id="txPower">
+                            <option>1</option>
+                            <option>5</option>
+                            <option>10</option>
+                            <option>25</option>
+                        </select> Watts
+                    </td>
+                </tr>
+                <tr>
+                    <th>Antenna Gain</th>
+                    <td>
+                        <input type="text" class="form-control" id="antennaGain"> dBi
+                    </td>
+                </tr>
+                <tr>
+                    <th>Height</th>
+                    <td>
+                        <select class="form-select" id="height">
+                            <option>10</option>
+                            <option>20</option>
+                            <option>40</option>
+                            <option>80</option>
+                        </select> Feet
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Filter -->
+        <h3 class="text-center mt-5 mb-4">Filter</h3>
+        <p class="text-center small text-light">Filter repeater</p>
+        <table class="table table-dark table-striped">
+            <tbody>
+                <tr>
+                    <td><input type="checkbox" id="message"> Message</td>
+                    <td><input type="checkbox" id="status"> Status</td>
+                    <td><input type="checkbox" id="telemetry"> Telemetry</td>
+                    <td><input type="checkbox" id="weather"> Weather</td>
+                    <td><input type="checkbox" id="object"> Object</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" id="item"> Item</td>
+                    <td><input type="checkbox" id="query"> Query</td>
+                    <td><input type="checkbox" id="buoy"> Buoy</td>
+                    <td><input type="checkbox" id="position"> Position</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Apply Changes -->
+        <div class="text-center mt-4 mb-5">
+            <button class="btn btn-primary">Apply Changes</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-center text-light py-3 mt-5">
+        ESP32IGate Web Configuration - &copy; 2025
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
