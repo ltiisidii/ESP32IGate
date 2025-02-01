@@ -720,286 +720,6 @@ void handle_radio_post(AsyncWebServerRequest *request) {
     request->redirect("/radio"); // Redirigir a la página
 }
 
-// void handle_mod_get(AsyncWebServerRequest *request) {
-//     if (!request->authenticate(config.http_username, config.http_password)) {
-//         return request->requestAuthentication();
-//     }
-
-//     // Cargar el archivo desde SPIFFS
-//     String html = loadHtmlTemplate("/mod.html");
-//     if (html.isEmpty()) {
-//         Serial.println("[ERROR] Archivo mod.html vacío o no encontrado");
-//         request->send(404, "text/plain", "Archivo mod.html vacío o no encontrado - Tengo problemas para cargar el archivo");
-//         return;  // Detener ejecución si no se carga el archivo
-//     }
-
-// 	// Cargar fragmentos y ensamblar
-//     html.replace("%HEADER%", loadHtmlTemplate("/mod_header.html"));
-//     html.replace("%NAVBAR%", loadHtmlTemplate("/mod_navbar.html"));
-//     html.replace("%MOD_UART%", loadHtmlTemplate("/mod_uart.html"));
-//     html.replace("%MOD_RF%", loadHtmlTemplate("/mod_rf.html"));
-//     html.replace("%MOD_GNSS%", loadHtmlTemplate("/mod_gnss.html"));
-//     html.replace("%MOD_MODBUS%", loadHtmlTemplate("/mod_modbus.html"));
-//     html.replace("%MOD_COUNTER%", loadHtmlTemplate("/mod_counter.html"));
-// 	html.replace("%MOD_I2C%", loadHtmlTemplate("/mod_i2c.html"));
-//     html.replace("%FOOTER%", loadHtmlTemplate("/mod_footer.html"));
-//     html.replace("%SCRIPTS%", loadHtmlTemplate("/mod_scripts.html"));
-
-// 	// Log para confirmar que el archivo fue cargado
-//     Serial.println("[INFO] Generating /mod with dynamic placeholders");
-// 	Serial.printf("[INFO] Longitud del archivo HTML cargado: %d bytes\n", html.length());
-
-//     // Reemplazar valores dinámicos
-//     html.replace("%UART0_ENABLED%", config.uart0_enable ? "checked" : "");
-//     html.replace("%UART0_RX_GPIO%", String(config.uart0_rx_gpio));
-//     html.replace("%UART0_TX_GPIO%", String(config.uart0_tx_gpio));
-//     html.replace("%UART0_RTS_GPIO%", String(config.uart0_rts_gpio));
-//     html.replace("%UART0_BAUDRATE%", generateBaudrateOptions(config.uart0_baudrate));
-
-//     html.replace("%UART1_ENABLED%", config.uart1_enable ? "checked" : "");
-//     html.replace("%UART1_RX_GPIO%", String(config.uart1_rx_gpio));
-//     html.replace("%UART1_TX_GPIO%", String(config.uart1_tx_gpio));
-//     html.replace("%UART1_RTS_GPIO%", String(config.uart1_rts_gpio));
-//     html.replace("%UART1_BAUDRATE%", generateBaudrateOptions(config.uart1_baudrate));
-
-//     html.replace("%UART2_ENABLED%", config.uart2_enable ? "checked" : "");
-//     html.replace("%UART2_RX_GPIO%", String(config.uart2_rx_gpio));
-//     html.replace("%UART2_TX_GPIO%", String(config.uart2_tx_gpio));
-//     html.replace("%UART2_RTS_GPIO%", String(config.uart2_rts_gpio));
-//     html.replace("%UART2_BAUDRATE%", generateBaudrateOptions(config.uart2_baudrate));
-
-//     // RF Config
-//     html.replace("%RF_BAUDRATE%", generateBaudrateOptions(config.rf_baudrate));
-//     html.replace("%RF_RX_GPIO%", String(config.rf_rx_gpio));
-//     html.replace("%RF_TX_GPIO%", String(config.rf_tx_gpio));
-//     html.replace("%RF_PD_GPIO%", String(config.rf_pd_gpio));
-//     html.replace("%RF_PWR_GPIO%", String(config.rf_pwr_gpio));
-//     html.replace("%RF_PTT_GPIO%", String(config.rf_ptt_gpio));
-//     html.replace("%RF_SQL_GPIO%", String(config.rf_sql_gpio));
-//     html.replace("%RF_ATTEN%", String(config.adc_atten));
-//     html.replace("%RF_DC_OFFSET%", String(config.adc_dc_offset));
-
-// 	// Agregar reemplazo para RF PD Active (LOW y HIGH)
-//     html.replace("%RF_PD_ACTIVE_LOW%", config.rf_pd_active == 0 ? "checked" : "");
-//     html.replace("%RF_PD_ACTIVE_HIGH%", config.rf_pd_active == 1 ? "checked" : "");
-
-// 	// Agregar reemplazos dinámicos para RF SQL Active (LOW y HIGH)
-// 	html.replace("%RF_SQL_ACTIVE_LOW%", config.rf_sql_active == 0 ? "checked" : "");
-// 	html.replace("%RF_SQL_ACTIVE_HIGH%", config.rf_sql_active == 1 ? "checked" : "");
-
-// 	// Agregar reemplazos dinámicos para RF PTT Active (LOW y HIGH)
-// 	html.replace("%RF_PTT_ACTIVE_LOW%", config.rf_ptt_active == 0 ? "checked" : "");
-// 	html.replace("%RF_PTT_ACTIVE_HIGH%", config.rf_ptt_active == 1 ? "checked" : "");
-
-// 	// Agregar reemplazos dinámicos para RF Power active (LOW y HIGH)
-// 	html.replace("%RF_PWR_ACTIVE_LOW%", config.rf_pwr_active == 0 ? "checked" : "");
-// 	html.replace("%RF_PWR_ACTIVE_HIGH%", config.rf_pwr_active == 1 ? "checked" : "");
-
-//     // GNSS Config
-//     html.replace("%GNSS_ENABLED%", config.gnss_enable ? "checked" : "");
-//     html.replace("%GNSS_CHANNEL%", String(config.gnss_channel));
-//     html.replace("%GNSS_AT_COMMAND%", String(config.gnss_at_command));
-//     html.replace("%GNSS_TCP_HOST%", String(config.gnss_tcp_host));
-//     html.replace("%GNSS_TCP_PORT%", String(config.gnss_tcp_port));
-
-//     // I2C Config
-//     html.replace("%I2C0_ENABLED%", config.i2c_enable ? "checked" : "");
-//     html.replace("%I2C0_SDA_GPIO%", String(config.i2c_sda_pin));
-//     html.replace("%I2C0_SCK_GPIO%", String(config.i2c_sck_pin));
-//     html.replace("%I2C0_FREQ%", String(config.i2c_freq));
-
-//     html.replace("%I2C1_ENABLED%", config.i2c1_enable ? "checked" : "");
-//     html.replace("%I2C1_SDA_GPIO%", String(config.i2c1_sda_pin));
-//     html.replace("%I2C1_SCK_GPIO%", String(config.i2c1_sck_pin));
-//     html.replace("%I2C1_FREQ%", String(config.i2c1_freq));
-
-//     // Counter Configs
-//     html.replace("%COUNTER0_ENABLED%", config.counter0_enable ? "checked" : "");
-//     html.replace("%COUNTER0_GPIO%", String(config.counter0_gpio));
-//     html.replace("%COUNTER0_ACTIVE%", config.counter0_active ? "checked" : "");
-
-//     html.replace("%COUNTER1_ENABLED%", config.counter1_enable ? "checked" : "");
-//     html.replace("%COUNTER1_GPIO%", String(config.counter1_gpio));
-//     html.replace("%COUNTER1_ACTIVE%", config.counter1_active ? "checked" : "");
-
-//     request->send(200, "text/html", html);
-// }
-
-// void handle_mod_post(AsyncWebServerRequest *request) {
-//     if (!request->authenticate(config.http_username, config.http_password)) {
-//         return request->requestAuthentication();
-//     }
-
-//     // UART0
-//     config.uart0_enable = request->hasArg("uart0_enable");
-//     if (request->hasArg("uart0_rx_gpio")) {
-//         config.uart0_rx_gpio = request->arg("uart0_rx_gpio").toInt();
-//     }
-//     if (request->hasArg("uart0_tx_gpio")) {
-//         config.uart0_tx_gpio = request->arg("uart0_tx_gpio").toInt();
-//     }
-//     if (request->hasArg("uart0_rts_gpio")) {
-//         config.uart0_rts_gpio = request->arg("uart0_rts_gpio").toInt();
-//     }
-//     if (request->hasArg("uart0_baudrate")) {
-//         config.uart0_baudrate = request->arg("uart0_baudrate").toInt();
-//     }
-
-//     // UART1
-//     config.uart1_enable = request->hasArg("uart1_enable");
-//     if (request->hasArg("uart1_rx_gpio")) {
-//         config.uart1_rx_gpio = request->arg("uart1_rx_gpio").toInt();
-//     }
-//     if (request->hasArg("uart1_tx_gpio")) {
-//         config.uart1_tx_gpio = request->arg("uart1_tx_gpio").toInt();
-//     }
-//     if (request->hasArg("uart1_rts_gpio")) {
-//         config.uart1_rts_gpio = request->arg("uart1_rts_gpio").toInt();
-//     }
-//     if (request->hasArg("uart1_baudrate")) {
-//         config.uart1_baudrate = request->arg("uart1_baudrate").toInt();
-//     }
-
-//     // UART2
-//     config.uart2_enable = request->hasArg("uart2_enable");
-//     if (request->hasArg("uart2_rx_gpio")) {
-//         config.uart2_rx_gpio = request->arg("uart2_rx_gpio").toInt();
-//     }
-//     if (request->hasArg("uart2_tx_gpio")) {
-//         config.uart2_tx_gpio = request->arg("uart2_tx_gpio").toInt();
-//     }
-//     if (request->hasArg("uart2_rts_gpio")) {
-//         config.uart2_rts_gpio = request->arg("uart2_rts_gpio").toInt();
-//     }
-//     if (request->hasArg("uart2_baudrate")) {
-//         config.uart2_baudrate = request->arg("uart2_baudrate").toInt();
-//     }
-
-//     // RF
-//     if (request->hasArg("rf_baudrate")) {
-//         config.rf_baudrate = request->arg("rf_baudrate").toInt();
-//     }
-//     if (request->hasArg("rf_rx_gpio")) {
-//         config.rf_rx_gpio = request->arg("rf_rx_gpio").toInt();
-//     }
-//     if (request->hasArg("rf_tx_gpio")) {
-//         config.rf_tx_gpio = request->arg("rf_tx_gpio").toInt();
-//     }
-//     if (request->hasArg("rf_pd_gpio")) {
-//         config.rf_pd_gpio = request->arg("rf_pd_gpio").toInt();
-//     }
-//     if (request->hasArg("rf_pwr_gpio")) {
-//         config.rf_pwr_gpio = request->arg("rf_pwr_gpio").toInt();
-//     }
-//     if (request->hasArg("rf_ptt_gpio")) {
-//         config.rf_ptt_gpio = request->arg("rf_ptt_gpio").toInt();
-//     }
-//     if (request->hasArg("rf_sql_gpio")) {
-//         config.rf_sql_gpio = request->arg("rf_sql_gpio").toInt();
-//     }
-//     if (request->hasArg("rf_adc_atten")) {
-//         config.adc_atten = request->arg("rf_adc_atten").toInt();
-//     }
-//     if (request->hasArg("rf_adc_dc_offset")) {
-//         config.adc_dc_offset = request->arg("rf_adc_dc_offset").toInt();
-//     }
-//     if (request->hasArg("rf_pd_active")) {
-//         config.rf_pd_active = request->arg("rf_pd_active").toInt();
-//     }
-//     if (request->hasArg("rf_pwr_active")) {
-//         config.rf_pwr_active = request->arg("rf_pwr_active").toInt();
-//     }
-//     if (request->hasArg("rf_ptt_active")) {
-//         config.rf_ptt_active = request->arg("rf_ptt_active").toInt();
-//     }
-//     if (request->hasArg("rf_sql_active")) {
-//         config.rf_sql_active = request->arg("rf_sql_active").toInt();
-//     }
-
-//     // GNSS
-//     config.gnss_enable = request->hasArg("gnss_enable");
-//     if (request->hasArg("gnss_channel")) {
-//         config.gnss_channel = request->arg("gnss_channel").toInt();
-//     }
-//     if (request->hasArg("gnss_at_command")) {
-//         strcpy(config.gnss_at_command, request->arg("gnss_at_command").c_str());
-//     }
-//     if (request->hasArg("gnss_tcp_host")) {
-//         strcpy(config.gnss_tcp_host, request->arg("gnss_tcp_host").c_str());
-//     }
-//     if (request->hasArg("gnss_tcp_port")) {
-//         config.gnss_tcp_port = request->arg("gnss_tcp_port").toInt();
-//     }
-
-//     // MODBUS
-//     config.modbus_enable = request->hasArg("modbus_enable");
-//     if (request->hasArg("modbus_channel")) {
-//         config.modbus_channel = request->arg("modbus_channel").toInt();
-//     }
-//     if (request->hasArg("modbus_address")) {
-//         config.modbus_address = request->arg("modbus_address").toInt();
-//     }
-//     if (request->hasArg("modbus_de_gpio")) {
-//         config.modbus_de_gpio = request->arg("modbus_de_gpio").toInt();
-//     }
-
-//     // TNC
-//     config.ext_tnc_enable = request->hasArg("tnc_enable");
-//     if (request->hasArg("tnc_channel")) {
-//         config.ext_tnc_channel = request->arg("tnc_channel").toInt();
-//     }
-//     if (request->hasArg("tnc_mode")) {
-//         config.ext_tnc_mode = request->arg("tnc_mode").toInt();
-//     }
-
-//     // I2C_0
-//     config.i2c_enable = request->hasArg("i2c0_enable");
-//     if (request->hasArg("i2c0_sda_gpio")) {
-//         config.i2c_sda_pin = request->arg("i2c0_sda_gpio").toInt();
-//     }
-//     if (request->hasArg("i2c0_sck_gpio")) {
-//         config.i2c_sck_pin = request->arg("i2c0_sck_gpio").toInt();
-//     }
-//     if (request->hasArg("i2c0_freq")) {
-//         config.i2c_freq = request->arg("i2c0_freq").toInt();
-//     }
-
-//     // I2C_1
-//     config.i2c1_enable = request->hasArg("i2c1_enable");
-//     if (request->hasArg("i2c1_sda_gpio")) {
-//         config.i2c1_sda_pin = request->arg("i2c1_sda_gpio").toInt();
-//     }
-//     if (request->hasArg("i2c1_sck_gpio")) {
-//         config.i2c1_sck_pin = request->arg("i2c1_sck_gpio").toInt();
-//     }
-//     if (request->hasArg("i2c1_freq")) {
-//         config.i2c1_freq = request->arg("i2c1_freq").toInt();
-//     }
-
-//     // Counter_0
-//     config.counter0_enable = request->hasArg("counter0_enable");
-//     if (request->hasArg("counter0_gpio")) {
-//         config.counter0_gpio = request->arg("counter0_gpio").toInt();
-//     }
-//     if (request->hasArg("counter0_active")) {
-//         config.counter0_active = request->arg("counter0_active") == "1";
-//     }
-
-//     // Counter_1
-//     config.counter1_enable = request->hasArg("counter1_enable");
-//     if (request->hasArg("counter1_gpio")) {
-//         config.counter1_gpio = request->arg("counter1_gpio").toInt();
-//     }
-//     if (request->hasArg("counter1_active")) {
-//         config.counter1_active = request->arg("counter1_active") == "1";
-//     }
-
-//     // Guardar los cambios en EEPROM
-//     saveEEPROM();
-
-//     // Redirigir de nuevo a /mod
-//     request->redirect("/mod");
-// }
 
 String getLocalDateTime() {
     struct tm timeinfo;
@@ -1011,6 +731,512 @@ String getLocalDateTime() {
              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
     return String(buffer);
+}
+
+void handle_uart_config(AsyncWebServerRequest *request) {
+    // Cargar el archivo HTML desde SPIFFS o LittleFS
+    String html = loadHtmlTemplate("/mod_uart.html");
+
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo /mod_uart.html no encontrado");
+        return;
+    }
+
+    // Reemplazar valores dinámicos para UART0
+    html.replace("%UART0_ENABLED%", config.uart0_enable ? "checked" : "");
+    html.replace("%UART0_RX_GPIO%", String(config.uart0_rx_gpio));
+    html.replace("%UART0_TX_GPIO%", String(config.uart0_tx_gpio));
+    html.replace("%UART0_RTS_GPIO%", String(config.uart0_rts_gpio));
+    html.replace("%UART0_BAUDRATE%", generateBaudrateOptions(config.uart0_baudrate));
+
+    // Reemplazar valores dinámicos para UART1
+    html.replace("%UART1_ENABLED%", config.uart1_enable ? "checked" : "");
+    html.replace("%UART1_RX_GPIO%", String(config.uart1_rx_gpio));
+    html.replace("%UART1_TX_GPIO%", String(config.uart1_tx_gpio));
+    html.replace("%UART1_RTS_GPIO%", String(config.uart1_rts_gpio));
+    html.replace("%UART1_BAUDRATE%", generateBaudrateOptions(config.uart1_baudrate));
+
+    // Reemplazar valores dinámicos para UART2
+    html.replace("%UART2_ENABLED%", config.uart2_enable ? "checked" : "");
+    html.replace("%UART2_RX_GPIO%", String(config.uart2_rx_gpio));
+    html.replace("%UART2_TX_GPIO%", String(config.uart2_tx_gpio));
+    html.replace("%UART2_RTS_GPIO%", String(config.uart2_rts_gpio));
+    html.replace("%UART2_BAUDRATE%", generateBaudrateOptions(config.uart2_baudrate));
+
+    // Enviar el HTML ensamblado al cliente
+    request->send(200, "text/html", html);
+}
+
+void handle_uart_post(AsyncWebServerRequest *request) {
+    // Variables para almacenar los valores recibidos con valores por defecto
+    bool uart0_enabled = config.uart0_enable;
+    bool uart1_enabled = config.uart1_enable;
+    bool uart2_enabled = config.uart2_enable;
+    int uart0_rx_gpio = config.uart0_rx_gpio;
+    int uart0_tx_gpio = config.uart0_tx_gpio;
+    int uart0_rts_gpio = config.uart0_rts_gpio;
+    int uart0_baudrate = config.uart0_baudrate;
+    int uart1_rx_gpio = config.uart1_rx_gpio;
+    int uart1_tx_gpio = config.uart1_tx_gpio;
+    int uart1_rts_gpio = config.uart1_rts_gpio;
+    int uart1_baudrate = config.uart1_baudrate;
+    int uart2_rx_gpio = config.uart2_rx_gpio;
+    int uart2_tx_gpio = config.uart2_tx_gpio;
+    int uart2_rts_gpio = config.uart2_rts_gpio;
+    int uart2_baudrate = config.uart2_baudrate;
+
+    // Función lambda para leer parámetros de tipo int
+    auto getIntParam = [&](const String &param, int &var) {
+        if (request->hasParam(param, true)) {
+            var = request->getParam(param, true)->value().toInt();
+        }
+    };
+
+    // Leer parámetros para UART0
+    if (request->hasParam("uart0_enable", true)) {
+        uart0_enabled = request->getParam("uart0_enable", true)->value() == "on";
+    }
+    getIntParam("uart0_rx_gpio", uart0_rx_gpio);
+    getIntParam("uart0_tx_gpio", uart0_tx_gpio);
+    getIntParam("uart0_rts_gpio", uart0_rts_gpio);
+    getIntParam("uart0_baudrate", uart0_baudrate);
+
+    // Leer parámetros para UART1
+    if (request->hasParam("uart1_enable", true)) {
+        uart1_enabled = request->getParam("uart1_enable", true)->value() == "on";
+    }
+    getIntParam("uart1_rx_gpio", uart1_rx_gpio);
+    getIntParam("uart1_tx_gpio", uart1_tx_gpio);
+    getIntParam("uart1_rts_gpio", uart1_rts_gpio);
+    getIntParam("uart1_baudrate", uart1_baudrate);
+
+    // Leer parámetros para UART2
+    if (request->hasParam("uart2_enable", true)) {
+        uart2_enabled = request->getParam("uart2_enable", true)->value() == "on";
+    }
+    getIntParam("uart2_rx_gpio", uart2_rx_gpio);
+    getIntParam("uart2_tx_gpio", uart2_tx_gpio);
+    getIntParam("uart2_rts_gpio", uart2_rts_gpio);
+    getIntParam("uart2_baudrate", uart2_baudrate);
+
+    // Guardar valores en la configuración
+    config.uart0_enable = uart0_enabled;
+    config.uart0_rx_gpio = uart0_rx_gpio;
+    config.uart0_tx_gpio = uart0_tx_gpio;
+    config.uart0_rts_gpio = uart0_rts_gpio;
+    config.uart0_baudrate = uart0_baudrate;
+
+    config.uart1_enable = uart1_enabled;
+    config.uart1_rx_gpio = uart1_rx_gpio;
+    config.uart1_tx_gpio = uart1_tx_gpio;
+    config.uart1_rts_gpio = uart1_rts_gpio;
+    config.uart1_baudrate = uart1_baudrate;
+
+    config.uart2_enable = uart2_enabled;
+    config.uart2_rx_gpio = uart2_rx_gpio;
+    config.uart2_tx_gpio = uart2_tx_gpio;
+    config.uart2_rts_gpio = uart2_rts_gpio;
+    config.uart2_baudrate = uart2_baudrate;
+
+    // Confirmar que se actualizaron los valores
+    request->send(200, "application/json", "{\"status\":\"success\"}");
+}
+
+void handle_rf_config(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/mod_rf.html");
+
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo /mod_rf.html no encontrado");
+        return;
+    }
+
+    // Reemplazar valores dinámicos de RF
+    html.replace("%RF_BAUDRATE%", generateBaudrateOptions(config.rf_baudrate));
+    html.replace("%RF_RX_GPIO%", String(config.rf_rx_gpio));
+    html.replace("%RF_TX_GPIO%", String(config.rf_tx_gpio));
+    html.replace("%RF_PD_GPIO%", String(config.rf_pd_gpio));
+    html.replace("%RF_PWR_GPIO%", String(config.rf_pwr_gpio));
+    html.replace("%RF_PTT_GPIO%", String(config.rf_ptt_gpio));
+    html.replace("%RF_SQL_GPIO%", String(config.rf_sql_gpio));
+    html.replace("%RF_ATTEN%", String(config.adc_atten));
+    html.replace("%RF_DC_OFFSET%", String(config.adc_dc_offset));
+
+    // Reemplazar dinámicamente los valores para "Active" (LOW y HIGH)
+    html.replace("%rf_pd_active_low%", config.rf_pd_active == 0 ? "checked" : "");
+    html.replace("%rf_pd_active_high%", config.rf_pd_active == 1 ? "checked" : "");
+
+    html.replace("%rf_pwr_active_low%", config.rf_pwr_active == 0 ? "checked" : "");
+    html.replace("%rf_pwr_active_high%", config.rf_pwr_active == 1 ? "checked" : "");
+
+    html.replace("%rf_sql_active_low%", config.rf_sql_active == 0 ? "checked" : "");
+    html.replace("%rf_sql_active_high%", config.rf_sql_active == 1 ? "checked" : "");
+
+    html.replace("%rf_ptt_active_low%", config.rf_ptt_active == 0 ? "checked" : "");
+    html.replace("%rf_ptt_active_high%", config.rf_ptt_active == 1 ? "checked" : "");
+
+    // Enviar respuesta al cliente
+    request->send(200, "text/html", html);
+}
+
+void handle_rf_post(AsyncWebServerRequest *request) {
+    // Variables para almacenar los valores recibidos con valores por defecto
+    int rf_baudrate = config.rf_baudrate;
+    int rf_rx_gpio = config.rf_rx_gpio;
+    int rf_tx_gpio = config.rf_tx_gpio;
+    int rf_pd_gpio = config.rf_pd_gpio;
+    int rf_pwr_gpio = config.rf_pwr_gpio;
+    int rf_ptt_gpio = config.rf_ptt_gpio;
+    int rf_sql_gpio = config.rf_sql_gpio;
+    int rf_pd_active = config.rf_pd_active;
+    int rf_pwr_active = config.rf_pwr_active;
+    int rf_sql_active = config.rf_sql_active;
+    int rf_ptt_active = config.rf_ptt_active;
+    int rf_atten = config.adc_atten;
+    int rf_dc_offset = config.adc_dc_offset;
+
+    // Función lambda para leer parámetros y evitar repetición de código
+    auto getParamValue = [&](const String &param, int &var) {
+        if (request->hasParam(param, true)) {
+            var = request->getParam(param, true)->value().toInt();
+        }
+    };
+
+    // Leer todos los parámetros
+    getParamValue("rf_baudrate", rf_baudrate);
+    getParamValue("rf_rx_gpio", rf_rx_gpio);
+    getParamValue("rf_tx_gpio", rf_tx_gpio);
+    getParamValue("rf_pd_gpio", rf_pd_gpio);
+    getParamValue("rf_pwr_gpio", rf_pwr_gpio);
+    getParamValue("rf_ptt_gpio", rf_ptt_gpio);
+    getParamValue("rf_sql_gpio", rf_sql_gpio);
+    getParamValue("rf_pd_active", rf_pd_active);
+    getParamValue("rf_pwr_active", rf_pwr_active);
+    getParamValue("rf_sql_active", rf_sql_active);
+    getParamValue("rf_ptt_active", rf_ptt_active);
+    getParamValue("rf_adc_atten", rf_atten);
+    getParamValue("rf_adc_dc_offset", rf_dc_offset);
+
+    // Guardar valores en la configuración
+    config.rf_baudrate = rf_baudrate;
+    config.rf_rx_gpio = rf_rx_gpio;
+    config.rf_tx_gpio = rf_tx_gpio;
+    config.rf_pd_gpio = rf_pd_gpio;
+    config.rf_pwr_gpio = rf_pwr_gpio;
+    config.rf_ptt_gpio = rf_ptt_gpio;
+    config.rf_sql_gpio = rf_sql_gpio;
+    config.rf_pd_active = rf_pd_active;
+    config.rf_pwr_active = rf_pwr_active;
+    config.rf_sql_active = rf_sql_active;
+    config.rf_ptt_active = rf_ptt_active;
+    config.adc_atten = rf_atten;
+    config.adc_dc_offset = rf_dc_offset;
+
+    // Confirmar que se actualizaron los valores
+    request->send(200, "application/json", "{\"status\":\"success\"}");
+}
+
+void handle_gnss_config(AsyncWebServerRequest *request) {
+    // Cargar el archivo HTML desde SPIFFS o LittleFS
+    String html = loadHtmlTemplate("/mod_gnss.html");
+
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo /mod_gnss.html no encontrado");
+        return;
+    }
+
+    // Reemplazo de valores dinámicos
+    html.replace("%GNSS_ENABLED%", config.gnss_enable ? "checked" : "");
+    html.replace("%GNSS_CHANNEL%", String(config.gnss_channel));
+    html.replace("%GNSS_AT_COMMAND%", String(config.gnss_at_command));
+    html.replace("%GNSS_TCP_HOST%", String(config.gnss_tcp_host));
+    html.replace("%GNSS_TCP_PORT%", String(config.gnss_tcp_port));
+
+    // Configurar el dropdown para GNSS_CHANNEL
+    for (int i = 0; i <= 4; i++) {
+        String placeholder = "%GNSS_CHANNEL_SELECTED_" + String(i) + "%";
+        String replacement = (config.gnss_channel == i) ? "selected" : "";
+        html.replace(placeholder, replacement);
+    }
+
+    // Enviar la respuesta al cliente
+    request->send(200, "text/html", html);
+}
+
+void handle_gnss_post(AsyncWebServerRequest *request) {
+    // Variables para almacenar los valores recibidos
+    bool gnss_enabled = config.gnss_enable;
+    int gnss_channel = config.gnss_channel;
+    int gnss_tcp_port = config.gnss_tcp_port;
+    String gnss_at_command, gnss_tcp_host;
+
+    // Función lambda para leer parámetros de tipo int
+    auto getIntParam = [&](const String &param, int &var) {
+        if (request->hasParam(param, true)) {
+            var = request->getParam(param, true)->value().toInt();
+        }
+    };
+
+    // Leer parámetros
+    if (request->hasParam("gnss_enable", true)) {
+        gnss_enabled = request->getParam("gnss_enable", true)->value() == "on";
+    }
+    getIntParam("gnss_channel", gnss_channel);
+    getIntParam("gnss_tcp_port", gnss_tcp_port);
+
+    if (request->hasParam("gnss_at_command", true)) {
+        gnss_at_command = request->getParam("gnss_at_command", true)->value();
+        strncpy(config.gnss_at_command, gnss_at_command.c_str(), sizeof(config.gnss_at_command) - 1);
+        config.gnss_at_command[sizeof(config.gnss_at_command) - 1] = '\0'; // Asegurar terminador nulo
+    }
+
+    if (request->hasParam("gnss_tcp_host", true)) {
+        gnss_tcp_host = request->getParam("gnss_tcp_host", true)->value();
+        strncpy(config.gnss_tcp_host, gnss_tcp_host.c_str(), sizeof(config.gnss_tcp_host) - 1);
+        config.gnss_tcp_host[sizeof(config.gnss_tcp_host) - 1] = '\0'; // Asegurar terminador nulo
+    }
+
+    // Guardar valores en la configuración
+    config.gnss_enable = gnss_enabled;
+    config.gnss_channel = gnss_channel;
+    config.gnss_tcp_port = gnss_tcp_port;
+
+    // Confirmar que se actualizaron los valores
+    request->send(200, "application/json", "{\"status\":\"success\"}");
+}
+
+void handle_modbus_config(AsyncWebServerRequest *request) {
+    // Cargar el archivo HTML desde SPIFFS o LittleFS
+    String html = loadHtmlTemplate("/mod_modbus.html");
+
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo /mod_modbus.html no encontrado");
+        return;
+    }
+
+    // Reemplazo de valores dinámicos para MODBUS
+    html.replace("%MODBUS_ENABLED%", config.modbus_enable ? "checked" : "");
+    html.replace("%MODBUS_ADDRESS%", String(config.modbus_address));
+    html.replace("%MODBUS_DE_GPIO%", String(config.modbus_de_gpio));
+
+    // Configurar el dropdown para MODBUS_CHANNEL
+    for (int i = 0; i <= 4; i++) {
+        String placeholder = "%MODBUS_CHANNEL_SELECTED_" + String(i) + "%";
+        String replacement = (config.modbus_channel == i) ? "selected" : "";
+        html.replace(placeholder, replacement);
+    }
+
+    // Reemplazo de valores dinámicos para TNC
+    html.replace("%TNC_ENABLED%", config.ext_tnc_enable ? "checked" : "");
+
+    // Configurar el dropdown para TNC_CHANNEL
+    for (int i = 0; i <= 3; i++) {
+        String placeholder = "%TNC_CHANNEL_SELECTED_" + String(i) + "%";
+        String replacement = (config.ext_tnc_channel == i) ? "selected" : "";
+        html.replace(placeholder, replacement);
+    }
+
+    // Configurar el dropdown para TNC_MODE
+    for (int i = 0; i <= 3; i++) {
+        String placeholder = "%TNC_MODE_SELECTED_" + String(i) + "%";
+        String replacement = (config.ext_tnc_mode == i) ? "selected" : "";
+        html.replace(placeholder, replacement);
+    }
+
+    // Enviar la respuesta al cliente
+    request->send(200, "text/html", html);
+}
+
+void handle_modbus_post(AsyncWebServerRequest *request) {
+    // Variables para almacenar los valores recibidos con valores por defecto
+    bool modbus_enabled = config.modbus_enable;
+    bool tnc_enabled = config.ext_tnc_enable;
+    int modbus_address = config.modbus_address;
+    int modbus_de_gpio = config.modbus_de_gpio;
+    int modbus_channel = config.modbus_channel;
+    int tnc_channel = config.ext_tnc_channel;
+    int tnc_mode = config.ext_tnc_mode;
+
+    // Función lambda para leer parámetros de tipo int
+    auto getIntParam = [&](const String &param, int &var) {
+        if (request->hasParam(param, true)) {
+            var = request->getParam(param, true)->value().toInt();
+        }
+    };
+
+    // Leer los parámetros
+    if (request->hasParam("modbus_enable", true)) {
+        modbus_enabled = request->getParam("modbus_enable", true)->value() == "on";
+    }
+    getIntParam("modbus_address", modbus_address);
+    getIntParam("modbus_de_gpio", modbus_de_gpio);
+    getIntParam("modbus_channel", modbus_channel);
+
+    if (request->hasParam("tnc_enable", true)) {
+        tnc_enabled = request->getParam("tnc_enable", true)->value() == "on";
+    }
+    getIntParam("tnc_channel", tnc_channel);
+    getIntParam("tnc_mode", tnc_mode);
+
+    // Guardar valores en la configuración
+    config.modbus_enable = modbus_enabled;
+    config.modbus_address = modbus_address;
+    config.modbus_de_gpio = modbus_de_gpio;
+    config.modbus_channel = modbus_channel;
+
+    config.ext_tnc_enable = tnc_enabled;
+    config.ext_tnc_channel = tnc_channel;
+    config.ext_tnc_mode = tnc_mode;
+
+    // Confirmar que se actualizaron los valores
+    request->send(200, "application/json", "{\"status\":\"success\"}");
+}
+
+void handle_counter_config(AsyncWebServerRequest *request) {
+    // Cargar el archivo HTML desde SPIFFS o LittleFS
+    String html = loadHtmlTemplate("/mod_counter.html");
+
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo /mod_counter.html no encontrado");
+        return;
+    }
+
+    // Reemplazo de valores dinámicos para Counter 0
+    html.replace("%COUNTER0_ENABLED%", config.counter0_enable ? "checked" : "");
+    html.replace("%COUNTER0_GPIO%", String(config.counter0_gpio));
+    html.replace("%COUNTER0_ACTIVE_LOW%", config.counter0_active == 0 ? "checked" : "");
+    html.replace("%COUNTER0_ACTIVE_HIGH%", config.counter0_active == 1 ? "checked" : "");
+
+    // Reemplazo de valores dinámicos para Counter 1
+    html.replace("%COUNTER1_ENABLED%", config.counter1_enable ? "checked" : "");
+    html.replace("%COUNTER1_GPIO%", String(config.counter1_gpio));
+    html.replace("%COUNTER1_ACTIVE_LOW%", config.counter1_active == 0 ? "checked" : "");
+    html.replace("%COUNTER1_ACTIVE_HIGH%", config.counter1_active == 1 ? "checked" : "");
+
+    // Enviar la respuesta al cliente
+    request->send(200, "text/html", html);
+}
+
+void handle_counter_post(AsyncWebServerRequest *request) {
+    // Variables para almacenar los valores recibidos con valores por defecto
+    bool counter0_enabled = config.counter0_enable;
+    bool counter1_enabled = config.counter1_enable;
+    int counter0_gpio = config.counter0_gpio;
+    int counter1_gpio = config.counter1_gpio;
+    int counter0_active = config.counter0_active;
+    int counter1_active = config.counter1_active;
+
+    // Función lambda para leer parámetros de tipo int
+    auto getIntParam = [&](const String &param, int &var) {
+        if (request->hasParam(param, true)) {
+            var = request->getParam(param, true)->value().toInt();
+        }
+    };
+
+    // Leer los parámetros
+    if (request->hasParam("counter0_enable", true)) {
+        counter0_enabled = request->getParam("counter0_enable", true)->value() == "on";
+    }
+    getIntParam("counter0_gpio", counter0_gpio);
+    
+    if (request->hasParam("counter0_active", true)) {
+        String activeValue = request->getParam("counter0_active", true)->value();
+        counter0_active = (activeValue == "HIGH") ? 1 : 0;
+    }
+
+    if (request->hasParam("counter1_enable", true)) {
+        counter1_enabled = request->getParam("counter1_enable", true)->value() == "on";
+    }
+    getIntParam("counter1_gpio", counter1_gpio);
+
+    if (request->hasParam("counter1_active", true)) {
+        String activeValue = request->getParam("counter1_active", true)->value();
+        counter1_active = (activeValue == "HIGH") ? 1 : 0;
+    }
+
+    // Guardar valores en la configuración
+    config.counter0_enable = counter0_enabled;
+    config.counter0_gpio = counter0_gpio;
+    config.counter0_active = counter0_active;
+
+    config.counter1_enable = counter1_enabled;
+    config.counter1_gpio = counter1_gpio;
+    config.counter1_active = counter1_active;
+
+    // Confirmar que se actualizaron los valores
+    request->send(200, "application/json", "{\"status\":\"success\"}");
+}
+
+void handle_i2c_config(AsyncWebServerRequest *request) {
+    // Cargar el archivo HTML para I2C desde SPIFFS o LittleFS
+    String html = loadHtmlTemplate("/mod_i2c.html");
+
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo /mod_i2c.html no encontrado");
+        return;
+    }
+
+    // Reemplazo de valores dinámicos para I2C_0
+    html.replace("%I2C0_ENABLED%", config.i2c_enable ? "checked" : "");
+    html.replace("%I2C0_SDA_GPIO%", String(config.i2c_sda_pin));
+    html.replace("%I2C0_SCK_GPIO%", String(config.i2c_sck_pin));
+    html.replace("%I2C0_FREQ%", String(config.i2c_freq));
+
+    // Reemplazo de valores dinámicos para I2C_1
+    html.replace("%I2C1_ENABLED%", config.i2c1_enable ? "checked" : "");
+    html.replace("%I2C1_SDA_GPIO%", String(config.i2c1_sda_pin));
+    html.replace("%I2C1_SCK_GPIO%", String(config.i2c1_sck_pin));
+    html.replace("%I2C1_FREQ%", String(config.i2c1_freq));
+
+    // Enviar la respuesta al cliente
+    request->send(200, "text/html", html);
+}
+
+void handle_i2c_post(AsyncWebServerRequest *request) {
+    // Variables para almacenar los valores recibidos con valores por defecto
+    bool i2c0_enabled = config.i2c_enable;
+    bool i2c1_enabled = config.i2c1_enable;
+    int i2c0_sda = config.i2c_sda_pin;
+    int i2c0_sck = config.i2c_sck_pin;
+    int i2c0_freq = config.i2c_freq;
+    int i2c1_sda = config.i2c1_sda_pin;
+    int i2c1_sck = config.i2c1_sck_pin;
+    int i2c1_freq = config.i2c1_freq;
+
+    // Función lambda para leer parámetros de tipo int
+    auto getIntParam = [&](const String &param, int &var) {
+        if (request->hasParam(param, true)) {
+            var = request->getParam(param, true)->value().toInt();
+        }
+    };
+
+    // Leer los parámetros
+    if (request->hasParam("i2c0_enable", true)) {
+        i2c0_enabled = request->getParam("i2c0_enable", true)->value() == "on";
+    }
+    getIntParam("i2c0_sda_gpio", i2c0_sda);
+    getIntParam("i2c0_sck_gpio", i2c0_sck);
+    getIntParam("i2c0_freq", i2c0_freq);
+
+    if (request->hasParam("i2c1_enable", true)) {
+        i2c1_enabled = request->getParam("i2c1_enable", true)->value() == "on";
+    }
+    getIntParam("i2c1_sda_gpio", i2c1_sda);
+    getIntParam("i2c1_sck_gpio", i2c1_sck);
+    getIntParam("i2c1_freq", i2c1_freq);
+
+    // Guardar valores en la configuración
+    config.i2c_enable = i2c0_enabled;
+    config.i2c_sda_pin = i2c0_sda;
+    config.i2c_sck_pin = i2c0_sck;
+    config.i2c_freq = i2c0_freq;
+
+    config.i2c1_enable = i2c1_enabled;
+    config.i2c1_sda_pin = i2c1_sda;
+    config.i2c1_sck_pin = i2c1_sck;
+    config.i2c1_freq = i2c1_freq;
+
+    // Confirmar que se actualizaron los valores
+    request->send(200, "application/json", "{\"status\":\"success\"}");
 }
 
 // Manejar solicitud GET para /system
@@ -1168,10 +1394,10 @@ void handle_system_post(AsyncWebServerRequest *request) {
     request->send(200, "text/html", "Configuración guardada.");
 }
 
-void handle_igate_get(AsyncWebServerRequest *request) {
-// if (!request->authenticate(config.http_username, config.http_password)) {
-//     return request->requestAuthentication();
-// }
+/* void handle_igate_get(AsyncWebServerRequest *request) {
+	// if (!request->authenticate(config.http_username, config.http_password)) {
+	//     return request->requestAuthentication();
+	// }
     // Cargar y enviar el HTML
     String html = loadHtmlTemplate("/igate.html");
 
@@ -1273,6 +1499,135 @@ void handle_igate_post(AsyncWebServerRequest *request) {
 
     saveEEPROM(); // Guardar los cambios
     request->redirect("/igate");
+} */
+
+// --- Funciones para la configuración GENERAL ---
+void handleIgateGeneralGet(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/igate_general.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+    // Reemplazar marcadores de posición de la configuración general
+    html.replace("%IGATE_ENABLE%", config.igate_en ? "checked" : "");
+    html.replace("%MY_CALL%", String(config.aprs_mycall));
+    html.replace("%MY_SSID%", String(config.aprs_ssid));
+    html.replace("%IGATE_TABLE%", String(config.igate_symbol[0]));
+    html.replace("%IGATE_SYMBOL%", String(config.igate_symbol[1]));
+    html.replace("%IGATE_COMMENT%", String(config.igate_comment));
+    html.replace("%RF2INET%", config.rf2inet ? "checked" : "");
+    html.replace("%INET2RF%", config.inet2rf ? "checked" : "");
+    request->send(200, "text/html", html);
+}
+
+void handleIgateGeneralPost(AsyncWebServerRequest *request) {
+    if (request->hasArg("igateEnable")) {
+        config.igate_en = (request->arg("igateEnable") == "OK");
+    }
+    if (request->hasArg("myCall")) {
+        String myCall = request->arg("myCall");
+        myCall.trim();
+        myCall.toUpperCase();
+        strncpy(config.aprs_mycall, myCall.c_str(), sizeof(config.aprs_mycall));
+    }
+    if (request->hasArg("mySSID")) {
+        config.aprs_ssid = request->arg("mySSID").toInt();
+        if (config.aprs_ssid > 15) config.aprs_ssid = 13;
+    }
+    if (request->hasArg("igateTable")) {
+        config.igate_symbol[0] = request->arg("igateTable")[0];
+    }
+    if (request->hasArg("igateSymbol")) {
+        config.igate_symbol[1] = request->arg("igateSymbol")[0];
+    }
+    if (request->hasArg("igateComment")) {
+        strncpy(config.igate_comment, request->arg("igateComment").c_str(), sizeof(config.igate_comment));
+    }
+    // Los checkbox se manejan así: si se incluye el parámetro se considera true, de lo contrario false.
+    config.rf2inet = request->hasArg("rf2inetEnable");
+    config.inet2rf = request->hasArg("inet2rfEnable");
+
+    saveEEPROM(); // Guardar cambios en EEPROM
+    request->redirect("/igate/general");
+}
+
+// --- Funciones para la configuración POSITION ---
+void handleIgatePositionGet(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/igate_position.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+    // Reemplazar marcadores para la posición
+    html.replace("%IGATE_OBJECT%", (config.igate_object && config.igate_object[0] != '\0') ? String(config.igate_object) : "");
+    html.replace("%IGATE_LAT%", String(config.igate_lat, 5));
+    html.replace("%IGATE_LON%", String(config.igate_lon, 5));
+    html.replace("%IGATE_ALT%", String(config.igate_alt, 2));
+    request->send(200, "text/html", html);
+}
+
+void handleIgatePositionPost(AsyncWebServerRequest *request) {
+    if (request->hasArg("igateObject")) {
+        strncpy(config.igate_object, request->arg("igateObject").c_str(), sizeof(config.igate_object));
+    }
+    if (request->hasArg("igateLat")) {
+        config.igate_lat = request->arg("igateLat").toFloat();
+    }
+    if (request->hasArg("igateLon")) {
+        config.igate_lon = request->arg("igateLon").toFloat();
+    }
+    if (request->hasArg("igateAlt")) {
+        config.igate_alt = request->arg("igateAlt").toFloat();
+    }
+    saveEEPROM();
+    request->redirect("/igate/position");
+}
+
+// --- Funciones para la configuración PHG ---
+void handleIgatePHGGet(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/igate_phg.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+    // En este ejemplo se maneja solo la opción PHG (ej. igate_bcn)
+    html.replace("%IGATE_BCN%", config.igate_bcn ? "checked" : "");
+    request->send(200, "text/html", html);
+}
+
+void handleIgatePHGPost(AsyncWebServerRequest *request) {
+    // Suponiendo que el checkbox se llama "igateBcnEnable"
+    config.igate_bcn = request->hasArg("igateBcnEnable");
+    saveEEPROM();
+    request->redirect("/igate/phg");
+}
+
+// --- Funciones para la configuración FILTER ---
+void handleIgateFilterGet(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/igate_filter.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+    // Reemplazar marcadores para la configuración del filtro APRS
+    html.replace("%APRS_HOST%", String(config.aprs_host));
+    html.replace("%APRS_PORT%", String(config.aprs_port));
+    html.replace("%APRS_FILTER%", String(config.aprs_filter));
+    request->send(200, "text/html", html);
+}
+
+void handleIgateFilterPost(AsyncWebServerRequest *request) {
+    if (request->hasArg("aprsHost")) {
+        strncpy(config.aprs_host, request->arg("aprsHost").c_str(), sizeof(config.aprs_host));
+    }
+    if (request->hasArg("aprsPort")) {
+        config.aprs_port = request->arg("aprsPort").toInt();
+    }
+    if (request->hasArg("aprsFilter")) {
+        strncpy(config.aprs_filter, request->arg("aprsFilter").c_str(), sizeof(config.aprs_filter));
+    }
+    saveEEPROM();
+    request->redirect("/igate/filter");
 }
 
 void handle_digi(AsyncWebServerRequest *request)
@@ -3527,475 +3882,121 @@ void webService()
 
 	// web client handlers
 	async_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ setMainPage(request); });
+					{ setMainPage(request); });										// INDEX	
 	async_server.on("/list-files", HTTP_GET, [](AsyncWebServerRequest *request) 
-					{ handle_list_files(request);});				
+					{ handle_list_files(request);});								// for debug
 	async_server.on("/symbol", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_symbol(request); });
+					{ handle_symbol(request); });									// for APRS Symbols
 	async_server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_logout(request); });
+					{ handle_logout(request); });									// not in use
 	async_server.on("/radio", HTTP_GET, [](AsyncWebServerRequest *request) 	
-					{ handle_radio_get(request);});
+					{ handle_radio_get(request);});									// RADIO GET	
 	async_server.on("/radio", HTTP_POST, [](AsyncWebServerRequest *request) 
-					{ handle_radio_post(request);});		
-	// async_server.on("/mod", HTTP_GET, [](AsyncWebServerRequest *request) 
-	// 				{ handle_mod_get(request);});
-	// async_server.on("/mod", HTTP_POST, [](AsyncWebServerRequest *request) 
-	// 				{ handle_mod_post(request);});
-	async_server.on("/mod/uart", HTTP_GET, [](AsyncWebServerRequest *request) {
-		// Cargar el archivo HTML desde SPIFFS o LittleFS
-		String html = loadHtmlTemplate("/mod_uart.html");
-
-		if (html.isEmpty()) {
-			request->send(404, "text/plain", "Archivo /mod_uart.html no encontrado");
-			return;
-		}
-
-		// Reemplazar valores dinámicos para UART0
-		html.replace("%UART0_ENABLED%", config.uart0_enable ? "checked" : "");
-		html.replace("%UART0_RX_GPIO%", String(config.uart0_rx_gpio));
-		html.replace("%UART0_TX_GPIO%", String(config.uart0_tx_gpio));
-		html.replace("%UART0_RTS_GPIO%", String(config.uart0_rts_gpio));
-		html.replace("%UART0_BAUDRATE%", generateBaudrateOptions(config.uart0_baudrate));
-
-		// Reemplazar valores dinámicos para UART1
-		html.replace("%UART1_ENABLED%", config.uart1_enable ? "checked" : "");
-		html.replace("%UART1_RX_GPIO%", String(config.uart1_rx_gpio));
-		html.replace("%UART1_TX_GPIO%", String(config.uart1_tx_gpio));
-		html.replace("%UART1_RTS_GPIO%", String(config.uart1_rts_gpio));
-		html.replace("%UART1_BAUDRATE%", generateBaudrateOptions(config.uart1_baudrate));
-
-		// Reemplazar valores dinámicos para UART2
-		html.replace("%UART2_ENABLED%", config.uart2_enable ? "checked" : "");
-		html.replace("%UART2_RX_GPIO%", String(config.uart2_rx_gpio));
-		html.replace("%UART2_TX_GPIO%", String(config.uart2_tx_gpio));
-		html.replace("%UART2_RTS_GPIO%", String(config.uart2_rts_gpio));
-		html.replace("%UART2_BAUDRATE%", generateBaudrateOptions(config.uart2_baudrate));
-
-		// Enviar el HTML ensamblado al cliente
-		request->send(200, "text/html", html);
-	});
-	async_server.on("/mod/rf", HTTP_GET, [](AsyncWebServerRequest *request) {
-		String html = loadHtmlTemplate("/mod_rf.html");
-
-		// Reemplazar valores dinámicos de RF
-		html.replace("%RF_BAUDRATE%", generateBaudrateOptions(config.rf_baudrate));
-		html.replace("%RF_RX_GPIO%", String(config.rf_rx_gpio));
-		html.replace("%RF_TX_GPIO%", String(config.rf_tx_gpio));
-		html.replace("%RF_PD_GPIO%", String(config.rf_pd_gpio));
-		html.replace("%RF_PWR_GPIO%", String(config.rf_pwr_gpio));
-		html.replace("%RF_PTT_GPIO%", String(config.rf_ptt_gpio));
-		html.replace("%RF_SQL_GPIO%", String(config.rf_sql_gpio));
-		html.replace("%RF_ATTEN%", String(config.adc_atten));
-		html.replace("%RF_DC_OFFSET%", String(config.adc_dc_offset));
-
-		// Reemplazar dinámicamente los valores para "Active" (LOW y HIGH)
-		// RF_PD_ACTIVE
-		html.replace("%rf_pd_active_low%", config.rf_pd_active == 0 ? "checked" : "");
-		html.replace("%rf_pd_active_high%", config.rf_pd_active == 1 ? "checked" : "");
-
-		// RF_PWR_ACTIVE
-		html.replace("%rf_pwr_active_low%", config.rf_pwr_active == 0 ? "checked" : "");
-		html.replace("%rf_pwr_active_high%", config.rf_pwr_active == 1 ? "checked" : "");
-
-		// RF_SQL_ACTIVE
-		html.replace("%rf_sql_active_low%", config.rf_sql_active == 0 ? "checked" : "");
-		html.replace("%rf_sql_active_high%", config.rf_sql_active == 1 ? "checked" : "");
-
-		// RF_PTT_ACTIVE
-		html.replace("%rf_ptt_active_low%", config.rf_ptt_active == 0 ? "checked" : "");
-		html.replace("%rf_ptt_active_high%", config.rf_ptt_active == 1 ? "checked" : "");
-
-		// Enviar respuesta al cliente
-		request->send(200, "text/html", html);
-	});
-	async_server.on("/mod/rf", HTTP_POST, [](AsyncWebServerRequest *request) {
-		// Variables para almacenar los valores recibidos
-		int rf_baudrate, rf_rx_gpio, rf_tx_gpio, rf_pd_gpio, rf_pwr_gpio, rf_ptt_gpio, rf_sql_gpio;
-		int rf_pd_active, rf_pwr_active, rf_sql_active, rf_ptt_active;
-		int rf_atten, rf_dc_offset;
-
-		// Leer los parámetros del request
-		if (request->hasParam("rf_baudrate", true)) {
-			rf_baudrate = request->getParam("rf_baudrate", true)->value().toInt();
-		}
-		if (request->hasParam("rf_rx_gpio", true)) {
-			rf_rx_gpio = request->getParam("rf_rx_gpio", true)->value().toInt();
-		}
-		if (request->hasParam("rf_tx_gpio", true)) {
-			rf_tx_gpio = request->getParam("rf_tx_gpio", true)->value().toInt();
-		}
-		if (request->hasParam("rf_pd_gpio", true)) {
-			rf_pd_gpio = request->getParam("rf_pd_gpio", true)->value().toInt();
-		}
-		if (request->hasParam("rf_pwr_gpio", true)) {
-			rf_pwr_gpio = request->getParam("rf_pwr_gpio", true)->value().toInt();
-		}
-		if (request->hasParam("rf_ptt_gpio", true)) {
-			rf_ptt_gpio = request->getParam("rf_ptt_gpio", true)->value().toInt();
-		}
-		if (request->hasParam("rf_sql_gpio", true)) {
-			rf_sql_gpio = request->getParam("rf_sql_gpio", true)->value().toInt();
-		}
-		if (request->hasParam("rf_pd_active", true)) {
-			rf_pd_active = request->getParam("rf_pd_active", true)->value().toInt();
-		}
-		if (request->hasParam("rf_pwr_active", true)) {
-			rf_pwr_active = request->getParam("rf_pwr_active", true)->value().toInt();
-		}
-		if (request->hasParam("rf_sql_active", true)) {
-			rf_sql_active = request->getParam("rf_sql_active", true)->value().toInt();
-		}
-		if (request->hasParam("rf_ptt_active", true)) {
-			rf_ptt_active = request->getParam("rf_ptt_active", true)->value().toInt();
-		}
-		if (request->hasParam("rf_adc_atten", true)) {
-			rf_atten = request->getParam("rf_adc_atten", true)->value().toInt();
-		}
-		if (request->hasParam("rf_adc_dc_offset", true)) {
-			rf_dc_offset = request->getParam("rf_adc_dc_offset", true)->value().toInt();
-		}
-
-		// Guardar valores en la configuración
-		config.rf_baudrate = rf_baudrate;
-		config.rf_rx_gpio = rf_rx_gpio;
-		config.rf_tx_gpio = rf_tx_gpio;
-		config.rf_pd_gpio = rf_pd_gpio;
-		config.rf_pwr_gpio = rf_pwr_gpio;
-		config.rf_ptt_gpio = rf_ptt_gpio;
-		config.rf_sql_gpio = rf_sql_gpio;
-		config.rf_pd_active = rf_pd_active;
-		config.rf_pwr_active = rf_pwr_active;
-		config.rf_sql_active = rf_sql_active;
-		config.rf_ptt_active = rf_ptt_active;
-		config.adc_atten = rf_atten;
-		config.adc_dc_offset = rf_dc_offset;
-
-		// Confirmar que se actualizaron los valores
-		request->send(200, "application/json", "{\"status\":\"success\"}");
-	});
-
-	async_server.on("/mod/gnss", HTTP_GET, [](AsyncWebServerRequest *request) {
-		String html = loadHtmlTemplate("/mod_gnss.html");
-
-		// Reemplazo de valores dinámicos
-		html.replace("%GNSS_ENABLED%", config.gnss_enable ? "checked" : "");
-		html.replace("%GNSS_CHANNEL%", String(config.gnss_channel));
-		html.replace("%GNSS_AT_COMMAND%", String(config.gnss_at_command));
-		html.replace("%GNSS_TCP_HOST%", String(config.gnss_tcp_host));
-		html.replace("%GNSS_TCP_PORT%", String(config.gnss_tcp_port));
-
-		// Configurar el dropdown para GNSS_CHANNEL
-		for (int i = 0; i <= 4; i++) {
-			String placeholder = "%GNSS_CHANNEL_SELECTED_" + String(i) + "%";
-			String replacement = (config.gnss_channel == i) ? "selected" : "";
-			html.replace(placeholder, replacement);
-		}
-
-		request->send(200, "text/html", html);
-	});
-	async_server.on("/mod/gnss", HTTP_POST, [](AsyncWebServerRequest *request) {
-		// Variables para almacenar los valores recibidos
-		bool gnss_enabled;
-		int gnss_channel, gnss_tcp_port;
-		String gnss_at_command, gnss_tcp_host;
-
-		// Leer los parámetros del request
-		if (request->hasParam("gnss_enable", true)) {
-			gnss_enabled = request->getParam("gnss_enable", true)->value() == "on";
-		}
-		if (request->hasParam("gnss_channel", true)) {
-			gnss_channel = request->getParam("gnss_channel", true)->value().toInt();
-		}
-		if (request->hasParam("gnss_at_command", true)) {
-			gnss_at_command = request->getParam("gnss_at_command", true)->value();
-			strncpy(config.gnss_at_command, gnss_at_command.c_str(), sizeof(config.gnss_at_command) - 1);
-			config.gnss_at_command[sizeof(config.gnss_at_command) - 1] = '\0'; // Asegurar terminador nulo
-		}
-		if (request->hasParam("gnss_tcp_host", true)) {
-			gnss_tcp_host = request->getParam("gnss_tcp_host", true)->value();
-			strncpy(config.gnss_tcp_host, gnss_tcp_host.c_str(), sizeof(config.gnss_tcp_host) - 1);
-			config.gnss_tcp_host[sizeof(config.gnss_tcp_host) - 1] = '\0'; // Asegurar terminador nulo
-		}
-		if (request->hasParam("gnss_tcp_port", true)) {
-			gnss_tcp_port = request->getParam("gnss_tcp_port", true)->value().toInt();
-		}
-
-		// Guardar valores en la configuración
-		config.gnss_enable = gnss_enabled;
-		config.gnss_channel = gnss_channel;
-		config.gnss_tcp_port = gnss_tcp_port;
-
-		// Confirmar que se actualizaron los valores
-		request->send(200, "application/json", "{\"status\":\"success\"}");
-	});
-
-	async_server.on("/mod/modbus", HTTP_GET, [](AsyncWebServerRequest *request) {
-		String html = loadHtmlTemplate("/mod_modbus.html");
-
-		// Reemplazo de valores dinámicos para MODBUS
-		html.replace("%MODBUS_ENABLED%", config.modbus_enable ? "checked" : "");
-		html.replace("%MODBUS_ADDRESS%", String(config.modbus_address));
-		html.replace("%MODBUS_DE_GPIO%", String(config.modbus_de_gpio));
-
-		// Configurar el dropdown para MODBUS_CHANNEL
-		for (int i = 0; i <= 4; i++) {
-			String placeholder = "%MODBUS_CHANNEL_SELECTED_" + String(i) + "%";
-			String replacement = (config.modbus_channel == i) ? "selected" : "";
-			html.replace(placeholder, replacement);
-		}
-
-		// Reemplazo de valores dinámicos para TNC
-		html.replace("%TNC_ENABLED%", config.ext_tnc_enable ? "checked" : "");
-
-		// Configurar el dropdown para TNC_CHANNEL
-		for (int i = 0; i <= 3; i++) {
-			String placeholder = "%TNC_CHANNEL_SELECTED_" + String(i) + "%";
-			String replacement = (config.ext_tnc_channel == i) ? "selected" : "";
-			html.replace(placeholder, replacement);
-		}
-
-		// Configurar el dropdown para TNC_MODE
-		for (int i = 0; i <= 3; i++) {
-			String placeholder = "%TNC_MODE_SELECTED_" + String(i) + "%";
-			String replacement = (config.ext_tnc_mode == i) ? "selected" : "";
-			html.replace(placeholder, replacement);
-		}
-
-		request->send(200, "text/html", html);
-	});
-
-	async_server.on("/mod/modbus", HTTP_POST, [](AsyncWebServerRequest *request) {
-    // Variables para almacenar los valores recibidos
-    bool modbus_enabled, tnc_enabled;
-    int modbus_address, modbus_de_gpio, modbus_channel;
-    int tnc_channel, tnc_mode;
-
-    // Leer los parámetros del request
-    if (request->hasParam("modbus_enable", true)) {
-        modbus_enabled = request->getParam("modbus_enable", true)->value() == "on";
-    }
-    if (request->hasParam("modbus_address", true)) {
-        modbus_address = request->getParam("modbus_address", true)->value().toInt();
-    }
-    if (request->hasParam("modbus_de_gpio", true)) {
-        modbus_de_gpio = request->getParam("modbus_de_gpio", true)->value().toInt();
-    }
-    if (request->hasParam("modbus_channel", true)) {
-        modbus_channel = request->getParam("modbus_channel", true)->value().toInt();
-    }
-
-    if (request->hasParam("tnc_enable", true)) {
-        tnc_enabled = request->getParam("tnc_enable", true)->value() == "on";
-    }
-    if (request->hasParam("tnc_channel", true)) {
-        tnc_channel = request->getParam("tnc_channel", true)->value().toInt();
-    }
-    if (request->hasParam("tnc_mode", true)) {
-        tnc_mode = request->getParam("tnc_mode", true)->value().toInt();
-    }
-
-    // Guardar valores en la configuración
-    config.modbus_enable = modbus_enabled;
-    config.modbus_address = modbus_address;
-    config.modbus_de_gpio = modbus_de_gpio;
-    config.modbus_channel = modbus_channel;
-
-    config.ext_tnc_enable = tnc_enabled;
-    config.ext_tnc_channel = tnc_channel;
-    config.ext_tnc_mode = tnc_mode;
-
-    // Confirmar que se actualizaron los valores
-    request->send(200, "application/json", "{\"status\":\"success\"}");
-	});
-
-	async_server.on("/mod/counter", HTTP_GET, [](AsyncWebServerRequest *request) {
-		String html = loadHtmlTemplate("/mod_counter.html");
-
-		// Reemplazo de valores dinámicos para Counter 0
-		html.replace("%COUNTER0_ENABLED%", config.counter0_enable ? "checked" : "");
-		html.replace("%COUNTER0_GPIO%", String(config.counter0_gpio));
-		html.replace("%COUNTER0_ACTIVE_LOW%", config.counter0_active == 0 ? "checked" : "");
-		html.replace("%COUNTER0_ACTIVE_HIGH%", config.counter0_active == 1 ? "checked" : "");
-
-		// Reemplazo de valores dinámicos para Counter 1
-		html.replace("%COUNTER1_ENABLED%", config.counter1_enable ? "checked" : "");
-		html.replace("%COUNTER1_GPIO%", String(config.counter1_gpio));
-		html.replace("%COUNTER1_ACTIVE_LOW%", config.counter1_active == 0 ? "checked" : "");
-		html.replace("%COUNTER1_ACTIVE_HIGH%", config.counter1_active == 1 ? "checked" : "");
-
-		request->send(200, "text/html", html);
-	});
-	async_server.on("/mod/counter", HTTP_POST, [](AsyncWebServerRequest *request) {
-    // Variables para almacenar los valores recibidos
-    bool counter0_enabled, counter1_enabled;
-    int counter0_gpio, counter1_gpio;
-    int counter0_active, counter1_active;
-
-    // Leer los parámetros del request
-    if (request->hasParam("counter0_enable", true)) {
-        counter0_enabled = request->getParam("counter0_enable", true)->value() == "on";
-    }
-    if (request->hasParam("counter0_gpio", true)) {
-        counter0_gpio = request->getParam("counter0_gpio", true)->value().toInt();
-    }
-    if (request->hasParam("counter0_active", true)) {
-        String activeValue = request->getParam("counter0_active", true)->value();
-        counter0_active = (activeValue == "HIGH") ? 1 : 0;
-    }
-
-    if (request->hasParam("counter1_enable", true)) {
-        counter1_enabled = request->getParam("counter1_enable", true)->value() == "on";
-    }
-    if (request->hasParam("counter1_gpio", true)) {
-        counter1_gpio = request->getParam("counter1_gpio", true)->value().toInt();
-    }
-    if (request->hasParam("counter1_active", true)) {
-        String activeValue = request->getParam("counter1_active", true)->value();
-        counter1_active = (activeValue == "HIGH") ? 1 : 0;
-    }
-
-    // Guardar valores en la configuración
-    config.counter0_enable = counter0_enabled;
-    config.counter0_gpio = counter0_gpio;
-    config.counter0_active = counter0_active;
-
-    config.counter1_enable = counter1_enabled;
-    config.counter1_gpio = counter1_gpio;
-    config.counter1_active = counter1_active;
-
-    // Confirmar que se actualizaron los valores
-    request->send(200, "application/json", "{\"status\":\"success\"}");
-	});
-
-	async_server.on("/mod/i2c", HTTP_GET, [](AsyncWebServerRequest *request) {
-    // Cargar el archivo HTML para I2C
-		String html = loadHtmlTemplate("/mod_i2c.html");
-
-		// Reemplazo de valores dinámicos para I2C_0
-		html.replace("%I2C0_ENABLED%", config.i2c_enable ? "checked" : "");
-		html.replace("%I2C0_SDA_GPIO%", String(config.i2c_sda_pin));
-		html.replace("%I2C0_SCK_GPIO%", String(config.i2c_sck_pin));
-		html.replace("%I2C0_FREQ%", String(config.i2c_freq));
-
-		// Reemplazo de valores dinámicos para I2C_1
-		html.replace("%I2C1_ENABLED%", config.i2c1_enable ? "checked" : "");
-		html.replace("%I2C1_SDA_GPIO%", String(config.i2c1_sda_pin));
-		html.replace("%I2C1_SCK_GPIO%", String(config.i2c1_sck_pin));
-		html.replace("%I2C1_FREQ%", String(config.i2c1_freq));
-
-		// Enviar el HTML ensamblado al cliente
-		request->send(200, "text/html", html);
-	});
-
-	async_server.on("/mod/i2c", HTTP_POST, [](AsyncWebServerRequest *request) {
-    // Variables para almacenar los valores recibidos
-    bool i2c0_enabled, i2c1_enabled;
-    int i2c0_sda, i2c0_sck, i2c0_freq;
-    int i2c1_sda, i2c1_sck, i2c1_freq;
-
-    // Leer los parámetros del request
-    if (request->hasParam("i2c0_enable", true)) {
-        i2c0_enabled = request->getParam("i2c0_enable", true)->value() == "on";
-    }
-    if (request->hasParam("i2c0_sda_gpio", true)) {
-        i2c0_sda = request->getParam("i2c0_sda_gpio", true)->value().toInt();
-    }
-    if (request->hasParam("i2c0_sck_gpio", true)) {
-        i2c0_sck = request->getParam("i2c0_sck_gpio", true)->value().toInt();
-    }
-    if (request->hasParam("i2c0_freq", true)) {
-        i2c0_freq = request->getParam("i2c0_freq", true)->value().toInt();
-    }
-
-    if (request->hasParam("i2c1_enable", true)) {
-        i2c1_enabled = request->getParam("i2c1_enable", true)->value() == "on";
-    }
-    if (request->hasParam("i2c1_sda_gpio", true)) {
-        i2c1_sda = request->getParam("i2c1_sda_gpio", true)->value().toInt();
-    }
-    if (request->hasParam("i2c1_sck_gpio", true)) {
-        i2c1_sck = request->getParam("i2c1_sck_gpio", true)->value().toInt();
-    }
-    if (request->hasParam("i2c1_freq", true)) {
-        i2c1_freq = request->getParam("i2c1_freq", true)->value().toInt();
-    }
-
-    // Guardar valores en la configuración
-    config.i2c_enable = i2c0_enabled;
-    config.i2c_sda_pin = i2c0_sda;
-    config.i2c_sck_pin = i2c0_sck;
-    config.i2c_freq = i2c0_freq;
-
-    config.i2c1_enable = i2c1_enabled;
-    config.i2c1_sda_pin = i2c1_sda;
-    config.i2c1_sck_pin = i2c1_sck;
-    config.i2c1_freq = i2c1_freq;
-
-    // Confirmar que se actualizaron los valores
-    request->send(200, "application/json", "{\"status\":\"success\"}");
-	});		
-
+					{ handle_radio_post(request);});								// RADIO POST
+	async_server.on("/mod/uart", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_uart_config(request);});		 						// MOD UART GET
+	async_server.on("/mod/uart", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_uart_post(request);});		 						// MOD UART POST									
+	async_server.on("/mod/rf", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_rf_config(request);});									// MOD RF GET
+	async_server.on("/mod/rf", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_rf_post(request);});									// MOD RF POST				
+	async_server.on("/mod/gnss", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_gnss_config(request);});								// MOD GNSS GET
+	async_server.on("/mod/gnss", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_gnss_post(request);});									// MOD GNSS POST
+	async_server.on("/mod/modbus", HTTP_GET, [](AsyncWebServerRequest *request) 	
+					{ handle_modbus_config(request);});								// MOD MODBUS GET
+	async_server.on("/mod/modbus", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_modbus_post(request); });								// MOD MODBUS POST
+	async_server.on("/mod/counter", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_counter_config(request);});							// MOD COUNTER GET
+	async_server.on("/mod/counter", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handle_counter_post(request); });								// MOD COUNTER POST
+	async_server.on("/mod/i2c", HTTP_GET, [](AsyncWebServerRequest *request)
+					{ handle_i2c_config(request);});								// MOD I2C GET
+	async_server.on("/mod/i2c", HTTP_POST, [](AsyncWebServerRequest *request)
+					{ handle_i2c_post(request);});									// MOD I2C POST
 	async_server.on("/default", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_default(); });
-	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) 
-					{ handle_igate_get(request);});
+					{ handle_default(); });											// DEFAULT	
+/* 	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handle_igate_get(request);});									// IGATE GET
 	async_server.on("/igate", HTTP_POST, [](AsyncWebServerRequest *request) 
-					{ handle_igate_post(request);});
+					{ handle_igate_post(request);});								// IGATE POST */
+// Rutas para la configuración GENERAL
+	async_server.on("/igate", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleIgateGeneralGet(request);});
+	async_server.on("/igate", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleIgateGeneralPost(request);});
+	// Rutas para la configuración POSITION
+	async_server.on("/igate/position", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleIgatePositionGet(request);});
+	async_server.on("/igate/position", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleIgatePositionPost(request);});
+	// Rutas para la configuración PHG
+	async_server.on("/igate/phg", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleIgatePHGGet(request);});
+	async_server.on("/igate/phg", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleIgatePHGPost(request);});
+	// Rutas para la configuración FILTER
+	async_server.on("/igate/filter", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleIgateFilterGet(request);});
+	async_server.on("/igate/filter", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleIgateFilterPost(request);});
 	async_server.on("/digi", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_digi(request); });
+					{ handle_digi(request); });										// DIGI
 	async_server.on("/tracker", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_tracker(request); });
+					{ handle_tracker(request); });									// TRACKER
 	async_server.on("/wx", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_wx(request); });
+					{ handle_wx(request); });										// WX
 	async_server.on("/tlm", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_tlm(request); });
+					{ handle_tlm(request); });										// TLM
 	async_server.on("/system", HTTP_GET, [](AsyncWebServerRequest *request) 
-					{ handle_system_get(request);});
+					{ handle_system_get(request);});								// SYSTEM GET	
 	async_server.on("/system", HTTP_POST, [](AsyncWebServerRequest *request) 
-					{ handle_system_post(request);});					
+					{ handle_system_post(request);});								// SYSTEM POST	
 	async_server.on("/wireless", HTTP_GET, [](AsyncWebServerRequest *request) 
-					{ handleWirelessGet(request);});
+					{ handleWirelessGet(request);});								// WIRELESS GET	
 	async_server.on("/wireless", HTTP_POST, [](AsyncWebServerRequest *request) 
-					{ handleWirelessPost(request);});
+					{ handleWirelessPost(request);});								// WIRELESS POST	
 	async_server.on("/tnc2", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_tnc2(request); });
+					{ handle_tnc2(request); });										// TNC2
 	async_server.on("/gnss", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_gnss(request); });
+					{ handle_gnss(request); });										// GNSS
 	async_server.on("/realtime", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_realtime(request); });
+					{ handle_realtime(request); });									// REALTIME
     async_server.on("/about", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_about_get(request); });
+					{ handle_about_get(request); });								// ABOUT GET
     async_server.on("/about", HTTP_POST, [](AsyncWebServerRequest *request) 
-					{ handle_about_post(request); });
+					{ handle_about_post(request); });								// ABOUT POST
 	async_server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_dashboard(request); });
+					{ handle_dashboard(request); });								// DASHBOARD
 	async_server.on("/sidebarInfo", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_sidebar(request); });
+					{ handle_sidebar(request); });									// SIDEBAR
 	async_server.on("/sysinfo", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_sysinfo(request); });
+					{ handle_sysinfo(request); });									// SYSINFO
 	async_server.on("/lastHeard", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_lastHeard(request); });			
+					{ handle_lastHeard(request); });								// LASTHEARD
 	async_server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_css(request); });
+					{ handle_css(request); });										// CSS
 	async_server.on("/jquery-3.7.1.js", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handle_jquery(request); });
+					{ handle_jquery(request); });									// JQUERY
 	async_server.on("/modes-enabled", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleModesEnabled(request); });		
+					{ handleModesEnabled(request); });								// MODES ENABLED	
 	async_server.on("/network-status", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleNetworkStatus(request); });	
+					{ handleNetworkStatus(request); });								// NETWORK STATUS
 	async_server.on("/statistics", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleStatistics(request); });
+					{ handleStatistics(request); });								// STATISTICS
 	async_server.on("/radio-info", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleRadioInfo(request); });									
+					{ handleRadioInfo(request); });									// RADIO INFO
 	async_server.on("/aprs-server", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleAPRSServer(request); });
+					{ handleAPRSServer(request); });								// APRS SERVER
 	async_server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleWiFiInfo(request); });		
+					{ handleWiFiInfo(request); });									// WIFI INFO
 	async_server.on("/debug-info", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleDebugData(request); });															
+					{ handleDebugData(request); });									// DEBUG INFO						
 	async_server.on("/debug", HTTP_GET, [](AsyncWebServerRequest *request)
-					{ handleDebugPage(request); });	
+					{ handleDebugPage(request); });									// DEBUG PAGE
 	async_server.on(
 		"/update", HTTP_POST, [](AsyncWebServerRequest *request)
 		{

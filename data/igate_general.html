@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang=en>
+<head>
+<meta charset=UTF-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>ESP32IGATE - IGATE</title>
+<link rel=stylesheet href=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css>
+
+</head>
+<body class="text-light bg-dark">
+<div class="container py-3">
+<h1 class=text-center><a href=/ class="text-light text-decoration-none">ESP32IGate Project [APRS ALL IN ONE]</a></h1>
+</div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
+                <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
+                <!-- Submenú para Igate -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        IGATE
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item active" href="/igate">General</a></li>
+                        <li><a class="dropdown-item" href="/igate/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/igate/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/igate/filter">Filter</a></li>
+                    </ul>
+                </li>                
+                <!-- Submenú para Digi -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Digi
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/digi">General</a></li>
+                        <li><a class="dropdown-item" href="/digi/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/digi/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/digi/filter">Filter</a></li>
+                    </ul>
+                </li>          
+                <!-- Submenú para Tracker -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Tracker
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/tracker">General</a></li>
+                        <li><a class="dropdown-item" href="/tracker/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/tracker/smartbeacon">Smart Beacon</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para WX -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        WX
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/wx">General</a></li>
+                        <li><a class="dropdown-item" href="/wx/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/wx/smartbeacon">PHG</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para TLM -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        TLM
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/tlm">General</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channela">Channel A</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channelb">Channel B</a></li>
+                    </ul>
+                </li>     
+                <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                
+                <!-- Submenú para Mod -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Mod
+                    </a>
+            <ul class="dropdown-menu" aria-labelledby="modDropdown">
+                        <li><a class="dropdown-item" href="/mod/uart">UART</a></li>
+                        <li><a class="dropdown-item" href="/mod/rf">RF GPIO</a></li>
+                        <li><a class="dropdown-item" href="/mod/i2c">I2C</a></li>
+                        <li><a class="dropdown-item" href="/mod/counter">Counters</a></li>
+                        <li><a class="dropdown-item" href="/mod/gnss">GNSS</a></li>
+                        <li><a class="dropdown-item" href="/mod/modbus">MODBUS</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+<div class="container mt-4" id=contentmain>
+<form action=# id=formIgate method=POST enctype=multipart/form-data>
+<div class="card mb-4">
+<div class="card-header text-white bg-primary"><b>[IGATE] Internet Gateway Mode</b></div>
+<div class="text-light bg-dark card-body">
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end"><b>Enable:</b></label>
+<div class=col-sm-8>
+<div class="form-check form-switch"><input name=igateEnable class=form-check-input id=igateEnable value=OK type=checkbox %igate_enable%></div>
+</div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end" for=myCall><b>Station Callsign:</b></label>
+<div class=col-sm-8><input name=myCall class=form-control id=myCall value=%MY_CALL% maxlength=7></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end" for=mySSID><b>Station SSID:</b></label>
+<div class=col-sm-8><select class=form-select id=mySSID name=mySSID><option value=0 %ssid_0_selected%>0</option><option value=1 %ssid_1_selected%>1</option><option value=2 %ssid_2_selected%>2</option><option value=3 %ssid_3_selected%>3</option><option value=4 %ssid_4_selected%>4</option><option value=5 %ssid_5_selected%>5</option><option value=6 %ssid_6_selected%>6</option><option value=7 %ssid_7_selected%>7</option><option value=8 %ssid_8_selected%>8</option><option value=9 %ssid_9_selected%>9</option><option value=10 %ssid_10_selected%>10</option><option value=11 %ssid_11_selected%>11</option><option value=12 %ssid_12_selected%>12</option><option value=13 %ssid_13_selected%>13</option><option value=14 %ssid_14_selected%>14</option><option value=15 %ssid_15_selected%>15</option></select></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end"><b>Station Symbol:</b></label>
+<div class="col-sm-8 align-items-center d-flex"><input name=igateTable class=form-control id=igateTable value=%IGATE_TABLE% maxlength=1> <input name=igateSymbol class=form-control id=igateSymbol value=%IGATE_SYMBOL% maxlength=1> <img alt=Symbol class=border id=igateImgSymbol onclick=openWindowSymbol() src=https://aprs.p00lack.cc/symbols/icons/38-1.png style=cursor:pointer width=24> <small class="text-light form-text">*Click icon for select symbol</small></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end" for=igateObject><b>Item/Obj Name:</b></label>
+<div class=col-sm-8><input name=igateObject class=form-control id=igateObject value=%IGATE_OBJECT% maxlength=9> <small class="text-light form-text">*If not used, leave it blank. Use 3-9 characters.</small></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end" for=igatePath><b>PATH:</b></label>
+<div class=col-sm-8><select class=form-select id=igatePath name=igatePath><option value=0 %igate_path_0_selected%>OFF</option><option value=1>DST-TRACE 1</option><option value=2>DST-TRACE 2</option><option value=3>DST-TRACE 3</option><option value=4>DST-TRACE 4</option><option value=5>TRACE1-1</option><option value=6>TRACE2-2</option><option value=7>TRACE3-3</option><option value=8 selected>WIDE1-1</option><option value=9>RFONLY</option><option value=10>RELAY</option><option value=11>GATE</option><option value=12>ECHO</option><option value=13>UserDefine 1</option><option value=14>UserDefine 2</option><option value=15>UserDefine 3</option><option value=16>UserDefine 4</option></select></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end" for=aprsHost><b>Server Host:</b></label>
+<div class=col-sm-8><input name=aprsHost class=form-control id=aprsHost value=%APRS_HOST% maxlength=20> <small class="text-light form-text">*Support APRS-IS of T2THAI at <a href=http://aprs.dprns.com:14580 target=_blank>aprs.dprns.com</a></small></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end" for=aprsPort><b>Server Port:</b></label>
+<div class=col-sm-8><input name=aprsPort class=form-control id=aprsPort value=%APRS_PORT% type=number max=65535 min=1> <small class="text-light form-text">*Support AMPR Host at <a href=http://aprs.hs5tqa.ampr.org:14580 target=_blank>aprs.hs5tqa.ampr.org</a></small></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end" for=aprsFilter><b>Server Filter:</b></label>
+<div class=col-sm-8><input name=aprsFilter class=form-control id=aprsFilter value=%APRS_FILTER% maxlength=30> <small class="text-light form-text">*Filter: <a href=http://www.aprs-is.net/javAPRSFilter.aspx target=_blank>APRS-IS Filter</a></small></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end" for=igateComment><b>Text Comment:</b></label>
+<div class=col-sm-8><input name=igateComment class=form-control id=igateComment value=%IGATE_COMMENT% maxlength=50></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end"><b>RF2INET:</b></label>
+<div class=col-sm-8>
+<div class="form-check form-switch"><input name=rf2inetEnable class=form-check-input id=rf2inetEnable value=OK type=checkbox></div><small class="text-light form-text">*Switch RF to Internet gateway</small></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end"><b>INET2RF:</b></label>
+<div class=col-sm-8>
+<div class="form-check form-switch"><input name=inet2rfEnable class=form-check-input id=inet2rfEnable value=OK type=checkbox></div><small class="text-light form-text">*Switch Internet to RF gateway</small></div>
+</div>
+<div class="mb-3 row"><label class="col-form-label col-sm-4 text-end"><b>Time Stamp:</b></label>
+<div class=col-sm-8>
+<div class="form-check form-switch"><input name=inet2rfEnable class=form-check-input id=inet2rfEnable value=OK type=checkbox></div>
+</div>
+</div>
+
+<div class="text-center mt-3"><button class="btn btn-primary" type=submit id=submitIGATE name=commitIGATE>Apply Changes</button></div><input name=commitIGATE type=hidden></form>
+</div>
+</div>
+</form>
+</div>
+<footer class="text-light bg-primary mt-5 py-3 text-center">ESP32IGate Web Configuration - © 2025</footer>
+<script src=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js></script>
+<script>async function loadConfig(){const e=await fetch("/igate/settings",{method:"GET"}),t=await e.json();document.getElementById("igateEnable").checked=t.igateEnable,document.getElementById("callsign").value=t.callsign||"",document.getElementById("mySSID").value=t.mySSID||"",document.getElementById("server").value=t.server||"",document.getElementById("port").value=t.port||"",document.getElementById("serverFilter").value=t.serverFilter||"",document.getElementById("textComment").value=t.textComment||"",document.getElementById("latitude").value=t.latitude||"",document.getElementById("longitude").value=t.longitude||"",document.getElementById("altitude").value=t.altitude||"",document.getElementById("txPower").value=t.txPower||"",document.getElementById("antennaGain").value=t.antennaGain||"",document.getElementById("height").value=t.height||"",document.getElementById("rf2inetMessage").checked=t.rf2inetMessage,document.getElementById("rf2inetTelemetry").checked=t.rf2inetTelemetry,document.getElementById("inet2rfMessage").checked=t.inet2rfMessage,document.getElementById("inet2rfTelemetry").checked=t.inet2rfTelemetry}async function saveConfig(){const e=document.getElementById("igateForm"),t=new FormData(e),n={};t.forEach(((e,t)=>{n[t]=e})),await fetch("/igate/settings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(n)}),alert("Configuration saved!")}window.onload=loadConfig</script>
+<script>function openWindowSymbol(){window.open("/symbol",null,"height=400,width=400,status=no,toolbar=no,menubar=no,titlebar=no,location=no")}function setValue(t,e){document.getElementById("igateSymbol").value=String.fromCharCode(t),document.getElementById("igateTable").value=1===e?"/":"\\",document.getElementById("igateImgSymbol").src=`http: //aprs.dprns.com/symbols/icons/${t}-${e}.png`}function calculatePHG(){const t=parseFloat(document.getElementById("power").value)||0,e=parseFloat(document.getElementById("haat").value)||0,n=parseFloat(document.getElementById("phgGain").value)||0,o=document.getElementById("phgDirection").value||"Omni";const a="PHG"+function(t){return t<1?"0":t<4?"1":t<9?"2":t<16?"3":t<25?"4":t<36?"5":t<49?"6":t<64?"7":t<81?"8":"9"}(t)+function(t){return t<10?"0":String.fromCharCode(48+Math.round(Math.log2(t/10)))}(e)+function(t){return Math.min(Math.max(Math.round(t),0),9).toString()}(n)+function(t){return"Omni"===t?"O":t[0].toUpperCase()}(o);document.getElementById("phgText").value=a,console.log("PHG Calculado:",a)}</script></body></html>
