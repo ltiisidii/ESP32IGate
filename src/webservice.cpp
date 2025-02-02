@@ -1516,535 +1516,378 @@ void handleIgateFilterPost(AsyncWebServerRequest *request) {
     request->redirect("/igate/filter");
 }
 
-void handle_digi(AsyncWebServerRequest *request)
+void handleDigiGeneral(AsyncWebServerRequest *request)
 {
-	if (!request->authenticate(config.http_username, config.http_password))
+    if (!request->authenticate(config.http_username, config.http_password))
+    {
+        return request->requestAuthentication();
+    }
+
+    // Cargar la plantilla HTML desde SPIFFS
+    String html = loadHtmlTemplate("/digi_general.html");
+    if (html.isEmpty())
+    {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+
+    // Reemplazar marcadores de posición con los valores de configuración
+    html.replace("%DIGI_ENABLE%", config.digi_en ? "checked" : "");
+    html.replace("%STATION_CALLSIGN%", String(config.digi_mycall));
+    html.replace("%STATION_SSID%", String(config.digi_ssid));
+    html.replace("%STATION_SYMBOL_TABLE%", String(config.digi_symbol[0]));
+    html.replace("%STATION_SYMBOL%", String(config.digi_symbol[1]));
+    html.replace("%DIGI_PATH%", String(config.digi_path));
+    html.replace("%TEXT_COMMENT%", String(config.digi_comment));
+    html.replace("%REPEAT_DELAY%", String(config.digi_delay));
+    html.replace("%TIME_STAMP%", config.digi_timestamp ? "checked" : "");
+
+    request->send(200, "text/html", html);
+}
+
+void handleDigiGeneralPost(AsyncWebServerRequest *request)
+{
+    if (!request->authenticate(config.http_username, config.http_password))
+    {
+        return request->requestAuthentication();
+    }
+
+    if (request->hasArg("enable"))
+    {
+        config.digi_en = request->arg("enable") == "on";
+    }
+
+    if (request->hasArg("stationCallsign"))
+    {
+        String myCall = request->arg("stationCallsign");
+        myCall.trim();
+        myCall.toUpperCase();
+        strcpy(config.digi_mycall, myCall.c_str());
+    }
+
+    if (request->hasArg("stationSsid") && isValidNumber(request->arg("stationSsid")))
+    {
+        config.digi_ssid = request->arg("stationSsid").toInt();
+        if (config.digi_ssid > 15)
+            config.digi_ssid = 3;
+    }
+
+    if (request->hasArg("stationSymbolTable"))
+    {
+        config.digi_symbol[0] = request->arg("stationSymbolTable").charAt(0);
+    }
+
+    if (request->hasArg("stationSymbol"))
+    {
+        config.digi_symbol[1] = request->arg("stationSymbol").charAt(0);
+    }
+
+	if (request->hasArg("path") && isValidNumber(request->arg("path")))
 	{
-		return request->requestAuthentication();
+		config.digi_path = request->arg("path").toInt();
 	}
-	bool digiEn = false;
-	bool posGPS = false;
-	bool bcnEN = false;
-	bool pos2RF = false;
-	bool pos2INET = false;
-	bool timeStamp = false;
+	
+    if (request->hasArg("textComment"))
+    {
+        String comment = request->arg("textComment");
+        comment.trim();
+        strncpy(config.digi_comment, comment.c_str(), sizeof(config.digi_comment) - 1);
+    }
 
-	if (request->hasArg("commitDIGI"))
-	{
-		config.digiFilter = 0;
-		for (int i = 0; i < request->args(); i++)
-		{
-			if (request->argName(i) == "digiEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						digiEn = true;
-				}
-			}
-			if (request->argName(i) == "myCall")
-			{
-				if (request->arg(i) != "")
-				{
-					String name = request->arg(i);
-					name.trim();
-					name.toUpperCase();
-					strcpy(config.digi_mycall, name.c_str());
-				}
-			}
-			if (request->argName(i) == "mySSID")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.digi_ssid = request->arg(i).toInt();
-					if (config.digi_ssid > 15)
-						config.digi_ssid = 3;
-				}
-			}
-			if (request->argName(i) == "digiDelay")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.digi_delay = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "digiPosInv")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.digi_interval = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "digiPosLat")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.digi_lat = request->arg(i).toFloat();
-				}
-			}
+    if (request->hasArg("repeatDelay") && isValidNumber(request->arg("repeatDelay")))
+    {
+        config.digi_delay = request->arg("repeatDelay").toInt();
+    }
 
-			if (request->argName(i) == "digiPosLon")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.digi_lon = request->arg(i).toFloat();
-				}
-			}
-			if (request->argName(i) == "digiPosAlt")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.digi_alt = request->arg(i).toFloat();
-				}
-			}
-			if (request->argName(i) == "digiPosSel")
-			{
-				if (request->arg(i) != "")
-				{
-					if (request->arg(i).toInt() == 1)
-						posGPS = true;
-				}
-			}
+    if (request->hasArg("timeStamp"))
+    {
+        config.digi_timestamp = request->arg("timeStamp") == "on";
+    }
 
-			if (request->argName(i) == "digiTable")
-			{
-				if (request->arg(i) != "")
-				{
-					config.digi_symbol[0] = request->arg(i).charAt(0);
-				}
-			}
-			if (request->argName(i) == "digiSymbol")
-			{
-				if (request->arg(i) != "")
-				{
-					config.digi_symbol[1] = request->arg(i).charAt(0);
-				}
-			}
-			if (request->argName(i) == "digiPath")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.digi_path = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "digiComment")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.digi_comment, request->arg(i).c_str());
-				}
-				else
-				{
-					memset(config.digi_comment, 0, sizeof(config.digi_comment));
-				}
-			}
-			if (request->argName(i) == "texttouse")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.digi_phg, request->arg(i).c_str());
-				}
-			}
-			if (request->argName(i) == "digiComment")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.digi_comment, request->arg(i).c_str());
-				}
-			}
-			if (request->argName(i) == "digiPos2RF")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						pos2RF = true;
-				}
-			}
-			if (request->argName(i) == "digiPos2INET")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						pos2INET = true;
-				}
-			}
-			if (request->argName(i) == "digiBcnEnable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						bcnEN = true;
-				}
-			}
-			// Filter
-			if (request->argName(i) == "FilterMessage")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.digiFilter |= FILTER_MESSAGE;
-				}
-			}
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
+}
 
-			if (request->argName(i) == "FilterTelemetry")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.digiFilter |= FILTER_TELEMETRY;
-				}
-			}
+void handleDigiPosition(AsyncWebServerRequest *request)
+{
+    if (!request->authenticate(config.http_username, config.http_password))
+    {
+        return request->requestAuthentication();
+    }
 
-			if (request->argName(i) == "FilterStatus")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.digiFilter |= FILTER_STATUS;
-				}
-			}
+    // Cargar la plantilla HTML desde SPIFFS
+    String html = loadHtmlTemplate("/digi_position.html");
+    if (html.isEmpty())
+    {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
 
-			if (request->argName(i) == "FilterWeather")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.digiFilter |= FILTER_WX;
-				}
-			}
+    // Reemplazar marcadores de posición con los valores de configuración
+    html.replace("%DIGI_BEACON%", config.digi_bcn ? "checked" : "");
+    html.replace("%DIGI_INTERVAL%", String(config.digi_interval));
+    html.replace("%DIGI_POS_FIX%", config.digi_gps ? "" : "checked");
+    html.replace("%DIGI_POS_GPS%", config.digi_gps ? "checked" : "");
+    html.replace("%DIGI_LATITUDE%", String(config.digi_lat, 5));
+    html.replace("%DIGI_LONGITUDE%", String(config.digi_lon, 5));
+    html.replace("%DIGI_ALTITUDE%", String(config.digi_alt, 2));
 
-			if (request->argName(i) == "FilterObject")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.digiFilter |= FILTER_OBJECT;
-				}
-			}
+    request->send(200, "text/html", html);
+}
 
-			if (request->argName(i) == "FilterItem")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.digiFilter |= FILTER_ITEM;
-				}
-			}
+void handleDigiPositionPost(AsyncWebServerRequest *request)
+{
+    if (!request->authenticate(config.http_username, config.http_password))
+    {
+        return request->requestAuthentication();
+    }
 
-			if (request->argName(i) == "FilterQuery")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.digiFilter |= FILTER_QUERY;
-				}
-			}
-			if (request->argName(i) == "FilterBuoy")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.digiFilter |= FILTER_BUOY;
-				}
-			}
-			if (request->argName(i) == "FilterPosition")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						config.digiFilter |= FILTER_POSITION;
-				}
-			}
-			if (request->argName(i) == "digiTimeStamp")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						timeStamp = true;
-				}
-			}
-		}
-		config.digi_en = digiEn;
-		config.digi_gps = posGPS;
-		config.digi_bcn = bcnEN;
-		config.digi_loc2rf = pos2RF;
-		config.digi_loc2inet = pos2INET;
-		config.digi_timestamp = timeStamp;
+    if (request->hasArg("beacon"))
+    {
+        config.digi_bcn = request->arg("beacon") == "on";
+    }
 
-		saveEEPROM();
-		initInterval = true;
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else
-	{
+    if (request->hasArg("interval") && isValidNumber(request->arg("interval")))
+    {
+        config.digi_interval = request->arg("interval").toInt();
+    }
 
-		String html = "<script type=\"text/javascript\">\n";
-		html += "$('form').submit(function (e) {\n";
-		html += "e.preventDefault();\n";
-		html += "var data = new FormData(e.currentTarget);\n";
-		html += "document.getElementById(\"submitDIGI\").disabled=true;\n";
-		html += "$.ajax({\n";
-		html += "url: '/digi',\n";
-		html += "type: 'POST',\n";
-		html += "data: data,\n";
-		html += "contentType: false,\n";
-		html += "processData: false,\n";
-		html += "success: function (data) {\n";
-		html += "alert(\"Submited Successfully\");\n";
-		html += "},\n";
-		html += "error: function (data) {\n";
-		html += "alert(\"An error occurred.\");\n";
-		html += "}\n";
-		html += "});\n";
-		html += "});\n";
-		html += "</script>\n<script type=\"text/javascript\">\n";
-		html += "function openWindowSymbol() {\n";
-		html += "var i, l, options = [{\n";
-		html += "value: 'first',\n";
-		html += "text: 'First'\n";
-		html += "}, {\n";
-		html += "value: 'second',\n";
-		html += "text: 'Second'\n";
-		html += "}],\n";
-		html += "newWindow = window.open(\"/symbol\", null, \"height=400,width=400,status=no,toolbar=no,menubar=no,titlebar=no,location=no\");\n";
-		html += "}\n";
+    if (request->hasArg("location"))
+    {
+        config.digi_gps = (request->arg("location") == "gps");
+    }
 
-		html += "function setValue(symbol,table) {\n";
-		html += "document.getElementById('digiSymbol').value = String.fromCharCode(symbol);\n";
-		html += "if(table==1){\n document.getElementById('digiTable').value='/';\n";
-		html += "}else if(table==2){\n document.getElementById('digiTable').value='\\\\';\n}\n";
-		html += "document.getElementById('digiImgSymbol').src = \"http://aprs.dprns.com/symbols/icons/\"+symbol.toString()+'-'+table.toString()+'.png';\n";
-		html += "\n}\n";
-		html += "function calculatePHGR(){document.forms.formDIGI.texttouse.value=\"PHG\"+calcPower(document.forms.formDIGI.power.value)+calcHeight(document.forms.formDIGI.haat.value)+calcGain(document.forms.formDIGI.gain.value)+calcDirection(document.forms.formDIGI.direction.selectedIndex)}function Log2(e){return Math.log(e)/Math.log(2)}function calcPerHour(e){return e<10?e:String.fromCharCode(65+(e-10))}function calcHeight(e){return String.fromCharCode(48+Math.round(Log2(e/10),0))}function calcPower(e){if(e<1)return 0;if(e>=1&&e<4)return 1;if(e>=4&&e<9)return 2;if(e>=9&&e<16)return 3;if(e>=16&&e<25)return 4;if(e>=25&&e<36)return 5;if(e>=36&&e<49)return 6;if(e>=49&&e<64)return 7;if(e>=64&&e<81)return 8;if(e>=81)return 9}function calcDirection(e){if(e==\"0\")return\"0\";if(e==\"1\")return\"1\";if(e==\"2\")return\"2\";if(e==\"3\")return\"3\";if(e==\"4\")return\"4\";if(e==\"5\")return\"5\";if(e==\"6\")return\"6\";if(e==\"7\")return\"7\";if(e==\"8\")return\"8\"}function calcGain(e){return e>9?\"9\":e<0?\"0\":Math.round(e,0)}\n";
-		html += "</script>\n";
+    if (request->hasArg("latitude") && isValidNumber(request->arg("latitude")))
+    {
+        config.digi_lat = request->arg("latitude").toFloat();
+    }
 
-		/************************ DIGI Mode **************************/
-		html += "<form id='formDIGI' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		// html += "<h2>[DIGI] Digital Repeater Mode</h2>\n";
-		html += "<table>\n";
-		// html += "<tr>\n";
-		// html += "<th width=\"200\"><span><b>Setting</b></span></th>\n";
-		// html += "<th><span><b>Value</b></span></th>\n";
-		// html += "</tr>\n";
-		html += "<th colspan=\"2\"><span><b>[DIGI] Dital Repeater Mode</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Enable:</b></td>\n";
-		String digiEnFlag = "";
-		if (config.digi_en)
-			digiEnFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"digiEnable\" value=\"OK\" " + digiEnFlag + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Station Callsign:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"7\" size=\"6\" id=\"myCall\" name=\"myCall\" type=\"text\" value=\"" + String(config.digi_mycall) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Station SSID:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"mySSID\" id=\"mySSID\">\n";
-		for (uint8_t ssid = 0; ssid <= 15; ssid++)
-		{
-			if (config.digi_ssid == ssid)
-			{
-				html += "<option value=\"" + String(ssid) + "\" selected>" + String(ssid) + "</option>\n";
-			}
-			else
-			{
-				html += "<option value=\"" + String(ssid) + "\">" + String(ssid) + "</option>\n";
-			}
-		}
-		html += "</select></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Station Symbol:</b></td>\n";
-		String table = "1";
-		if (config.digi_symbol[0] == 47)
-			table = "1";
-		if (config.digi_symbol[0] == 92)
-			table = "2";
-		html += "<td style=\"text-align: left;\">Table:<input maxlength=\"1\" size=\"1\" id=\"digiTable\" name=\"digiTable\" type=\"text\" value=\"" + String(config.digi_symbol[0]) + "\" style=\"background-color: rgb(97, 239, 170);\" /> Symbol:<input maxlength=\"1\" size=\"1\" id=\"digiSymbol\" name=\"digiSymbol\" type=\"text\" value=\"" + String(config.digi_symbol[1]) + "\" style=\"background-color: rgb(97, 239, 170);\" /> <img border=\"1\" style=\"vertical-align: middle;\" id=\"digiImgSymbol\" onclick=\"openWindowSymbol();\" src=\"http://aprs.dprns.com/symbols/icons/" + String((int)config.digi_symbol[1]) + "-" + table + ".png\"> <i>*Click icon for select symbol</i></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PATH:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"digiPath\" id=\"digiPath\">\n";
-		for (uint8_t pthIdx = 0; pthIdx < PATH_LEN; pthIdx++)
-		{
-			if (config.digi_path == pthIdx)
-			{
-				html += "<option value=\"" + String(pthIdx) + "\" selected>" + String(PATH_NAME[pthIdx]) + "</option>\n";
-			}
-			else
-			{
-				html += "<option value=\"" + String(pthIdx) + "\">" + String(PATH_NAME[pthIdx]) + "</option>\n";
-			}
-		}
-		html += "</select></td>\n";
-		// html += "<td style=\"text-align: left;\"><input maxlength=\"72\" size=\"72\" id=\"digiPath\" name=\"digiPath\" type=\"text\" value=\"" + String(config.digi_path) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Text Comment:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"50\" size=\"50\" id=\"digiComment\" name=\"digiComment\" type=\"text\" value=\"" + String(config.digi_comment) + "\" /></td>\n";
-		html += "</tr>\n";
+    if (request->hasArg("longitude") && isValidNumber(request->arg("longitude")))
+    {
+        config.digi_lon = request->arg("longitude").toFloat();
+    }
 
-		html += "<tr><td style=\"text-align: right;\"><b>Repeat Delay:</b></td><td style=\"text-align: left;\"><input min=\"0\" max=\"10000\" step=\"100\" id=\"digiDelay\" name=\"digiDelay\" type=\"number\" value=\"" + String(config.digi_delay) + "\" /> mSec. <i>*0 is auto,Other random of delay time</i></td></tr>";
+    if (request->hasArg("altitude") && isValidNumber(request->arg("altitude")))
+    {
+        config.digi_alt = request->arg("altitude").toFloat();
+    }
 
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Time Stamp:</b></td>\n";
-		String timeStampFlag = "";
-		if (config.digi_timestamp)
-			timeStampFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"digiTimeStamp\" value=\"OK\" " + timeStampFlag + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
+}
 
-		html += "<tr><td align=\"right\"><b>POSITION:</b></td>\n";
-		html += "<td align=\"center\">\n";
-		html += "<table>";
-		String digiBcnEnFlag = "";
-		if (config.digi_bcn)
-			digiBcnEnFlag = "checked";
+void handleDigiPHG(AsyncWebServerRequest *request)
+{
+    if (!request->authenticate(config.http_username, config.http_password))
+    {
+        return request->requestAuthentication();
+    }
 
-		html += "<tr><td style=\"text-align: right;\">Beacon:</td><td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"digiBcnEnable\" value=\"OK\" " + digiBcnEnFlag + "><span class=\"slider round\"></span></label><label style=\"vertical-align: bottom;font-size: 8pt;\">  Interval:<input min=\"0\" max=\"3600\" step=\"1\" id=\"digiPosInv\" name=\"digiPosInv\" type=\"number\" value=\"" + String(config.digi_interval) + "\" />Sec.</label></td></tr>";
-		String digiPosFixFlag = "";
-		String digiPosGPSFlag = "";
-		String digiPos2RFFlag = "";
-		String digiPos2INETFlag = "";
-		if (config.digi_gps)
-			digiPosGPSFlag = "checked=\"checked\"";
-		else
-			digiPosFixFlag = "checked=\"checked\"";
+    // Cargar la plantilla HTML desde SPIFFS
+    String html = loadHtmlTemplate("/digi_phg.html");
+    if (html.isEmpty())
+    {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
 
-		if (config.digi_loc2rf)
-			digiPos2RFFlag = "checked";
-		if (config.digi_loc2inet)
-			digiPos2INETFlag = "checked";
-		html += "<tr><td style=\"text-align: right;\">Location:</td><td style=\"text-align: left;\"><input type=\"radio\" name=\"digiPosSel\" value=\"0\" " + digiPosFixFlag + "/>Fix <input type=\"radio\" name=\"digiPosSel\" value=\"1\" " + digiPosGPSFlag + "/>GPS </td></tr>\n";
-		html += "<tr><td style=\"text-align: right;\">TX Channel:</td><td style=\"text-align: left;\"><input type=\"checkbox\" name=\"digiPos2RF\" value=\"OK\" " + digiPos2RFFlag + "/>RF <input type=\"checkbox\" name=\"digiPos2INET\" value=\"OK\" " + digiPos2INETFlag + "/>Internet </td></tr>\n";
-		html += "<tr><td style=\"text-align: right;\">Latitude:</td><td style=\"text-align: left;\"><input min=\"-90\" max=\"90\" step=\"0.00001\" id=\"digiPosLat\" name=\"digiPosLat\" type=\"number\" value=\"" + String(config.digi_lat, 5) + "\" />degrees (positive for North, negative for South)</td></tr>\n";
-		html += "<tr><td style=\"text-align: right;\">Longitude:</td><td style=\"text-align: left;\"><input min=\"-180\" max=\"180\" step=\"0.00001\" id=\"digiPosLon\" name=\"digiPosLon\" type=\"number\" value=\"" + String(config.digi_lon, 5) + "\" />degrees (positive for East, negative for West)</td></tr>\n";
-		html += "<tr><td style=\"text-align: right;\">Altitude:</td><td style=\"text-align: left;\"><input min=\"0\" max=\"10000\" step=\"0.1\" id=\"digiPosAlt\" name=\"digiPosAlt\" type=\"number\" value=\"" + String(config.digi_alt, 2) + "\" /> meter. *Value 0 is not send height</td></tr>\n";
-		html += "</table></td>";
-		html += "</tr>\n";
-		delay(1);
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PHG:</b></td>\n";
-		html += "<td align=\"center\">\n";
-		html += "<table>";
-		html += "<tr>\n";
-		html += "<td align=\"right\">Radio TX Power</td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"power\" id=\"power\">\n";
-		html += "<option value=\"1\" selected>1</option>\n";
-		html += "<option value=\"5\">5</option>\n";
-		html += "<option value=\"10\">10</option>\n";
-		html += "<option value=\"15\">15</option>\n";
-		html += "<option value=\"25\">25</option>\n";
-		html += "<option value=\"35\">35</option>\n";
-		html += "<option value=\"50\">50</option>\n";
-		html += "<option value=\"65\">65</option>\n";
-		html += "<option value=\"80\">80</option>\n";
-		html += "</select> Watts</td>\n";
-		html += "</tr>\n";
-		html += "<tr><td style=\"text-align: right;\">Antenna Gain</td><td style=\"text-align: left;\"><input size=\"3\" min=\"0\" max=\"100\" step=\"0.1\" id=\"gain\" name=\"gain\" type=\"number\" value=\"6\" /> dBi</td></tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\">Height</td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"haat\" id=\"haat\">\n";
-		int k = 10;
-		for (uint8_t w = 0; w < 10; w++)
-		{
-			if (w == 0)
-			{
-				html += "<option value=\"" + String(k) + "\" selected>" + String(k) + "</option>\n";
-			}
-			else
-			{
-				html += "<option value=\"" + String(k) + "\">" + String(k) + "</option>\n";
-			}
-			k += k;
-		}
-		html += "</select> Feet</td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\">Antenna/Direction</td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"direction\" id=\"direction\">\n";
-		html += "<option>Omni</option><option>NE</option><option>E</option><option>SE</option><option>S</option><option>SW</option><option>W</option><option>NW</option><option>N</option>\n";
-		html += "</select></td>\n";
-		html += "</tr>\n";
-		html += "<tr><td align=\"right\"><b>PHG Text</b></td><td align=\"left\"><input name=\"texttouse\" type=\"text\" size=\"6\" style=\"background-color: rgb(97, 239, 170);\" value=\"" + String(config.digi_phg) + "\"/> <input type=\"button\" value=\"Calculate PHG\" onclick=\"javascript:calculatePHGR()\" /></td></tr>\n";
+    request->send(200, "text/html", html);
+}
 
-		html += "</table></tr>";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Filter:</b></td>\n";
+void handleDigiPHGPost(AsyncWebServerRequest *request)
+{
+    if (!request->authenticate(config.http_username, config.http_password))
+    {
+        return request->requestAuthentication();
+    }
 
-		html += "<td align=\"center\">\n";
-		html += "<fieldset id=\"FilterGrp\">\n";
-		html += "<legend>Filter repeater</legend>\n<table style=\"text-align:unset;border-width:0px;background:unset\">";
-		html += "<tr style=\"background:unset;\">";
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
+}
 
-		String filterFlageEn = "";
-		if (config.digiFilter & FILTER_MESSAGE)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"FilterMessage\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Message</td>\n";
+void handleDigiFilter(AsyncWebServerRequest *request)
+{
+    if (!request->authenticate(config.http_username, config.http_password))
+    {
+        return request->requestAuthentication();
+    }
 
-		filterFlageEn = "";
-		if (config.digiFilter & FILTER_STATUS)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"FilterStatus\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Status</td>\n";
+    // Cargar la plantilla HTML desde SPIFFS
+    String html = loadHtmlTemplate("/digi_filter.html");
+    if (html.isEmpty())
+    {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
 
-		filterFlageEn = "";
-		if (config.digiFilter & FILTER_TELEMETRY)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"FilterTelemetry\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Telemetry</td>\n";
+    // Reemplazar marcadores de posición con los valores de configuración de filtros
+    html.replace("%FILTER_MESSAGE%", (config.digiFilter & FILTER_MESSAGE) ? "checked" : "");
+    html.replace("%FILTER_STATUS%", (config.digiFilter & FILTER_STATUS) ? "checked" : "");
+    html.replace("%FILTER_TELEMETRY%", (config.digiFilter & FILTER_TELEMETRY) ? "checked" : "");
+    html.replace("%FILTER_WEATHER%", (config.digiFilter & FILTER_WX) ? "checked" : "");
+    html.replace("%FILTER_OBJECT%", (config.digiFilter & FILTER_OBJECT) ? "checked" : "");
+    html.replace("%FILTER_ITEM%", (config.digiFilter & FILTER_ITEM) ? "checked" : "");
+    html.replace("%FILTER_QUERY%", (config.digiFilter & FILTER_QUERY) ? "checked" : "");
+    html.replace("%FILTER_BUOY%", (config.digiFilter & FILTER_BUOY) ? "checked" : "");
+    html.replace("%FILTER_POSITION%", (config.digiFilter & FILTER_POSITION) ? "checked" : "");
 
-		filterFlageEn = "";
-		if (config.digiFilter & FILTER_WX)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"FilterWeather\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Weather</td>\n";
+    request->send(200, "text/html", html);
+}
 
-		filterFlageEn = "";
-		if (config.digiFilter & FILTER_OBJECT)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"FilterObject\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Object</td>\n";
+void handleDigiFilterPost(AsyncWebServerRequest *request)
+{
+    if (!request->authenticate(config.http_username, config.http_password))
+    {
+        return request->requestAuthentication();
+    }
 
-		filterFlageEn = "";
-		if (config.digiFilter & FILTER_ITEM)
-			filterFlageEn = "checked";
-		html += "</tr><tr style=\"background:unset;\"><td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"FilterItem\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Item</td>\n";
+    config.digiFilter = 0;
 
-		filterFlageEn = "";
-		if (config.digiFilter & FILTER_QUERY)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"FilterQuery\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Query</td>\n";
+    if (request->hasArg("message"))
+        config.digiFilter |= FILTER_MESSAGE;
+    if (request->hasArg("status"))
+        config.digiFilter |= FILTER_STATUS;
+    if (request->hasArg("telemetry"))
+        config.digiFilter |= FILTER_TELEMETRY;
+    if (request->hasArg("weather"))
+        config.digiFilter |= FILTER_WX;
+    if (request->hasArg("object"))
+        config.digiFilter |= FILTER_OBJECT;
+    if (request->hasArg("item"))
+        config.digiFilter |= FILTER_ITEM;
+    if (request->hasArg("query"))
+        config.digiFilter |= FILTER_QUERY;
+    if (request->hasArg("buoy"))
+        config.digiFilter |= FILTER_BUOY;
+    if (request->hasArg("position"))
+        config.digiFilter |= FILTER_POSITION;
 
-		filterFlageEn = "";
-		if (config.digiFilter & FILTER_BUOY)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"FilterBuoy\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Buoy</td>\n";
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
+}
 
-		filterFlageEn = "";
-		if (config.digiFilter & FILTER_POSITION)
-			filterFlageEn = "checked";
-		html += "<td style=\"border:unset;\"><input class=\"field_checkbox\" name=\"FilterPosition\" type=\"checkbox\" value=\"OK\" " + filterFlageEn + "/>Position</td>\n";
+void handleTrackerGeneral(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/tracker_general.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
 
-		html += "<td style=\"border:unset;\"></td>";
-		html += "</tr></table></fieldset>\n";
-		html += "</td></tr>\n";
-		html += "</table><br />\n";
-		html += "<div><button type='submit' id='submitDIGI'  name=\"commitDIGI\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitDIGI\"/>\n";
-		html += "</form><br />";
-		request->send(200, "text/html", html); // send to someones browser when asked
-	}
+    // Reemplazar marcadores con los valores actuales de configuración
+    html.replace("%TRACKER_ENABLE%", config.trk_en ? "checked" : "");
+    html.replace("%SMART_BEACON%", config.trk_smartbeacon ? "checked" : "");
+    html.replace("%COMPRESS_ENABLE%", config.trk_compress ? "checked" : "");
+    html.replace("%MY_CALL%", String(config.trk_mycall));
+    html.replace("%MY_SSID%", String(config.trk_ssid));
+    html.replace("%TRACKER_COMMENT%", String(config.trk_comment));
+
+    request->send(200, "text/html", html);
+}
+
+void handleTrackerGeneralPost(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    if (request->hasArg("trackerEnable")) config.trk_en = (request->arg("trackerEnable") == "OK");
+    if (request->hasArg("smartBcnEnable")) config.trk_smartbeacon = (request->arg("smartBcnEnable") == "OK");
+    if (request->hasArg("compressEnable")) config.trk_compress = (request->arg("compressEnable") == "OK");
+    if (request->hasArg("myCall")) strcpy(config.trk_mycall, request->arg("myCall").c_str());
+    if (request->hasArg("trackerComment")) strcpy(config.trk_comment, request->arg("trackerComment").c_str());
+
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
+}
+
+void handleTrackerPosition(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/tracker_position.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+
+    html.replace("%LATITUDE%", String(config.trk_lat));
+    html.replace("%LONGITUDE%", String(config.trk_lon));
+    html.replace("%ALTITUDE%", String(config.trk_alt));
+    html.replace("%INTERVAL%", String(config.trk_interval));
+    html.replace("%POSITION_SOURCE%", config.trk_gps ? "GPS" : "Fix");
+
+    request->send(200, "text/html", html);
+}
+
+void handleTrackerPositionPost(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    if (request->hasArg("trackerPosLat") && isValidNumber(request->arg("trackerPosLat"))) {
+        config.trk_lat = request->arg("trackerPosLat").toFloat();
+    }
+
+    if (request->hasArg("trackerPosLon") && isValidNumber(request->arg("trackerPosLon"))) {
+        config.trk_lon = request->arg("trackerPosLon").toFloat();
+    }
+
+    if (request->hasArg("trackerPosAlt") && isValidNumber(request->arg("trackerPosAlt"))) {
+        config.trk_alt = request->arg("trackerPosAlt").toFloat();
+    }
+
+    if (request->hasArg("trackerPosSel")) {
+        config.trk_gps = (request->arg("trackerPosSel").toInt() == 1);
+    }
+
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
+}
+
+void handleTrackerSmartBeacon(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/tracker_smartbeacon.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+
+    html.replace("%HIGH_SPEED%", String(config.trk_hspeed));
+    html.replace("%LOW_SPEED%", String(config.trk_lspeed));
+    html.replace("%SLOW_INTERVAL%", String(config.trk_slowinterval));
+    html.replace("%MAX_INTERVAL%", String(config.trk_maxinterval));
+    html.replace("%MIN_INTERVAL%", String(config.trk_mininterval));
+    html.replace("%MIN_ANGLE%", String(config.trk_minangle));
+
+    request->send(200, "text/html", html);
+}
+
+void handleTrackerSmartBeaconPost(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    if (request->hasArg("hspeed") && isValidNumber(request->arg("hspeed"))) {
+        config.trk_hspeed = request->arg("hspeed").toInt();
+    }
+
+    if (request->hasArg("lspeed") && isValidNumber(request->arg("lspeed"))) {
+        config.trk_lspeed = request->arg("lspeed").toInt();
+    }
+
+    if (request->hasArg("slowInterval") && isValidNumber(request->arg("slowInterval"))) {
+        config.trk_slowinterval = request->arg("slowInterval").toInt();
+    }
+
+    if (request->hasArg("maxInterval") && isValidNumber(request->arg("maxInterval"))) {
+        config.trk_maxinterval = request->arg("maxInterval").toInt();
+    }
+
+    if (request->hasArg("minInterval") && isValidNumber(request->arg("minInterval"))) {
+        config.trk_mininterval = request->arg("minInterval").toInt();
+    }
+
+    if (request->hasArg("minAngle") && isValidNumber(request->arg("minAngle"))) {
+        config.trk_minangle = request->arg("minAngle").toInt();
+    }
+
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
 }
 
 void handle_wx(AsyncWebServerRequest *request)
@@ -2340,351 +2183,501 @@ void handle_wx(AsyncWebServerRequest *request)
 	}
 }
 
-void handle_tlm(AsyncWebServerRequest *request)
-{
-	if (!request->authenticate(config.http_username, config.http_password))
-	{
-		return request->requestAuthentication();
-	}
-	bool En = false;
-	bool pos2RF = false;
-	bool pos2INET = false;
-	String arg = "";
+// void handle_tlm(AsyncWebServerRequest *request)
+// {
+// 	if (!request->authenticate(config.http_username, config.http_password))
+// 	{
+// 		return request->requestAuthentication();
+// 	}
+// 	bool En = false;
+// 	bool pos2RF = false;
+// 	bool pos2INET = false;
+// 	String arg = "";
 
-	if (request->hasArg("commitTLM"))
-	{
-		for (int i = 0; i < request->args(); i++)
-		{
-			if (request->argName(i) == "Enable")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						En = true;
-				}
-			}
-			if (request->argName(i) == "myCall")
-			{
-				if (request->arg(i) != "")
-				{
-					String name = request->arg(i);
-					name.trim();
-					name.toUpperCase();
-					strcpy(config.tlm0_mycall, name.c_str());
-				}
-			}
-			if (request->argName(i) == "mySSID")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.tlm0_ssid = request->arg(i).toInt();
-					if (config.tlm0_ssid > 15)
-						config.tlm0_ssid = 3;
-				}
-			}
-			if (request->argName(i) == "infoInv")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.tlm0_info_interval = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "dataInv")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.tlm0_data_interval = request->arg(i).toInt();
-				}
-			}
+// 	if (request->hasArg("commitTLM"))
+// 	{
+// 		for (int i = 0; i < request->args(); i++)
+// 		{
+// 			if (request->argName(i) == "Enable")
+// 			{
+// 				if (request->arg(i) != "")
+// 				{
+// 					if (String(request->arg(i)) == "OK")
+// 						En = true;
+// 				}
+// 			}
+// 			if (request->argName(i) == "myCall")
+// 			{
+// 				if (request->arg(i) != "")
+// 				{
+// 					String name = request->arg(i);
+// 					name.trim();
+// 					name.toUpperCase();
+// 					strcpy(config.tlm0_mycall, name.c_str());
+// 				}
+// 			}
+// 			if (request->argName(i) == "mySSID")
+// 			{
+// 				if (request->arg(i) != "")
+// 				{
+// 					if (isValidNumber(request->arg(i)))
+// 						config.tlm0_ssid = request->arg(i).toInt();
+// 					if (config.tlm0_ssid > 15)
+// 						config.tlm0_ssid = 3;
+// 				}
+// 			}
+// 			if (request->argName(i) == "infoInv")
+// 			{
+// 				if (request->arg(i) != "")
+// 				{
+// 					if (isValidNumber(request->arg(i)))
+// 						config.tlm0_info_interval = request->arg(i).toInt();
+// 				}
+// 			}
+// 			if (request->argName(i) == "dataInv")
+// 			{
+// 				if (request->arg(i) != "")
+// 				{
+// 					if (isValidNumber(request->arg(i)))
+// 						config.tlm0_data_interval = request->arg(i).toInt();
+// 				}
+// 			}
 
-			if (request->argName(i) == "Path")
-			{
-				if (request->arg(i) != "")
-				{
-					if (isValidNumber(request->arg(i)))
-						config.tlm0_path = request->arg(i).toInt();
-				}
-			}
-			if (request->argName(i) == "Comment")
-			{
-				if (request->arg(i) != "")
-				{
-					strcpy(config.tlm0_comment, request->arg(i).c_str());
-				}
-				else
-				{
-					memset(config.tlm0_comment, 0, sizeof(config.tlm0_comment));
-				}
-			}
-			if (request->argName(i) == "Pos2RF")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						pos2RF = true;
-				}
-			}
-			if (request->argName(i) == "Pos2INET")
-			{
-				if (request->arg(i) != "")
-				{
-					if (String(request->arg(i)) == "OK")
-						pos2INET = true;
-				}
-			}
-			for (int x = 0; x < 13; x++)
-			{
-				arg = "sensorCH" + String(x);
-				if (request->argName(i) == arg)
-				{
-					if (isValidNumber(request->arg(i)))
-						config.tml0_data_channel[x] = request->arg(i).toInt();
-				}
-				arg = "param" + String(x);
-				if (request->argName(i) == arg)
-				{
-					if (request->arg(i) != "")
-					{
-						strcpy(config.tlm0_PARM[x], request->arg(i).c_str());
-					}
-				}
-				arg = "unit" + String(x);
-				if (request->argName(i) == arg)
-				{
-					if (request->arg(i) != "")
-					{
-						strcpy(config.tlm0_UNIT[x], request->arg(i).c_str());
-					}
-				}
-				if (x < 5)
-				{
-					for (int y = 0; y < 3; y++)
-					{
-						arg = "eqns" + String(x) + String((char)(y + 'a'));
-						if (request->argName(i) == arg)
-						{
-							if (isValidNumber(request->arg(i)))
-								config.tlm0_EQNS[x][y] = request->arg(i).toFloat();
-						}
-					}
-				}
-			}
-			uint8_t b = 1;
-			for (int x = 0; x < 8; x++)
-			{
-				arg = "bitact" + String(x);
-				if (request->argName(i) == arg)
-				{
-					if (isValidNumber(request->arg(i)))
-					{
-						if (request->arg(i).toInt() == 1)
-						{
-							config.tlm0_BITS_Active |= b;
-						}
-						else
-						{
-							config.tlm0_BITS_Active &= ~b;
-						}
-					}
-				}
-				b <<= 1;
-			}
-		}
-		config.tlm0_en = En;
-		config.tlm0_2rf = pos2RF;
-		config.tlm0_2inet = pos2INET;
+// 			if (request->argName(i) == "Path")
+// 			{
+// 				if (request->arg(i) != "")
+// 				{
+// 					if (isValidNumber(request->arg(i)))
+// 						config.tlm0_path = request->arg(i).toInt();
+// 				}
+// 			}
+// 			if (request->argName(i) == "Comment")
+// 			{
+// 				if (request->arg(i) != "")
+// 				{
+// 					strcpy(config.tlm0_comment, request->arg(i).c_str());
+// 				}
+// 				else
+// 				{
+// 					memset(config.tlm0_comment, 0, sizeof(config.tlm0_comment));
+// 				}
+// 			}
+// 			if (request->argName(i) == "Pos2RF")
+// 			{
+// 				if (request->arg(i) != "")
+// 				{
+// 					if (String(request->arg(i)) == "OK")
+// 						pos2RF = true;
+// 				}
+// 			}
+// 			if (request->argName(i) == "Pos2INET")
+// 			{
+// 				if (request->arg(i) != "")
+// 				{
+// 					if (String(request->arg(i)) == "OK")
+// 						pos2INET = true;
+// 				}
+// 			}
+// 			for (int x = 0; x < 13; x++)
+// 			{
+// 				arg = "sensorCH" + String(x);
+// 				if (request->argName(i) == arg)
+// 				{
+// 					if (isValidNumber(request->arg(i)))
+// 						config.tml0_data_channel[x] = request->arg(i).toInt();
+// 				}
+// 				arg = "param" + String(x);
+// 				if (request->argName(i) == arg)
+// 				{
+// 					if (request->arg(i) != "")
+// 					{
+// 						strcpy(config.tlm0_PARM[x], request->arg(i).c_str());
+// 					}
+// 				}
+// 				arg = "unit" + String(x);
+// 				if (request->argName(i) == arg)
+// 				{
+// 					if (request->arg(i) != "")
+// 					{
+// 						strcpy(config.tlm0_UNIT[x], request->arg(i).c_str());
+// 					}
+// 				}
+// 				if (x < 5)
+// 				{
+// 					for (int y = 0; y < 3; y++)
+// 					{
+// 						arg = "eqns" + String(x) + String((char)(y + 'a'));
+// 						if (request->argName(i) == arg)
+// 						{
+// 							if (isValidNumber(request->arg(i)))
+// 								config.tlm0_EQNS[x][y] = request->arg(i).toFloat();
+// 						}
+// 					}
+// 				}
+// 			}
+// 			uint8_t b = 1;
+// 			for (int x = 0; x < 8; x++)
+// 			{
+// 				arg = "bitact" + String(x);
+// 				if (request->argName(i) == arg)
+// 				{
+// 					if (isValidNumber(request->arg(i)))
+// 					{
+// 						if (request->arg(i).toInt() == 1)
+// 						{
+// 							config.tlm0_BITS_Active |= b;
+// 						}
+// 						else
+// 						{
+// 							config.tlm0_BITS_Active &= ~b;
+// 						}
+// 					}
+// 				}
+// 				b <<= 1;
+// 			}
+// 		}
+// 		config.tlm0_en = En;
+// 		config.tlm0_2rf = pos2RF;
+// 		config.tlm0_2inet = pos2INET;
 
-		saveEEPROM();
-		initInterval = true;
-		String html = "OK";
-		request->send(200, "text/html", html);
-	}
-	else
-	{
+// 		saveEEPROM();
+// 		initInterval = true;
+// 		String html = "OK";
+// 		request->send(200, "text/html", html);
+// 	}
+// 	else
+// 	{
 
-		String html = "<script type=\"text/javascript\">\n";
-		html += "$('form').submit(function (e) {\n";
-		html += "e.preventDefault();\n";
-		html += "var data = new FormData(e.currentTarget);\n";
-		html += "document.getElementById(\"submitTLM\").disabled=true;\n";
-		html += "$.ajax({\n";
-		html += "url: '/tlm',\n";
-		html += "type: 'POST',\n";
-		html += "data: data,\n";
-		html += "contentType: false,\n";
-		html += "processData: false,\n";
-		html += "success: function (data) {\n";
-		html += "alert(\"Submited Successfully\");\n";
-		html += "},\n";
-		html += "error: function (data) {\n";
-		html += "alert(\"An error occurred.\");\n";
-		html += "}\n";
-		html += "});\n";
-		html += "});\n";
-		html += "</script>\n";
+// 		String html = "<script type=\"text/javascript\">\n";
+// 		html += "$('form').submit(function (e) {\n";
+// 		html += "e.preventDefault();\n";
+// 		html += "var data = new FormData(e.currentTarget);\n";
+// 		html += "document.getElementById(\"submitTLM\").disabled=true;\n";
+// 		html += "$.ajax({\n";
+// 		html += "url: '/tlm',\n";
+// 		html += "type: 'POST',\n";
+// 		html += "data: data,\n";
+// 		html += "contentType: false,\n";
+// 		html += "processData: false,\n";
+// 		html += "success: function (data) {\n";
+// 		html += "alert(\"Submited Successfully\");\n";
+// 		html += "},\n";
+// 		html += "error: function (data) {\n";
+// 		html += "alert(\"An error occurred.\");\n";
+// 		html += "}\n";
+// 		html += "});\n";
+// 		html += "});\n";
+// 		html += "</script>\n";
 
-		/************************ TLM Mode **************************/
-		html += "<form id='formTLM' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
-		html += "<table>\n";
-		html += "<th colspan=\"2\"><span><b>System Telemetry</b></span></th>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Enable:</b></td>\n";
-		String EnFlag = "";
-		if (config.tlm0_en)
-			EnFlag = "checked";
-		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + EnFlag + "><span class=\"slider round\"></span></label></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Station Callsign:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"7\" size=\"6\" id=\"myCall\" name=\"myCall\" type=\"text\" value=\"" + String(config.tlm0_mycall) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Station SSID:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"mySSID\" id=\"mySSID\">\n";
-		for (uint8_t ssid = 0; ssid <= 15; ssid++)
-		{
-			if (config.tlm0_ssid == ssid)
-			{
-				html += "<option value=\"" + String(ssid) + "\" selected>" + String(ssid) + "</option>\n";
-			}
-			else
-			{
-				html += "<option value=\"" + String(ssid) + "\">" + String(ssid) + "</option>\n";
-			}
-		}
-		html += "</select></td>\n";
-		html += "</tr>\n";
+// 		/************************ TLM Mode **************************/
+// 		html += "<form id='formTLM' method=\"POST\" action='#' enctype='multipart/form-data'>\n";
+// 		html += "<table>\n";
+// 		html += "<th colspan=\"2\"><span><b>System Telemetry</b></span></th>\n";
+// 		html += "<tr>\n";
+// 		html += "<td align=\"right\"><b>Enable:</b></td>\n";
+// 		String EnFlag = "";
+// 		if (config.tlm0_en)
+// 			EnFlag = "checked";
+// 		html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"Enable\" value=\"OK\" " + EnFlag + "><span class=\"slider round\"></span></label></td>\n";
+// 		html += "</tr>\n";
+// 		html += "<tr>\n";
+// 		html += "<td align=\"right\"><b>Station Callsign:</b></td>\n";
+// 		html += "<td style=\"text-align: left;\"><input maxlength=\"7\" size=\"6\" id=\"myCall\" name=\"myCall\" type=\"text\" value=\"" + String(config.tlm0_mycall) + "\" /></td>\n";
+// 		html += "</tr>\n";
+// 		html += "<tr>\n";
+// 		html += "<td align=\"right\"><b>Station SSID:</b></td>\n";
+// 		html += "<td style=\"text-align: left;\">\n";
+// 		html += "<select name=\"mySSID\" id=\"mySSID\">\n";
+// 		for (uint8_t ssid = 0; ssid <= 15; ssid++)
+// 		{
+// 			if (config.tlm0_ssid == ssid)
+// 			{
+// 				html += "<option value=\"" + String(ssid) + "\" selected>" + String(ssid) + "</option>\n";
+// 			}
+// 			else
+// 			{
+// 				html += "<option value=\"" + String(ssid) + "\">" + String(ssid) + "</option>\n";
+// 			}
+// 		}
+// 		html += "</select></td>\n";
+// 		html += "</tr>\n";
 
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>PATH:</b></td>\n";
-		html += "<td style=\"text-align: left;\">\n";
-		html += "<select name=\"Path\" id=\"Path\">\n";
-		for (uint8_t pthIdx = 0; pthIdx < PATH_LEN; pthIdx++)
-		{
-			if (config.tlm0_path == pthIdx)
-			{
-				html += "<option value=\"" + String(pthIdx) + "\" selected>" + String(PATH_NAME[pthIdx]) + "</option>\n";
-			}
-			else
-			{
-				html += "<option value=\"" + String(pthIdx) + "\">" + String(PATH_NAME[pthIdx]) + "</option>\n";
-			}
-		}
-		html += "</select></td>\n";
-		// html += "<td style=\"text-align: left;\"><input maxlength=\"72\" size=\"72\" name=\"Path\" type=\"text\" value=\"" + String(config.tlm0_path) + "\" /></td>\n";
-		html += "</tr>\n";
-		html += "<tr>\n";
-		html += "<td align=\"right\"><b>Text Comment:</b></td>\n";
-		html += "<td style=\"text-align: left;\"><input maxlength=\"50\" size=\"50\" name=\"Comment\" type=\"text\" value=\"" + String(config.tlm0_comment) + "\" /></td>\n";
-		html += "</tr>\n";
+// 		html += "<tr>\n";
+// 		html += "<td align=\"right\"><b>PATH:</b></td>\n";
+// 		html += "<td style=\"text-align: left;\">\n";
+// 		html += "<select name=\"Path\" id=\"Path\">\n";
+// 		for (uint8_t pthIdx = 0; pthIdx < PATH_LEN; pthIdx++)
+// 		{
+// 			if (config.tlm0_path == pthIdx)
+// 			{
+// 				html += "<option value=\"" + String(pthIdx) + "\" selected>" + String(PATH_NAME[pthIdx]) + "</option>\n";
+// 			}
+// 			else
+// 			{
+// 				html += "<option value=\"" + String(pthIdx) + "\">" + String(PATH_NAME[pthIdx]) + "</option>\n";
+// 			}
+// 		}
+// 		html += "</select></td>\n";
+// 		// html += "<td style=\"text-align: left;\"><input maxlength=\"72\" size=\"72\" name=\"Path\" type=\"text\" value=\"" + String(config.tlm0_path) + "\" /></td>\n";
+// 		html += "</tr>\n";
+// 		html += "<tr>\n";
+// 		html += "<td align=\"right\"><b>Text Comment:</b></td>\n";
+// 		html += "<td style=\"text-align: left;\"><input maxlength=\"50\" size=\"50\" name=\"Comment\" type=\"text\" value=\"" + String(config.tlm0_comment) + "\" /></td>\n";
+// 		html += "</tr>\n";
 
-		html += "<tr><td style=\"text-align: right;\">Info Interval:</td><td style=\"text-align: left;\"><input min=\"0\" max=\"3600\" step=\"1\" name=\"infoInv\" type=\"number\" value=\"" + String(config.tlm0_info_interval) + "\" />Sec.</td></tr>";
-		html += "<tr><td style=\"text-align: right;\">Data Interval:</td><td style=\"text-align: left;\"><input min=\"0\" max=\"3600\" step=\"1\" name=\"dataInv\" type=\"number\" value=\"" + String(config.tlm0_data_interval) + "\" />Sec.</td></tr>";
+// 		html += "<tr><td style=\"text-align: right;\">Info Interval:</td><td style=\"text-align: left;\"><input min=\"0\" max=\"3600\" step=\"1\" name=\"infoInv\" type=\"number\" value=\"" + String(config.tlm0_info_interval) + "\" />Sec.</td></tr>";
+// 		html += "<tr><td style=\"text-align: right;\">Data Interval:</td><td style=\"text-align: left;\"><input min=\"0\" max=\"3600\" step=\"1\" name=\"dataInv\" type=\"number\" value=\"" + String(config.tlm0_data_interval) + "\" />Sec.</td></tr>";
 
-		String Pos2RFFlag = "";
-		String Pos2INETFlag = "";
-		if (config.tlm0_2rf)
-			Pos2RFFlag = "checked";
-		if (config.tlm0_2inet)
-			Pos2INETFlag = "checked";
-		html += "<tr><td style=\"text-align: right;\">TX Channel:</td><td style=\"text-align: left;\"><input type=\"checkbox\" name=\"Pos2RF\" value=\"OK\" " + Pos2RFFlag + "/>RF <input type=\"checkbox\" name=\"Pos2INET\" value=\"OK\" " + Pos2INETFlag + "/>Internet </td></tr>\n";
+// 		String Pos2RFFlag = "";
+// 		String Pos2INETFlag = "";
+// 		if (config.tlm0_2rf)
+// 			Pos2RFFlag = "checked";
+// 		if (config.tlm0_2inet)
+// 			Pos2INETFlag = "checked";
+// 		html += "<tr><td style=\"text-align: right;\">TX Channel:</td><td style=\"text-align: left;\"><input type=\"checkbox\" name=\"Pos2RF\" value=\"OK\" " + Pos2RFFlag + "/>RF <input type=\"checkbox\" name=\"Pos2INET\" value=\"OK\" " + Pos2INETFlag + "/>Internet </td></tr>\n";
 
-		// html += "<tr>\n";
-		// html += "<td align=\"right\"><b>Time Stamp:</b></td>\n";
-		// String timeStampFlag = "";
-		// if (config.wx_timestamp)
-		// 	timeStampFlag = "checked";
-		// html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"wxTimeStamp\" value=\"OK\" " + timeStampFlag + "><span class=\"slider round\"></span></label></td>\n";
-		// html += "</tr>\n";
-		for (int ax = 0; ax < 5; ax++)
-		{
-			html += "<tr><td align=\"right\"><b>Channel A" + String(ax + 1) + ":</b></td>\n";
-			html += "<td align=\"center\">\n";
-			html += "<table>";
+// 		// html += "<tr>\n";
+// 		// html += "<td align=\"right\"><b>Time Stamp:</b></td>\n";
+// 		// String timeStampFlag = "";
+// 		// if (config.wx_timestamp)
+// 		// 	timeStampFlag = "checked";
+// 		// html += "<td style=\"text-align: left;\"><label class=\"switch\"><input type=\"checkbox\" name=\"wxTimeStamp\" value=\"OK\" " + timeStampFlag + "><span class=\"slider round\"></span></label></td>\n";
+// 		// html += "</tr>\n";
+// 		for (int ax = 0; ax < 5; ax++)
+// 		{
+// 			html += "<tr><td align=\"right\"><b>Channel A" + String(ax + 1) + ":</b></td>\n";
+// 			html += "<td align=\"center\">\n";
+// 			html += "<table>";
 
-			// html += "<tr><td style=\"text-align: right;\">Name:</td><td style=\"text-align: center;\"><i>Sensor Type</i></td><td style=\"text-align: center;\"><i>Parameter</i></td><td style=\"text-align: center;\"><i>Unit</i></td></tr>\n";
+// 			// html += "<tr><td style=\"text-align: right;\">Name:</td><td style=\"text-align: center;\"><i>Sensor Type</i></td><td style=\"text-align: center;\"><i>Parameter</i></td><td style=\"text-align: center;\"><i>Unit</i></td></tr>\n";
 
-			html += "<tr><td style=\"text-align: right;\">Type/Name:</td>\n";
-			html += "<td style=\"text-align: left;\">Sensor Type: ";
-			html += "<select name=\"sensorCH" + String(ax) + "\" id=\"sensorCH" + String(ax) + "\">\n";
-			for (uint8_t idx = 0; idx < SYSTEM_LEN; idx++)
-			{
-				if (config.tml0_data_channel[ax] == idx)
-				{
-					html += "<option value=\"" + String(idx) + "\" selected>" + String(SYSTEM_NAME[idx]) + "</option>\n";
-				}
-				else
-				{
-					html += "<option value=\"" + String(idx) + "\">" + String(SYSTEM_NAME[idx]) + "</option>\n";
-				}
-			}
-			html += "</select></td>\n";
+// 			html += "<tr><td style=\"text-align: right;\">Type/Name:</td>\n";
+// 			html += "<td style=\"text-align: left;\">Sensor Type: ";
+// 			html += "<select name=\"sensorCH" + String(ax) + "\" id=\"sensorCH" + String(ax) + "\">\n";
+// 			for (uint8_t idx = 0; idx < SYSTEM_LEN; idx++)
+// 			{
+// 				if (config.tml0_data_channel[ax] == idx)
+// 				{
+// 					html += "<option value=\"" + String(idx) + "\" selected>" + String(SYSTEM_NAME[idx]) + "</option>\n";
+// 				}
+// 				else
+// 				{
+// 					html += "<option value=\"" + String(idx) + "\">" + String(SYSTEM_NAME[idx]) + "</option>\n";
+// 				}
+// 			}
+// 			html += "</select></td>\n";
 
-			html += "<td style=\"text-align: left;\">Parameter: <input maxlength=\"10\" size=\"8\" name=\"param" + String(ax) + "\" type=\"text\" value=\"" + String(config.tlm0_PARM[ax]) + "\" /></td>\n";
-			html += "<td style=\"text-align: left;\">Unit: <input maxlength=\"8\" size=\"5\" name=\"unit" + String(ax) + "\" type=\"text\" value=\"" + String(config.tlm0_UNIT[ax]) + "\" /></td></tr>\n";
-			html += "<tr><td style=\"text-align: right;\">EQNS:</td><td colspan=\"3\" style=\"text-align: left;\">a:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax) + "a\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][0], 3) + "\" />  b:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax) + "b\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][1], 3) + "\" /> c:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax) + "c\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][2], 3) + "\" /> (av^2+bv+c)</td></tr>\n";
-			html += "</table></td>";
-			html += "</tr>\n";
-		}
+// 			html += "<td style=\"text-align: left;\">Parameter: <input maxlength=\"10\" size=\"8\" name=\"param" + String(ax) + "\" type=\"text\" value=\"" + String(config.tlm0_PARM[ax]) + "\" /></td>\n";
+// 			html += "<td style=\"text-align: left;\">Unit: <input maxlength=\"8\" size=\"5\" name=\"unit" + String(ax) + "\" type=\"text\" value=\"" + String(config.tlm0_UNIT[ax]) + "\" /></td></tr>\n";
+// 			html += "<tr><td style=\"text-align: right;\">EQNS:</td><td colspan=\"3\" style=\"text-align: left;\">a:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax) + "a\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][0], 3) + "\" />  b:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax) + "b\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][1], 3) + "\" /> c:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax) + "c\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][2], 3) + "\" /> (av^2+bv+c)</td></tr>\n";
+// 			html += "</table></td>";
+// 			html += "</tr>\n";
+// 		}
 
-		uint8_t b = 1;
-		for (int ax = 0; ax < 8; ax++)
-		{
-			html += "<tr><td align=\"right\"><b>Channel B" + String(ax + 1) + ":</b></td>\n";
-			html += "<td align=\"center\">\n";
-			html += "<table>";
+// 		uint8_t b = 1;
+// 		for (int ax = 0; ax < 8; ax++)
+// 		{
+// 			html += "<tr><td align=\"right\"><b>Channel B" + String(ax + 1) + ":</b></td>\n";
+// 			html += "<td align=\"center\">\n";
+// 			html += "<table>";
 
-			// html += "<tr><td style=\"text-align: right;\">Type/Name:</td>\n";
-			html += "<td style=\"text-align: left;\">Type: ";
-			html += "<select name=\"sensorCH" + String(ax + 5) + "\" id=\"sensorCH" + String(ax) + "\">\n";
-			for (uint8_t idx = 0; idx < SYSTEM_BIT_LEN; idx++)
-			{
-				if (config.tml0_data_channel[ax + 5] == idx)
-				{
-					html += "<option value=\"" + String(idx) + "\" selected>" + String(SYSTEM_BITS_NAME[idx]) + "</option>\n";
-				}
-				else
-				{
-					html += "<option value=\"" + String(idx) + "\">" + String(SYSTEM_BITS_NAME[idx]) + "</option>\n";
-				}
-			}
-			html += "</select></td>\n";
+// 			// html += "<tr><td style=\"text-align: right;\">Type/Name:</td>\n";
+// 			html += "<td style=\"text-align: left;\">Type: ";
+// 			html += "<select name=\"sensorCH" + String(ax + 5) + "\" id=\"sensorCH" + String(ax) + "\">\n";
+// 			for (uint8_t idx = 0; idx < SYSTEM_BIT_LEN; idx++)
+// 			{
+// 				if (config.tml0_data_channel[ax + 5] == idx)
+// 				{
+// 					html += "<option value=\"" + String(idx) + "\" selected>" + String(SYSTEM_BITS_NAME[idx]) + "</option>\n";
+// 				}
+// 				else
+// 				{
+// 					html += "<option value=\"" + String(idx) + "\">" + String(SYSTEM_BITS_NAME[idx]) + "</option>\n";
+// 				}
+// 			}
+// 			html += "</select></td>\n";
 
-			html += "<td style=\"text-align: left;\">Parameter: <input maxlength=\"10\" size=\"8\" name=\"param" + String(ax + 5) + "\" type=\"text\" value=\"" + String(config.tlm0_PARM[ax + 5]) + "\" /></td>\n";
-			html += "<td style=\"text-align: left;\">Unit: <input maxlength=\"8\" size=\"5\" name=\"unit" + String(ax + 5) + "\" type=\"text\" value=\"" + String(config.tlm0_UNIT[ax + 5]) + "\" /></td>\n";
-			String LowFlag = "", HighFlag = "";
-			if (config.tlm0_BITS_Active & b)
-				HighFlag = "checked=\"checked\"";
-			else
-				LowFlag = "checked=\"checked\"";
-			html += "<td style=\"text-align: left;\"> Active:<input type=\"radio\" name=\"bitact" + String(ax) + "\" value=\"0\" " + LowFlag + "/>LOW <input type=\"radio\" name=\"bitact" + String(ax) + "\" value=\"1\" " + HighFlag + "/>HIGH </td>\n";
-			html += "</tr>\n";
-			// html += "<tr><td style=\"text-align: right;\">EQNS:</td><td colspan=\"3\" style=\"text-align: left;\">a:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax + 1) + "a\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][0], 3) + "\" />  b:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax + 1) + "b\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][1], 3) + "\" /> c:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax + 1) + "c\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][2], 3) + "\" /> (av^2+bv+c)</td></tr>\n";
-			html += "</table></td>";
-			html += "</tr>\n";
-			b <<= 1;
-		}
+// 			html += "<td style=\"text-align: left;\">Parameter: <input maxlength=\"10\" size=\"8\" name=\"param" + String(ax + 5) + "\" type=\"text\" value=\"" + String(config.tlm0_PARM[ax + 5]) + "\" /></td>\n";
+// 			html += "<td style=\"text-align: left;\">Unit: <input maxlength=\"8\" size=\"5\" name=\"unit" + String(ax + 5) + "\" type=\"text\" value=\"" + String(config.tlm0_UNIT[ax + 5]) + "\" /></td>\n";
+// 			String LowFlag = "", HighFlag = "";
+// 			if (config.tlm0_BITS_Active & b)
+// 				HighFlag = "checked=\"checked\"";
+// 			else
+// 				LowFlag = "checked=\"checked\"";
+// 			html += "<td style=\"text-align: left;\"> Active:<input type=\"radio\" name=\"bitact" + String(ax) + "\" value=\"0\" " + LowFlag + "/>LOW <input type=\"radio\" name=\"bitact" + String(ax) + "\" value=\"1\" " + HighFlag + "/>HIGH </td>\n";
+// 			html += "</tr>\n";
+// 			// html += "<tr><td style=\"text-align: right;\">EQNS:</td><td colspan=\"3\" style=\"text-align: left;\">a:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax + 1) + "a\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][0], 3) + "\" />  b:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax + 1) + "b\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][1], 3) + "\" /> c:<input min=\"-999\" max=\"999\" step=\"0.1\" name=\"eqns" + String(ax + 1) + "c\" type=\"number\" value=\"" + String(config.tlm0_EQNS[ax][2], 3) + "\" /> (av^2+bv+c)</td></tr>\n";
+// 			html += "</table></td>";
+// 			html += "</tr>\n";
+// 			b <<= 1;
+// 		}
 
-		// html += "<tr><td align=\"right\"><b>Parameter Name:</b></td>\n";
-		// html += "<td align=\"center\">\n";
-		// html += "<table>";
+// 		// html += "<tr><td align=\"right\"><b>Parameter Name:</b></td>\n";
+// 		// html += "<td align=\"center\">\n";
+// 		// html += "<table>";
 
-		// // html += "<tr><td style=\"text-align: right;\">Latitude:</td><td style=\"text-align: left;\"><input min=\"-90\" max=\"90\" step=\"0.00001\" name=\"PosLat\" type=\"number\" value=\"" + String(config.wx_lat, 5) + "\" />degrees (positive for North, negative for South)</td></tr>\n";
-		// // html += "<tr><td style=\"text-align: right;\">Longitude:</td><td style=\"text-align: left;\"><input min=\"-180\" max=\"180\" step=\"0.00001\" name=\"PosLon\" type=\"number\" value=\"" + String(config.wx_lon, 5) + "\" />degrees (positive for East, negative for West)</td></tr>\n";
-		// // html += "<tr><td style=\"text-align: right;\">Altitude:</td><td style=\"text-align: left;\"><input min=\"0\" max=\"10000\" step=\"0.1\" name=\"PosAlt\" type=\"number\" value=\"" + String(config.wx_alt, 2) + "\" /> meter. *Value 0 is not send height</td></tr>\n";
-		// html += "</table></td>";
-		// html += "</tr>\n";
+// 		// // html += "<tr><td style=\"text-align: right;\">Latitude:</td><td style=\"text-align: left;\"><input min=\"-90\" max=\"90\" step=\"0.00001\" name=\"PosLat\" type=\"number\" value=\"" + String(config.wx_lat, 5) + "\" />degrees (positive for North, negative for South)</td></tr>\n";
+// 		// // html += "<tr><td style=\"text-align: right;\">Longitude:</td><td style=\"text-align: left;\"><input min=\"-180\" max=\"180\" step=\"0.00001\" name=\"PosLon\" type=\"number\" value=\"" + String(config.wx_lon, 5) + "\" />degrees (positive for East, negative for West)</td></tr>\n";
+// 		// // html += "<tr><td style=\"text-align: right;\">Altitude:</td><td style=\"text-align: left;\"><input min=\"0\" max=\"10000\" step=\"0.1\" name=\"PosAlt\" type=\"number\" value=\"" + String(config.wx_alt, 2) + "\" /> meter. *Value 0 is not send height</td></tr>\n";
+// 		// html += "</table></td>";
+// 		// html += "</tr>\n";
 
-		html += "</table><br />\n";
-		html += "<div><button type='submit' id='submitTLM'  name=\"commitTLM\"> Apply Change </button></div>\n";
-		html += "<input type=\"hidden\" name=\"commitTLM\"/>\n";
-		html += "</form><br />";
-		request->send(200, "text/html", html); // send to someones browser when asked
-	}
+// 		html += "</table><br />\n";
+// 		html += "<div><button type='submit' id='submitTLM'  name=\"commitTLM\"> Apply Change </button></div>\n";
+// 		html += "<input type=\"hidden\" name=\"commitTLM\"/>\n";
+// 		html += "</form><br />";
+// 		request->send(200, "text/html", html); // send to someones browser when asked
+// 	}
+// }
+
+void handleTlmGeneral(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/tlm_general.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+
+    html.replace("%TLM_ENABLE%", config.tlm0_en ? "checked" : "");
+    html.replace("%MY_CALL%", String(config.tlm0_mycall));
+    html.replace("%MY_SSID%", String(config.tlm0_ssid));
+    html.replace("%INFO_INTERVAL%", String(config.tlm0_info_interval));
+    html.replace("%DATA_INTERVAL%", String(config.tlm0_data_interval));
+    html.replace("%TLM_PATH%", String(config.tlm0_path));
+    html.replace("%TLM_COMMENT%", String(config.tlm0_comment));
+    html.replace("%TX_RF%", config.tlm0_2rf ? "checked" : "");
+    html.replace("%TX_INET%", config.tlm0_2inet ? "checked" : "");
+
+    request->send(200, "text/html", html);
+}
+
+void handleTlmGeneralPost(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    if (request->hasArg("Enable")) config.tlm0_en = (request->arg("Enable") == "OK");
+    if (request->hasArg("myCall")) strcpy(config.tlm0_mycall, request->arg("myCall").c_str());
+    if (request->hasArg("mySSID") && isValidNumber(request->arg("mySSID"))) {
+        config.tlm0_ssid = request->arg("mySSID").toInt();
+        if (config.tlm0_ssid > 15) config.tlm0_ssid = 3;
+    }
+    if (request->hasArg("infoInv") && isValidNumber(request->arg("infoInv"))) {
+        config.tlm0_info_interval = request->arg("infoInv").toInt();
+    }
+    if (request->hasArg("dataInv") && isValidNumber(request->arg("dataInv"))) {
+        config.tlm0_data_interval = request->arg("dataInv").toInt();
+    }
+    if (request->hasArg("Path") && isValidNumber(request->arg("Path"))) {
+        config.tlm0_path = request->arg("Path").toInt();
+    }
+    if (request->hasArg("Comment")) strcpy(config.tlm0_comment, request->arg("Comment").c_str());
+    if (request->hasArg("Pos2RF")) config.tlm0_2rf = (request->arg("Pos2RF") == "OK");
+    if (request->hasArg("Pos2INET")) config.tlm0_2inet = (request->arg("Pos2INET") == "OK");
+
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
+}
+
+void handleTlmChannelA(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/tlm_channela.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+
+    for (int i = 0; i < 5; i++) {
+        html.replace("%SENSOR_TYPE_" + String(i) + "%", String(config.tml0_data_channel[i]));
+        html.replace("%PARAM_" + String(i) + "%", String(config.tlm0_PARM[i]));
+        html.replace("%UNIT_" + String(i) + "%", String(config.tlm0_UNIT[i]));
+        html.replace("%EQNS_A_" + String(i) + "%", String(config.tlm0_EQNS[i][0], 3));
+        html.replace("%EQNS_B_" + String(i) + "%", String(config.tlm0_EQNS[i][1], 3));
+        html.replace("%EQNS_C_" + String(i) + "%", String(config.tlm0_EQNS[i][2], 3));
+    }
+
+    request->send(200, "text/html", html);
+}
+
+void handleTlmChannelAPost(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    for (int i = 0; i < 5; i++) {
+        String sensorArg = "sensorCH" + String(i);
+        String paramArg = "param" + String(i);
+        String unitArg = "unit" + String(i);
+
+        if (request->hasArg(sensorArg.c_str()) && isValidNumber(request->arg(sensorArg.c_str()))) {
+            config.tml0_data_channel[i] = request->arg(sensorArg.c_str()).toInt();
+        }
+        if (request->hasArg(paramArg.c_str())) {
+            strcpy(config.tlm0_PARM[i], request->arg(paramArg.c_str()).c_str());
+        }
+        if (request->hasArg(unitArg.c_str())) {
+            strcpy(config.tlm0_UNIT[i], request->arg(unitArg.c_str()).c_str());
+        }
+
+        for (int j = 0; j < 3; j++) {
+            String eqnsArg = "eqns" + String(i) + String((char)('a' + j));
+            if (request->hasArg(eqnsArg.c_str()) && isValidNumber(request->arg(eqnsArg.c_str()))) {
+                config.tlm0_EQNS[i][j] = request->arg(eqnsArg.c_str()).toFloat();
+            }
+        }
+    }
+
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
+}
+
+void handleTlmChannelB(AsyncWebServerRequest *request) {
+    String html = loadHtmlTemplate("/tlm_channelb.html");
+    if (html.isEmpty()) {
+        request->send(404, "text/plain", "Archivo HTML vacío o no encontrado");
+        return;
+    }
+
+    for (int i = 0; i < 8; i++) {
+        html.replace("%BIT_SENSOR_" + String(i) + "%", String(config.tml0_data_channel[i + 5]));
+        html.replace("%BIT_PARAM_" + String(i) + "%", String(config.tlm0_PARM[i + 5]));
+        html.replace("%BIT_UNIT_" + String(i) + "%", String(config.tlm0_UNIT[i + 5]));
+        html.replace("%BIT_ACTIVE_" + String(i) + "%", (config.tlm0_BITS_Active & (1 << i)) ? "checked" : "");
+    }
+
+    request->send(200, "text/html", html);
+}
+
+void handleTlmChannelBPost(AsyncWebServerRequest *request) {
+    if (!request->authenticate(config.http_username, config.http_password)) {
+        return request->requestAuthentication();
+    }
+
+    for (int i = 0; i < 8; i++) {
+        String sensorArg = "sensorCH" + String(i + 5);
+        String paramArg = "param" + String(i + 5);
+        String unitArg = "unit" + String(i + 5);
+        String bitActArg = "bitact" + String(i);
+
+        if (request->hasArg(sensorArg.c_str()) && isValidNumber(request->arg(sensorArg.c_str()))) {
+            config.tml0_data_channel[i + 5] = request->arg(sensorArg.c_str()).toInt();
+        }
+        if (request->hasArg(paramArg.c_str())) {
+            strcpy(config.tlm0_PARM[i + 5], request->arg(paramArg.c_str()).c_str());
+        }
+        if (request->hasArg(unitArg.c_str())) {
+            strcpy(config.tlm0_UNIT[i + 5], request->arg(unitArg.c_str()).c_str());
+        }
+
+        if (request->hasArg(bitActArg.c_str()) && isValidNumber(request->arg(bitActArg.c_str()))) {
+            if (request->arg(bitActArg.c_str()).toInt() == 1) {
+                config.tlm0_BITS_Active |= (1 << i);
+            } else {
+                config.tlm0_BITS_Active &= ~(1 << i);
+            }
+        }
+    }
+
+    saveEEPROM();
+    request->send(200, "text/plain", "OK");
 }
 
 void handle_tracker(AsyncWebServerRequest *request)
@@ -3803,33 +3796,79 @@ void webService()
 					{ handle_i2c_post(request);});									// MOD I2C POST
 	async_server.on("/default", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
 					{ handle_default(); });											// DEFAULT	
+	// igate					
 	async_server.on("/igate/general", HTTP_GET, [](AsyncWebServerRequest *request) 
 					{ handleIgateGeneralGet(request);});
 	async_server.on("/igate/general", HTTP_POST, [](AsyncWebServerRequest *request) 
 					{ handleIgateGeneralPost(request);});
-	// Rutas para la configuración POSITION
 	async_server.on("/igate/position", HTTP_GET, [](AsyncWebServerRequest *request) 
 					{ handleIgatePositionGet(request);});
 	async_server.on("/igate/position", HTTP_POST, [](AsyncWebServerRequest *request) 
 					{ handleIgatePositionPost(request);});
-	// Rutas para la configuración PHG
 	async_server.on("/igate/phg", HTTP_GET, [](AsyncWebServerRequest *request) 
 					{ handleIgatePHGGet(request);});
 	async_server.on("/igate/phg", HTTP_POST, [](AsyncWebServerRequest *request) 
 					{ handleIgatePHGPost(request);});
-	// Rutas para la configuración FILTER
 	async_server.on("/igate/filter", HTTP_GET, [](AsyncWebServerRequest *request) 
 					{ handleIgateFilterGet(request);});
 	async_server.on("/igate/filter", HTTP_POST, [](AsyncWebServerRequest *request) 
 					{ handleIgateFilterPost(request);});
-	async_server.on("/digi", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_digi(request); });										// DIGI
-	async_server.on("/tracker", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_tracker(request); });									// TRACKER
+	// digipeater				
+	async_server.on("/digi/general", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleDigiGeneral(request);});
+	async_server.on("/digi/general", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleDigiGeneralPost(request);});
+	async_server.on("/digi/position", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleDigiPosition(request);});
+	async_server.on("/digi/position", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleDigiPositionPost(request);});
+	async_server.on("/digi/phg", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleDigiPHG(request);});
+	async_server.on("/digi/phg", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleDigiPHGPost(request);});
+	async_server.on("/digi/filter", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleDigiFilter(request);});
+	async_server.on("/digi/filter", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleDigiFilterPost(request);});
+	// Tracker General
+    async_server.on("/tracker/general", HTTP_GET, [](AsyncWebServerRequest *request) 
+                    { handleTrackerGeneral(request); });
+    async_server.on("/tracker/general", HTTP_POST, [](AsyncWebServerRequest *request) 
+                    { handleTrackerGeneralPost(request); });
+
+    // Tracker Position
+    async_server.on("/tracker/position", HTTP_GET, [](AsyncWebServerRequest *request) 
+                    { handleTrackerPosition(request); });
+    async_server.on("/tracker/position", HTTP_POST, [](AsyncWebServerRequest *request) 
+                    { handleTrackerPositionPost(request); });
+
+    // Tracker SmartBeacon
+    async_server.on("/tracker/smartbeacon", HTTP_GET, [](AsyncWebServerRequest *request) 
+                    { handleTrackerSmartBeacon(request); });
+    async_server.on("/tracker/smartbeacon", HTTP_POST, [](AsyncWebServerRequest *request) 
+                    { handleTrackerSmartBeaconPost(request); });
+							
 	async_server.on("/wx", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_wx(request); });										// WX
-	async_server.on("/tlm", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
-					{ handle_tlm(request); });										// TLM
+					{ handle_wx(request); });	
+														
+	// async_server.on("/tlm", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest *request)
+	// 				{ handle_tlm(request); });										// TLM
+
+	async_server.on("/tlm/general", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleTlmGeneral(request); });
+	async_server.on("/tlm/general", HTTP_POST, [](AsyncWebServerRequest *request) 	
+					{ handleTlmGeneralPost(request); });
+
+	async_server.on("/tlm/channela", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleTlmChannelA(request); });
+	async_server.on("/tlm/channela", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleTlmChannelAPost(request); });
+
+	async_server.on("/tlm/channelb", HTTP_GET, [](AsyncWebServerRequest *request) 
+					{ handleTlmChannelB(request); });
+	async_server.on("/tlm/channelb", HTTP_POST, [](AsyncWebServerRequest *request) 
+					{ handleTlmChannelBPost(request); });
+
 	async_server.on("/system", HTTP_GET, [](AsyncWebServerRequest *request) 
 					{ handle_system_get(request);});								// SYSTEM GET	
 	async_server.on("/system", HTTP_POST, [](AsyncWebServerRequest *request) 

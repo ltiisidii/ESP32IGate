@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>ESP32IGATE - System Telemetry Configuration</title>
+</head>
+<body class="bg-dark text-light">
+
+    <!-- Header -->
+    <div class="container py-3">
+        <h1 class="text-center">
+            <a href="/" class="text-decoration-none text-light">ESP32IGate Project [System Telemetry]</a>
+        </h1>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/radio">Radio</a></li>
+                <li class="nav-item"><a class="nav-link" href="/tnc2">TNC</a></li>
+                <li class="nav-item"><a class="nav-link" href="/gnss">GNSS</a></li>
+                <!-- Submenú para Igate -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="igateDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        IGATE
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="igateDropdown">
+                        <li><a class="dropdown-item" href="/igate/general">General</a></li>
+                        <li><a class="dropdown-item" href="/igate/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/igate/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/igate/filter">Filter</a></li>
+                    </ul>
+                </li>                
+                <!-- Submenú para Digi -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="digiDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Digi
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="digiDropdown">
+                        <li><a class="dropdown-item" href="/digi/general">General</a></li>
+                        <li><a class="dropdown-item" href="/digi/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/digi/phg">PHG</a></li>
+                        <li><a class="dropdown-item" href="/digi/filter">Filter</a></li>
+                    </ul>
+                </li>          
+                <!-- Submenú para Tracker -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="trackerDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Tracker
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="trackerDropdown">
+                        <li><a class="dropdown-item" href="/tracker/general">General</a></li>
+                        <li><a class="dropdown-item" href="/tracker/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/tracker/smartbeacon">Smart Beacon</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para WX -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle " href="#" id="wxDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        WX
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="wxDropdown">
+                        <li><a class="dropdown-item" href="/wx/general">General</a></li>
+                        <li><a class="dropdown-item" href="/wx/position">Position</a></li>
+                        <li><a class="dropdown-item" href="/wx/smartbeacon">PHG</a></li>
+                    </ul>
+                </li>     
+                <!-- Submenú para TLM -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" id="tlmDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        TLM
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="tlmDropdown">
+                        <li><a class="dropdown-item" href="/tlm/general">General</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channela">Channel A</a></li>
+                        <li><a class="dropdown-item" href="/tlm/channelb">Channel B</a></li>
+                    </ul>
+                </li>     
+                <li class="nav-item"><a class="nav-link" href="/wireless">Wireless</a></li>
+                
+                <!-- Submenú para Mod -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="modDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Mod
+                    </a>
+            <ul class="dropdown-menu" aria-labelledby="modDropdown">
+                        <li><a class="dropdown-item" href="/mod/uart">UART</a></li>
+                        <li><a class="dropdown-item" href="/mod/rf">RF GPIO</a></li>
+                        <li><a class="dropdown-item" href="/mod/i2c">I2C</a></li>
+                        <li><a class="dropdown-item" href="/mod/counter">Counters</a></li>
+                        <li><a class="dropdown-item" href="/mod/gnss">GNSS</a></li>
+                        <li><a class="dropdown-item" href="/mod/modbus">MODBUS</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" href="/system">System</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4 mb-5" id="contentmain">
+        <table class="table table-dark table-bordered">
+            <tbody>
+        <!-- Channels B -->
+        <div class="mb-3">
+            <h6>Channel B1</h6>
+            <table class="table table-dark table-bordered">
+                <tr>
+                    <td>Type:</td>
+                    <td>
+                        <select class="form-select">
+                            <option value="none">none</option>
+                            <option value="Igate mode">Igate mode</option>
+                            <option value="digi mode">digi mode</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Parameter:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Unit:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Active:</td>
+                    <td>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB1" id="lowB1" value="LOW">
+                            <label class="form-check-label" for="lowB1">LOW</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB1" id="highB1" value="HIGH" checked>
+                            <label class="form-check-label" for="highB8">HIGH</label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="mb-3">
+            <h6>Channel B2</h6>
+            <table class="table table-dark table-bordered">
+                <tr>
+                    <td>Type:</td>
+                    <td>
+                        <select class="form-select">
+                            <option value="none">none</option>
+                            <option value="Igate mode">Igate mode</option>
+                            <option value="digi mode">digi mode</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Parameter:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Unit:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Active:</td>
+                    <td>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="lowB1" value="LOW">
+                            <label class="form-check-label" for="lowB1">LOW</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="highB8" value="HIGH" checked>
+                            <label class="form-check-label" for="highB8">HIGH</label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="mb-3">
+            <h6>Channel B3</h6>
+            <table class="table table-dark table-bordered">
+                <tr>
+                    <td>Type:</td>
+                    <td>
+                        <select class="form-select">
+                            <option value="none">none</option>
+                            <option value="Igate mode">Igate mode</option>
+                            <option value="digi mode">digi mode</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Parameter:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Unit:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Active:</td>
+                    <td>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="lowB1" value="LOW">
+                            <label class="form-check-label" for="lowB1">LOW</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="highB8" value="HIGH" checked>
+                            <label class="form-check-label" for="highB8">HIGH</label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="mb-3">
+            <h6>Channel B4</h6>
+            <table class="table table-dark table-bordered">
+                <tr>
+                    <td>Type:</td>
+                    <td>
+                        <select class="form-select">
+                            <option value="none">none</option>
+                            <option value="Igate mode">Igate mode</option>
+                            <option value="digi mode">digi mode</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Parameter:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Unit:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Active:</td>
+                    <td>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="lowB1" value="LOW">
+                            <label class="form-check-label" for="lowB1">LOW</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="highB8" value="HIGH" checked>
+                            <label class="form-check-label" for="highB8">HIGH</label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="mb-3">
+            <h6>Channel B5</h6>
+            <table class="table table-dark table-bordered">
+                <tr>
+                    <td>Type:</td>
+                    <td>
+                        <select class="form-select">
+                            <option value="none">none</option>
+                            <option value="Igate mode">Igate mode</option>
+                            <option value="digi mode">digi mode</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Parameter:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Unit:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Active:</td>
+                    <td>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="lowB1" value="LOW">
+                            <label class="form-check-label" for="lowB1">LOW</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="highB8" value="HIGH" checked>
+                            <label class="form-check-label" for="highB8">HIGH</label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="mb-3">
+            <h6>Channel B6</h6>
+            <table class="table table-dark table-bordered">
+                <tr>
+                    <td>Type:</td>
+                    <td>
+                        <select class="form-select">
+                            <option value="none">none</option>
+                            <option value="Igate mode">Igate mode</option>
+                            <option value="digi mode">digi mode</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Parameter:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Unit:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Active:</td>
+                    <td>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="lowB1" value="LOW">
+                            <label class="form-check-label" for="lowB1">LOW</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="highB8" value="HIGH" checked>
+                            <label class="form-check-label" for="highB8">HIGH</label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="mb-3">
+            <h6>Channel B7</h6>
+            <table class="table table-dark table-bordered">
+                <tr>
+                    <td>Type:</td>
+                    <td>
+                        <select class="form-select">
+                            <option value="none">none</option>
+                            <option value="Igate mode">Igate mode</option>
+                            <option value="digi mode">digi mode</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Parameter:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Unit:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Active:</td>
+                    <td>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="lowB1" value="LOW">
+                            <label class="form-check-label" for="lowB1">LOW</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="highB8" value="HIGH" checked>
+                            <label class="form-check-label" for="highB8">HIGH</label>
+                        </div>
+                </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="mb-3">
+            <h6>Channel B8</h6>
+            <table class="table table-dark table-bordered">
+                <tr>
+                    <td>Type:</td>
+                    <td>
+                        <select class="form-select">
+                            <option value="none">none</option>
+                            <option value="Igate mode">Igate mode</option>
+                            <option value="digi mode">digi mode</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Parameter:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Unit:</td>
+                    <td><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td>Active:</td>
+                    <td>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="lowB1" value="LOW">
+                            <label class="form-check-label" for="lowB1">LOW</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="activeB8" id="highB8" value="HIGH" checked>
+                            <label class="form-check-label" for="highB8">HIGH</label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <!-- Repeat Channel B1 structure for B2 to B8 -->
+
+        <div class="text-center">
+            <button type="button" class="btn btn-primary">Apply Changes</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-center text-light py-3">
+        ESP32IGate System Telemetry Configuration - &copy; 2025
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
